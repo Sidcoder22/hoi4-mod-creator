@@ -1,0 +1,63 @@
+import { test, expect } from 'vitest'
+import { modidAusName, tagVorschlag, neuesProjekt, neueId, ladeProjektAusJson, ProjektFehler, GRAFIKSTILE } from '../../src/projekt/modell.js'
+import { zuBase64, ausBase64 } from '../../src/projekt/base64.js'
+import { BONI, bonusWertImSpiel } from '../../src/projekt/boni.js'
+
+test('modidAusName', () => {
+  expect(modidAusName('Mein Reich')).toBe('mein_reich')
+  expect(modidAusName('Grösste Schweiz!')).toBe('groesste_schweiz')
+  expect(modidAusName('1936 Neu')).toBe('mod_1936_neu')
+  expect(modidAusName('')).toBe('meine_mod')
+  expect(modidAusName('Ein sehr sehr langer Modname')).toMatch(/^[a-z][a-z0-9_]{0,19}$/)
+  expect(modidAusName('Ein sehr sehr langer Modname').endsWith('_')).toBe(false)
+  expect(modidAusName('Straße')).toBe('strasse')
+})
+
+test('tagVorschlag', () => {
+  expect(tagVorschlag('Mein Reich', new Set())).toBe('MRE')
+  expect(tagVorschlag('Helvetien', new Set())).toBe('HEL')
+  expect(tagVorschlag('Helvetien', new Set(['HEL']))).toBe('HEV')
+  expect(tagVorschlag('Über Land', new Set())).toBe('ULA')
+  expect(tagVorschlag('Andorra', new Set())).toBe('ANO')
+  expect(tagVorschlag('D12', new Set())).not.toMatch(/^D\d\d$/)
+  expect(tagVorschlag('', new Set())).toMatch(/^[A-Z][A-Z0-9]{2}$/)
+  expect(tagVorschlag('!!!', new Set(['X00']))).toMatch(/^[A-Z][A-Z0-9]{2}$/)
+})
+
+test('neuesProjekt', () => {
+  const p = neuesProjekt('Mein Reich')
+  expect(p).toMatchObject({ formatVersion: 1, laender: [], ideen: [], bilder: {}, zaehler: { geist: 0 } })
+  expect(p.mod).toEqual({ name: 'Mein Reich', modid: 'mein_reich', modidManuell: false, version: '1.0', beschreibung: '',
+    spielversion: null, windowsBenutzer: '', gespeichertAls: null, vorschaubild: null })
+  expect(p.id).toMatch(/^e[0-9a-z]{10}$/)
+  expect(neueId()).not.toBe(neueId())
+  expect(GRAFIKSTILE.map(g => g.id)).toContain('western_european')
+})
+
+test('ladeProjektAusJson', () => {
+  expect(() => ladeProjektAusJson('{"x":1}')).toThrow(ProjektFehler)
+  expect(() => ladeProjektAusJson('kein json')).toThrow(ProjektFehler)
+  expect(() => ladeProjektAusJson('{"formatVersion":99}')).toThrow(ProjektFehler)
+  const p = neuesProjekt('A')
+  const q = ladeProjektAusJson(JSON.stringify(p))
+  expect(q.id).not.toBe(p.id)
+  expect({ ...q, id: p.id }).toEqual(p)
+})
+
+test('base64', () => {
+  const alle = Uint8Array.from({ length: 256 }, (_, i) => i)
+  expect([...ausBase64(zuBase64(alle))]).toEqual([...alle])
+  for (const n of [1, 2, 3]) {
+    const b = alle.slice(0, n)
+    expect([...ausBase64(zuBase64(b))]).toEqual([...b])
+  }
+  expect(zuBase64(new TextEncoder().encode('hallo'))).toBe('aGFsbG8=')
+})
+
+test('Boni', () => {
+  expect(BONI.map(b => b.art)).toEqual(['politische_macht', 'stabilitaet', 'kriegsunterstuetzung', 'forschung', 'fabrikleistung',
+    'baugeschwindigkeit', 'rekruten', 'bevoelkerung', 'angriff', 'verteidigung', 'organisation', 'fabrikeffizienz'])
+  expect(BONI.find(b => b.art === 'rekruten')).toMatchObject({ modifier: 'conscription', min: -5, max: 10, schritt: 0.5 })
+  expect(bonusWertImSpiel({ art: 'stabilitaet', wert: 5 })).toBe(0.05)
+  expect(bonusWertImSpiel({ art: 'politische_macht', wert: 0.1 })).toBe(0.1)
+})
