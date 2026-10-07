@@ -7,9 +7,10 @@ import { erstelleSprachsammler } from './sprache.js'
 import { aendereStaatsdatei, aendereColors, verlaufMitAnhang } from './kern.js'
 import { pruefeAusgabe } from './ausgabepruefung.js'
 import { modPfad } from './kennungen.js'
+import { erzeugeIdeen } from './ideen.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = []
+export const ERZEUGER = [erzeugeIdeen]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
