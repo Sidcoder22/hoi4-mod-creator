@@ -64,3 +64,17 @@ export function projektBildUrl(projekt, bildId) {
 export async function ladeBenutzerBild(datei) {
   return createImageBitmap(datei)
 }
+
+const rgbaCache = new Map()
+
+/** Projektbild als { breite, hoehe, rgba } (fuer den Flaggen-Designer). */
+export function projektBildRgba(projekt, bildId) {
+  const b = projekt?.bilder?.[bildId]
+  if (!b) return null
+  const schluessel = `${bildId}:${b.rgba.length}`
+  if (!rgbaCache.has(schluessel)) {
+    const bytes = ausBase64(b.rgba)
+    rgbaCache.set(schluessel, { breite: b.breite, hoehe: b.hoehe, rgba: new Uint8ClampedArray(bytes.buffer, bytes.byteOffset, bytes.byteLength) })
+  }
+  return rgbaCache.get(schluessel)
+}

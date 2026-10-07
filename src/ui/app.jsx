@@ -3,6 +3,8 @@ import { aktionen, useSpeicher } from './zustand.js'
 import { Start } from './start.jsx'
 import { Spielordner } from './spielordner.jsx'
 import { Einstellungen } from './einstellungen.jsx'
+import { Uebersicht } from './laender/uebersicht.jsx'
+import { LandEditor } from './laender/land-editor.jsx'
 
 function Folgt({ titel }) {
   return <div class="ansicht"><h1>{titel}</h1><p class="leise">Dieser Bereich folgt.</p></div>
@@ -11,7 +13,7 @@ function Folgt({ titel }) {
 /** Bereiche der Seitenleiste: id, Beschriftung, Ansicht. */
 export const BEREICHE = [
   { id: 'einstellungen', text: 'Mod-Einstellungen', ansicht: Einstellungen },
-  { id: 'laender', text: 'Länder', ansicht: () => <Folgt titel="Länder" /> },
+  { id: 'laender', text: 'Länder', ansicht: Uebersicht },
   { id: 'geister', text: 'Nationale Geister', ansicht: () => <Folgt titel="Nationale Geister" /> },
   { id: 'pruefung', text: 'Prüfung', ansicht: () => <Folgt titel="Prüfung" /> },
   { id: 'speichern', text: 'Mod speichern', ansicht: () => <Folgt titel="Mod speichern" /> },
@@ -58,8 +60,13 @@ function Seitenleiste({ z }) {
   )
 }
 
+/** Ansichten ohne eigenen Eintrag in der Seitenleiste. */
+const UNTERANSICHTEN = { land: LandEditor }
+
 function Arbeitsbereich({ z }) {
-  const bereich = BEREICHE.find(b => b.id === z.ansicht.bereich) || BEREICHE.find(b => b.id === 'laender')
+  const bereich = UNTERANSICHTEN[z.ansicht.bereich]
+    ? { id: z.ansicht.bereich, ansicht: UNTERANSICHTEN[z.ansicht.bereich] }
+    : BEREICHE.find(b => b.id === z.ansicht.bereich) || BEREICHE.find(b => b.id === 'laender')
   const Ansicht = bereich.ansicht
   return (
     <div class="haupt">

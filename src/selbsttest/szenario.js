@@ -53,4 +53,16 @@ export const SCHRITTE = [
       h.pruefe(zustand().projekt.id === id, 'falsches Projekt geöffnet')
     },
   },
+  {
+    name: 'Bestehendes Land wählen',
+    async lauf(h) {
+      await h.klicke('nav-laender')
+      await h.klicke('bestehendes-land')
+      await h.klickeKarte('karte-auswahl', 3)
+      await h.warte(async () => (await h.text('auswahl-bestaetigen')).includes('Schweiz'), 3000, 'Auswahl Schweiz')
+      await h.klicke('auswahl-bestaetigen')
+      await h.warte(async () => (await h.text('land-editor')).includes('Schweiz'), 3000, 'Editor Schweiz')
+      h.pruefe(zustand().projekt.laender.some(l => l.tag === 'SWI' && l.art === 'geaendert'), 'SWI nicht im Projekt')
+    },
+  },
 ]

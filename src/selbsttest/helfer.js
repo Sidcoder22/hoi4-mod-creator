@@ -86,3 +86,19 @@ export function taste(key, { ctrl = false, meta = false, shift = false } = {}) {
 export function pruefe(bedingung, meldung) {
   if (!bedingung) throw new Error(meldung)
 }
+
+/** Klickt auf der Karte (Container mit data-test) in die Mitte eines Staats. */
+export async function klickeKarte(test, staatId) {
+  const { schwerpunkt } = await import('../leser/karte.js')
+  const container = await element(test)
+  const canvas = await warte(() => container.querySelector('canvas'), 3000, 'Karten-Canvas')
+  const karte = window.__hmc.speicher.lies().karte
+  const [x, y] = schwerpunkt(karte, staatId)
+  const r = canvas.getBoundingClientRect()
+  const clientX = r.left + ((x + 0.5) * r.width) / karte.breite
+  const clientY = r.top + ((y + 0.5) * r.height) / karte.hoehe
+  const optionen = { bubbles: true, clientX, clientY, pointerId: 1, button: 0, buttons: 1, isPrimary: true }
+  canvas.dispatchEvent(new PointerEvent('pointerdown', optionen))
+  canvas.dispatchEvent(new PointerEvent('pointerup', { ...optionen, buttons: 0 }))
+  await pause(50)
+}
