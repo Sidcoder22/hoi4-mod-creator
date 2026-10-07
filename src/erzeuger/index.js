@@ -9,9 +9,10 @@ import { pruefeAusgabe } from './ausgabepruefung.js'
 import { modPfad } from './kennungen.js'
 import { erzeugeIdeen } from './ideen.js'
 import { erzeugeNeueLaender } from './land-neu.js'
+import { erzeugeGeaenderteLaender } from './land-geaendert.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = [erzeugeIdeen, erzeugeNeueLaender]
+export const ERZEUGER = [erzeugeIdeen, erzeugeNeueLaender, erzeugeGeaenderteLaender]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
