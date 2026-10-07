@@ -2,6 +2,10 @@
 
 import { erstelleMiniSpielordner } from './mini-spielordner.js'
 import { dateiquelleAusObjekt } from '../leser/dateiquelle.js'
+import { erstelleFakeOrdner } from './fake-ordner.js'
+import { parseParadox } from '../leser/paradox.js'
+
+let fakeOrdner = null
 
 const zustand = () => window.__hmc.speicher.lies()
 
@@ -201,6 +205,75 @@ export const SCHRITTE = [
       await h.tippe('anfuehrer-name', 'Wilhelm Tell')
       const land = zustand().projekt.laender.find(l => l.tag === 'SWI')
       h.pruefe(land.aendern.anfuehrer && land.anfuehrer.name === 'Wilhelm Tell', 'Anführer der Schweiz nicht geändert')
+    },
+  },
+  {
+    name: 'Prüfung',
+    async lauf(h) {
+      await h.klicke('nav-pruefung')
+      await h.warte(() => h.el('ampel')?.dataset.zustand === 'rot', 3000, 'Ampel rot')
+      await h.element('meldung-hauptstadt-verloren-0')
+      await h.klicke('behebung-hauptstadt-verloren-0')
+      await h.warte(() => h.el('ampel')?.dataset.zustand === 'gelb', 3000, 'Ampel gelb')
+      const ger = zustand().projekt.laender.find(l => l.tag === 'GER')
+      h.pruefe(ger && ger.hauptstadt === 2 && ger.aendern.gebiet, 'Deutschland hat keine neue Hauptstadt')
+    },
+  },
+  {
+    name: 'Speichern in Ordner',
+    async lauf(h) {
+      fakeOrdner = erstelleFakeOrdner({ 'settings.txt': '' })
+      await window.__hmc.aktionen.merkeZielordner(fakeOrdner)
+      await h.klicke('nav-speichern')
+      await h.klicke('speichern-ordner')
+      await h.element('speichern-ergebnis')
+      const dateien = fakeOrdner.alsObjekt()
+      for (const pfad of ['mod/selbsttest_reich.mod', 'mod/selbsttest_reich/history/countries/MRE - Mein Reich.txt',
+        'mod/selbsttest_reich/gfx/flags/MRE.tga', 'mod/selbsttest_reich/history/countries/SWI - Switzerland.txt',
+        'mod/selbsttest_reich/common/ideas/selbsttest_reich_ideas.txt', 'mod/selbsttest_reich/hoi4-mod-creator-projekt.json']) {
+        h.pruefe(dateien[pfad], `Datei fehlt: ${pfad}`)
+      }
+      for (const [pfad, inhalt] of Object.entries(dateien)) {
+        if (pfad.endsWith('.txt') && pfad.startsWith('mod/')) parseParadox(new TextDecoder().decode(inhalt), { streng: true })
+      }
+      h.pruefe(zustand().projekt.mod.gespeichertAls === 'selbsttest_reich', 'gespeichertAls nicht gesetzt')
+    },
+  },
+  {
+    name: 'ZIP',
+    async lauf(h) {
+      let erhalten = null
+      window.__hmc.ladeHerunter = (blob, name) => { erhalten = { blob, name } }
+      await h.klicke('speichern-zip')
+      await h.warte(() => erhalten, 3000, 'ZIP-Download')
+      h.pruefe(erhalten.name === 'selbsttest_reich.zip', 'ZIP-Name falsch: ' + erhalten.name)
+      h.pruefe(erhalten.blob.size > 1000, 'ZIP zu klein')
+    },
+  },
+  {
+    name: 'Spielfehler',
+    async lauf(h) {
+      const logs = await fakeOrdner.getDirectoryHandle('logs', { create: true })
+      const w = await (await logs.getFileHandle('error.log', { create: true })).createWritable()
+      await w.write('[12:00:01][persistent.cpp:48]: Error: "Unexpected token: }, near line: 7" in file: "history/countries/MRE - Mein Reich.txt" near line: 7\n[12:00:02][x.cpp:1]: anderes Problem in common/foo.txt\n')
+      await w.close()
+      await h.klicke('nav-spielfehler')
+      await h.klicke('spielfehler-laden')
+      await h.warte(async () => (await h.text('spielfehler-0')).includes('Tippfehler'), 3000, 'Spielfehler erklärt')
+      h.pruefe(!h.el('spielfehler-1'), 'fremder Fehler wurde angezeigt')
+    },
+  },
+  {
+    name: 'Projekt aus Mod öffnen',
+    async lauf(h) {
+      const json = fakeOrdner.alsObjekt()['mod/selbsttest_reich/hoi4-mod-creator-projekt.json']
+      await h.klicke('zur-startseite')
+      await h.element('neues-projekt-name')
+      const vorher = zustand().projekte.length
+      await h.ladeHoch('projekt-importieren', new File([json], 'hoi4-mod-creator-projekt.json', { type: 'application/json' }))
+      await h.warte(() => zustand().projekte.length === vorher + 1, 3000, 'Projekt importiert')
+      const mre = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      h.pruefe(JSON.stringify(mre.staaten) === '[1,4]', 'Staaten nach Import falsch')
     },
   },
 ]

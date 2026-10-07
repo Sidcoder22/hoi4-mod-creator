@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks'
+import { useEffect, useMemo } from 'preact/hooks'
 import { aktionen, useSpeicher } from './zustand.js'
 import { Start } from './start.jsx'
 import { Spielordner } from './spielordner.jsx'
@@ -7,19 +7,19 @@ import { Uebersicht } from './laender/uebersicht.jsx'
 import { LandEditor } from './laender/land-editor.jsx'
 import { GeisterListe } from './geister/geister-liste.jsx'
 import { GeistEditor } from './geister/geist-editor.jsx'
-
-function Folgt({ titel }) {
-  return <div class="ansicht"><h1>{titel}</h1><p class="leise">Dieser Bereich folgt.</p></div>
-}
+import { Pruefung, ampelZustand } from './pruefung.jsx'
+import { Speichern } from './speichern.jsx'
+import { Spielfehler } from './spielfehler.jsx'
+import { pruefeProjekt } from '../pruefung/regeln.js'
 
 /** Bereiche der Seitenleiste: id, Beschriftung, Ansicht. */
 export const BEREICHE = [
   { id: 'einstellungen', text: 'Mod-Einstellungen', ansicht: Einstellungen },
   { id: 'laender', text: 'Länder', ansicht: Uebersicht },
   { id: 'geister', text: 'Nationale Geister', ansicht: GeisterListe },
-  { id: 'pruefung', text: 'Prüfung', ansicht: () => <Folgt titel="Prüfung" /> },
-  { id: 'speichern', text: 'Mod speichern', ansicht: () => <Folgt titel="Mod speichern" /> },
-  { id: 'spielfehler', text: 'Spielfehler', ansicht: () => <Folgt titel="Spielfehler" /> },
+  { id: 'pruefung', text: 'Prüfung', ansicht: Pruefung },
+  { id: 'speichern', text: 'Mod speichern', ansicht: Speichern },
+  { id: 'spielfehler', text: 'Spielfehler', ansicht: Spielfehler },
 ]
 
 function Kopf({ z }) {
@@ -50,12 +50,14 @@ function Kopf({ z }) {
 }
 
 function Seitenleiste({ z }) {
+  const ampel = useMemo(() => (z.spieldaten ? ampelZustand(pruefeProjekt(z.projekt, z.spieldaten)) : null), [z.projekt, z.spieldaten])
   return (
     <nav class="seitenleiste" data-test="seitenleiste">
       {BEREICHE.map(b => (
         <button key={b.id} data-test={`nav-${b.id}`} class={z.ansicht.bereich === b.id || (b.id === 'laender' && z.ansicht.bereich === 'land') || (b.id === 'geister' && z.ansicht.bereich === 'geist') ? 'aktiv' : ''}
           onClick={() => aktionen.gehe({ bereich: b.id })}>
           {b.text}
+          {b.id === 'pruefung' && ampel && <span class="ampel" data-test="ampel" data-zustand={ampel} title={{ rot: 'Es gibt Fehler', gelb: 'Nur Hinweise', gruen: 'Alles bereit' }[ampel]} />}
         </button>
       ))}
     </nav>

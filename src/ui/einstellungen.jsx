@@ -31,12 +31,13 @@ export function Einstellungen({ z }) {
               Bild wählen
               <input type="file" accept="image/*" data-test="mod-vorschaubild"
                 onChange={async (e) => {
-                  const f = e.currentTarget.files?.[0]
+                  const feld = e.currentTarget
+                  const f = feld.files?.[0]
+                  feld.value = ''
                   if (f) {
                     const pngBase64 = await vorschaubildAusDatei(f)
                     aktionen.aendere((p) => setzeModFeld(p, 'vorschaubild', { pngBase64 }))
                   }
-                  e.currentTarget.value = ''
                 }} />
             </label>
             {m.vorschaubild && <button class="knopf leise" onClick={() => aktionen.aendere((p) => setzeModFeld(p, 'vorschaubild', null))}>Entfernen</button>}

@@ -56,9 +56,10 @@ export function Start({ z }) {
             Projektdatei öffnen
             <input type="file" accept=".json,application/json" data-test="projekt-importieren"
               onChange={async (e) => {
-                const f = e.currentTarget.files?.[0]
+                const feld = e.currentTarget
+                const f = feld.files?.[0]
+                feld.value = ''
                 if (f) await aktionen.importiereProjekt(await f.text())
-                e.currentTarget.value = ''
               }} />
           </label>
         </p>
