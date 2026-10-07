@@ -62,3 +62,12 @@ test('falscher Ordner gibt verstaendliche Meldung', async () => {
   await expect(leseSpielordner(dateiquelleAusObjekt({ 'readme.txt': 'x' }))).rejects.toThrow(SpielordnerFehler)
   await expect(leseSpielordner(dateiquelleAusObjekt({ 'launcher-settings.json': '{}' }))).rejects.toThrow(/^Das ist nicht der Hearts-of-Iron-IV-Spielordner\./)
 })
+
+test('gfx-Schluessel und Texturpfade ohne Ruecksicht auf Gross-/Kleinschreibung (Review C1)', async () => {
+  const o = erstelleMiniSpielordner()
+  o['interface/ideas.gfx'] = o['interface/ideas.gfx'].replace(/spriteType =/g, 'SpriteType =').replace(/texturefile/g, 'textureFile').replace('idea_generic_army.dds', 'IDEA_Generic_Army.dds')
+  o['interface/leaders.gfx'] = o['interface/leaders.gfx'].replace('spriteTypes', 'SpriteTypes').replace('spriteType =', 'SpriteType =')
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.ideenBilder).toEqual(['GFX_idea_generic_army', 'GFX_idea_generic_industry'])
+  expect(spieldaten.charaktere.GER_adolf_hitler.portraet).toBe('gfx/leaders/GER/Portrait_Germany_Adolf_Hitler.dds')
+})

@@ -46,3 +46,13 @@ test('Dateiquelle aus Objekt liefert Text auch fuer Bytes', async () => {
   expect(await q.text('c.txt')).toBe('ä')
   expect([...(await q.bytes('a.txt'))]).toEqual([104, 97, 108, 108, 111])
 })
+
+test('Dateiquelle findet Pfade ohne Ruecksicht auf Gross-/Kleinschreibung (Review C1)', async () => {
+  const q = dateiquelleAusObjekt({ 'gfx/Interface/Idea_A.dds': Uint8Array.from([7]) })
+  expect(q.hat('gfx/interface/idea_a.dds')).toBe(true)
+  expect([...(await q.bytes('GFX/INTERFACE/IDEA_A.DDS'))]).toEqual([7])
+  const f = (p, t) => ({ webkitRelativePath: p, text: async () => t, arrayBuffer: async () => new TextEncoder().encode(t).buffer })
+  const q2 = dateiquelleAusFileList([f('HOI4/Map/Definition.csv', 'x')])
+  expect(q2.hat('map/definition.csv')).toBe(true)
+  expect(await q2.text('map/definition.csv')).toBe('x')
+})

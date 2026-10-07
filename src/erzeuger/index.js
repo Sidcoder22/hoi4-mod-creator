@@ -1,7 +1,7 @@
 // Erzeugt aus Projekt und Spieldaten alle Dateien der Mod.
 // Ergebnis: Pfade relativ zum Ordner «Hearts of Iron IV» im Benutzerverzeichnis.
 
-import { parseParadox, finde, findeAlle, wertText } from '../leser/paradox.js'
+import { parseParadox, findeI, findeAlleI, wertText } from '../leser/paradox.js'
 import { ausBase64 } from '../projekt/base64.js'
 import { erstelleSprachsammler } from './sprache.js'
 import { aendereStaatsdatei, aendereColors, verlaufMitAnhang } from './kern.js'
@@ -28,9 +28,9 @@ function modGfxNamen(dateien) {
   for (const d of dateien) {
     if (!d.pfad.endsWith('.gfx')) continue
     const text = typeof d.inhalt === 'string' ? d.inhalt : new TextDecoder().decode(d.inhalt)
-    for (const block of findeAlle(parseParadox(text).eintraege, 'spriteTypes')) {
-      for (const s of findeAlle(block.wert.inhalt || [], 'spriteType')) {
-        const n = wertText(finde(s.wert.inhalt || [], 'name')?.wert)
+    for (const block of findeAlleI(parseParadox(text).eintraege, 'spriteTypes')) {
+      for (const s of findeAlleI(block.wert.inhalt || [], 'spriteType')) {
+        const n = wertText(findeI(s.wert.inhalt || [], 'name')?.wert)
         if (n) namen.add(n)
       }
     }
@@ -107,8 +107,8 @@ export function erzeugeMod(projekt, spieldaten) {
 
   const beschreibung = deskriptor(projekt, spieldaten)
   kontext.schreibe(modPfad(modid, 'descriptor.mod'), beschreibung)
-  const benutzer = String(projekt.mod.windowsBenutzer || '').trim().replace(/["\\/]/g, '')
-  const pfad = benutzer ? `C:/Users/${benutzer}/Documents/Paradox Interactive/Hearts of Iron IV/mod/${modid}` : `mod/${modid}`
+  const ordner = String(projekt.mod.benutzerOrdner || '').trim().replace(/"/g, '').replace(/\\/g, '/').replace(/\/+$/, '')
+  const pfad = ordner ? `${ordner}/mod/${modid}` : `mod/${modid}`
   kontext.schreibe(`mod/${modid}.mod`, beschreibung + `path="${pfad}"\n`)
   if (projekt.mod.vorschaubild?.pngBase64) kontext.schreibe(modPfad(modid, 'thumbnail.png'), ausBase64(projekt.mod.vorschaubild.pngBase64))
   kontext.schreibe(modPfad(modid, 'hoi4-mod-creator-projekt.json'), JSON.stringify(projekt))

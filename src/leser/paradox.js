@@ -189,6 +189,20 @@ export function findeAlle(inhalt, schluessel) {
   return inhalt.filter(x => istEintrag(x) && x.schluessel === schluessel)
 }
 
+/** Wie finde, aber ohne Ruecksicht auf Gross-/Kleinschreibung (Clausewitz-Schluessel). */
+export function findeI(inhalt, schluessel) {
+  if (!inhalt) return undefined
+  const k = schluessel.toLowerCase()
+  return inhalt.find(x => istEintrag(x) && x.schluessel.toLowerCase() === k)
+}
+
+/** Wie findeAlle, aber ohne Ruecksicht auf Gross-/Kleinschreibung. */
+export function findeAlleI(inhalt, schluessel) {
+  if (!inhalt) return []
+  const k = schluessel.toLowerCase()
+  return inhalt.filter(x => istEintrag(x) && x.schluessel.toLowerCase() === k)
+}
+
 /** Text eines einfachen Werts (Wort oder Text), sonst ''. */
 export function wertText(wert) {
   if (!wert) return ''

@@ -1,7 +1,8 @@
 // Liest aus dem HOI4-Spielordner alles, was der Creator braucht, und macht daraus «Spieldaten».
 // Jede Datei wird einzeln behandelt: eine kaputte Datei erzeugt eine Warnung, aber keinen Abbruch.
+// Schluessel und Pfade werden wie im Spiel ohne Ruecksicht auf Gross-/Kleinschreibung gelesen.
 
-import { parseParadox, finde, findeAlle, wertText, zahlen } from './paradox.js'
+import { parseParadox, findeI as finde, findeAlleI as findeAlle, wertText, zahlen } from './paradox.js'
 import { parseYml } from './yml.js'
 import { leseBmp } from './bmp.js'
 import { leseTga } from './tga.js'
@@ -313,7 +314,10 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   const ideenGroessen = []
   for (const sprite of Object.keys(sprites).filter(n => n.startsWith('GFX_idea_')).sort()) {
     const pfad = sprites[sprite]
-    if (!quelle.hat(pfad)) continue
+    if (!quelle.hat(pfad)) {
+      warnungen.push(`${pfad}: Bild zu ${sprite} fehlt`)
+      continue
+    }
     try {
       const bild = dekodiereBild(pfad, await quelle.bytes(pfad))
       if (!bild) continue

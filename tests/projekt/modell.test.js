@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest'
-import { modidAusName, tagVorschlag, neuesProjekt, neueId, ladeProjektAusJson, ProjektFehler, GRAFIKSTILE } from '../../src/projekt/modell.js'
+import { modidAusName, tagVorschlag, neuesProjekt, neueId, ladeProjektAusJson, ProjektFehler, GRAFIKSTILE, kopiereProjekt } from '../../src/projekt/modell.js'
 import { zuBase64, ausBase64 } from '../../src/projekt/base64.js'
 import { BONI, bonusWertImSpiel } from '../../src/projekt/boni.js'
 
@@ -28,7 +28,7 @@ test('neuesProjekt', () => {
   const p = neuesProjekt('Mein Reich')
   expect(p).toMatchObject({ formatVersion: 1, laender: [], ideen: [], bilder: {}, zaehler: { geist: 0 } })
   expect(p.mod).toEqual({ name: 'Mein Reich', modid: 'mein_reich', modidManuell: false, version: '1.0', beschreibung: '',
-    spielversion: null, windowsBenutzer: '', gespeichertAls: null, vorschaubild: null })
+    spielversion: null, benutzerOrdner: '', gespeichertAls: null, vorschaubild: null })
   expect(p.id).toMatch(/^e[0-9a-z]{10}$/)
   expect(neueId()).not.toBe(neueId())
   expect(GRAFIKSTILE.map(g => g.id)).toContain('western_european')
@@ -60,4 +60,11 @@ test('Boni', () => {
   expect(BONI.find(b => b.art === 'rekruten')).toMatchObject({ modifier: 'conscription', min: -5, max: 10, schritt: 0.5 })
   expect(bonusWertImSpiel({ art: 'stabilitaet', wert: 5 })).toBe(0.05)
   expect(bonusWertImSpiel({ art: 'politische_macht', wert: 0.1 })).toBe(0.1)
+})
+
+test('kopiereProjekt bekommt eigene modid (Review I2)', () => {
+  const p = { ...neuesProjekt('Mein Reich'), mod: { ...neuesProjekt('Mein Reich').mod, gespeichertAls: 'mein_reich', modidManuell: true } }
+  const k = kopiereProjekt(p)
+  expect(k.id).not.toBe(p.id)
+  expect(k.mod).toMatchObject({ name: 'Mein Reich (Kopie)', modid: 'mein_reich_kopie', modidManuell: false, gespeichertAls: null })
 })

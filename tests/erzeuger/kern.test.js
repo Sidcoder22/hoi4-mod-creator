@@ -25,8 +25,8 @@ test('leere Mod: Deskriptoren und Projektdatei', () => {
   expect(text(dateien, 'mod/mein_reich/descriptor.mod')).not.toContain('path=')
   expect(text(dateien, 'mod/mein_reich/descriptor.mod')).not.toContain('picture=')
   expect(JSON.parse(text(dateien, 'mod/mein_reich/hoi4-mod-creator-projekt.json')).mod.version).toBe('1.2')
-  const mitBenutzer = erzeugeMod(setzeModFeld(p, 'windowsBenutzer', 'Sid'), sd)
-  expect(text(mitBenutzer.dateien, 'mod/mein_reich.mod')).toContain('path="C:/Users/Sid/Documents/Paradox Interactive/Hearts of Iron IV/mod/mein_reich"')
+  const mitOrdner = erzeugeMod(setzeModFeld(p, 'benutzerOrdner', 'C:\\Users\\Sid\\OneDrive\\Dokumente\\Paradox Interactive\\Hearts of Iron IV\\'), sd)
+  expect(text(mitOrdner.dateien, 'mod/mein_reich.mod')).toContain('path="C:/Users/Sid/OneDrive/Dokumente/Paradox Interactive/Hearts of Iron IV/mod/mein_reich"')
 })
 
 test('Vorschaubild', () => {
@@ -108,4 +108,10 @@ test('pruefeAusgabe', () => {
   expect(pruefeAusgabe([], { ...leer, benutzteSprache: new Set(['FEHLT']) })[0]).toContain('FEHLT')
   expect(pruefeAusgabe([], { ...leer, benutzteSprache: new Set(['DA']), definierteSprache: new Set(['DA']) })).toEqual([])
   expect(pruefeAusgabe([], { ...leer, benutzteGfx: new Set(['GFX_x']) })[0]).toContain('GFX_x')
+})
+
+test('Projektdatei enthaelt gespeichertAls, wenn vorher alsGespeichert (Review I2b)', async () => {
+  const { alsGespeichert } = await import('../../src/projekt/aenderungen.js')
+  const { dateien } = erzeugeMod(alsGespeichert(neuesProjekt('Mein Reich'), sd), sd)
+  expect(JSON.parse(text(dateien, 'mod/mein_reich/hoi4-mod-creator-projekt.json')).mod.gespeichertAls).toBe('mein_reich')
 })

@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest'
 import { erstelleFakeOrdner } from '../../src/selbsttest/fake-ordner.js'
-import { pruefeZielordner, schreibeMod, leseFehlerlog } from '../../src/speicher/ordner.js'
+import { pruefeZielordner, schreibeMod, leseFehlerlog, modOrdnerVorhanden } from '../../src/speicher/ordner.js'
 
 const datei = (pfad) => ({ pfad, inhalt: `Inhalt von ${pfad}` })
 
@@ -36,4 +36,17 @@ test('Dateiliste mit fremden Pfaden wird ignoriert', async () => {
 test('Fehlerprotokoll lesen', async () => {
   expect(await leseFehlerlog(erstelleFakeOrdner({ 'logs/error.log': 'zeile' }))).toBe('zeile')
   expect(await leseFehlerlog(erstelleFakeOrdner({ 'settings.txt': '' }))).toBeNull()
+})
+
+test('Umbenennung nur in Gross-/Kleinschreibung loescht die neue Datei nicht (Review I1, Windows)', async () => {
+  const o = erstelleFakeOrdner({ 'settings.txt': '' })
+  await schreibeMod(o, 'm', [datei('mod/m.mod'), datei('mod/m/history/countries/MRE - Mein reich.txt')])
+  const r = await schreibeMod(o, 'm', [datei('mod/m.mod'), datei('mod/m/history/countries/MRE - Mein Reich.txt')])
+  expect(r.geloescht).toEqual([])
+})
+
+test('modOrdnerVorhanden (Review I2)', async () => {
+  const o = erstelleFakeOrdner({ 'mod/alt/descriptor.mod': 'x' })
+  expect(await modOrdnerVorhanden(o, 'alt')).toBe(true)
+  expect(await modOrdnerVorhanden(o, 'neu')).toBe(false)
 })

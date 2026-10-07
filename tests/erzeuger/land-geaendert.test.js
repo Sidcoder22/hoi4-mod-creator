@@ -106,3 +106,12 @@ test('ohne aktiven Reiter keine Dateien fuer das Land', () => {
   expect(fehler).toEqual([])
   expect(dateien.map(d => d.pfad).sort()).toEqual(['mod/mein_reich.mod', m + 'descriptor.mod', m + 'hoi4-mod-creator-projekt.json'])
 })
+
+test('Regierung eines bestehenden Landes behaelt Wahldatum und Intervall (Review I5)', () => {
+  const [p] = mitLand('SWI', {}, { regierung: true })
+  const { dateien, fehler } = erzeugeMod(p, sd)
+  expect(fehler).toEqual([])
+  const v = text(dateien, m + 'history/countries/SWI - Switzerland.txt').split('---\n').at(-1)
+  expect(v).toContain('last_election = "1935.10.27"')
+  expect(v).toContain('election_frequency = 36')
+})

@@ -16,7 +16,13 @@ function AuswahlDialog({ z, onSchliessen }) {
     .sort((a, b) => a.name.localeCompare(b.name, 'de')), [projekt, sd])
   const gefiltert = laender.filter(l => !filter || l.name.toLowerCase().includes(filter.toLowerCase()) || l.tag.includes(filter.toUpperCase()))
   const markiert = new Set([...besitzer].filter(([, t]) => t === tag).map(([s]) => s))
+  const eigenesNeues = tag ? projekt.laender.find(l => l.art === 'neu' && l.tag === tag) : null
   const bestaetigen = () => {
+    if (eigenesNeues) {
+      onSchliessen()
+      aktionen.gehe({ bereich: 'land', id: eigenesNeues.id, reiter: 'name' })
+      return
+    }
     let id
     aktionen.aendere((p, spieldaten) => { const [q, neueId] = fuegeLandHinzu(p, spieldaten, 'geaendert', tag); id = neueId; return q })
     if (!id) id = projekt.laender.find(l => l.tag === tag && l.art === 'geaendert')?.id
@@ -48,7 +54,7 @@ function AuswahlDialog({ z, onSchliessen }) {
         </div>
         <div class="knopfreihe">
           <button class="knopf haupt" data-test="auswahl-bestaetigen" disabled={!tag} onClick={bestaetigen}>
-            {tag ? `«${landName(tag, projekt, sd)}» ändern` : 'Zuerst ein Land wählen'}
+            {!tag ? 'Zuerst ein Land wählen' : eigenesNeues ? `«${landName(tag, projekt, sd)}» bearbeiten (dein neues Land)` : `«${landName(tag, projekt, sd)}» ändern`}
           </button>
           <button class="knopf leise" onClick={onSchliessen}>Abbrechen</button>
         </div>

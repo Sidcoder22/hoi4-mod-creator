@@ -48,7 +48,7 @@ export function hauptstadtVon(tag, p, sd) {
 
 /** Startwerte eines Spiel-Landes aus seiner Verlaufsdatei (ohne Datumsbloecke). */
 export function verlaufsWerte(sd, tag) {
-  const werte = { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 2, beliebtheiten: {}, ideologie: null, wahlen: false }
+  const werte = { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 2, beliebtheiten: {}, ideologie: null, wahlen: false, letzteWahl: '1933.3.5', wahlintervall: 48 }
   const land = sd.laender[tag]
   const text = land?.verlaufDatei ? sd.originaltexte[land.verlaufDatei] : null
   if (!text) return werte
@@ -65,6 +65,9 @@ export function verlaufsWerte(sd, tag) {
   if (politik && politik.wert.typ === 'block') {
     werte.ideologie = wertText(finde(politik.wert.inhalt, 'ruling_party')?.wert) || null
     werte.wahlen = wertText(finde(politik.wert.inhalt, 'elections_allowed')?.wert) === 'yes'
+    werte.letzteWahl = wertText(finde(politik.wert.inhalt, 'last_election')?.wert) || werte.letzteWahl
+    const intervall = Number(wertText(finde(politik.wert.inhalt, 'election_frequency')?.wert))
+    if (Number.isInteger(intervall) && intervall > 0) werte.wahlintervall = intervall
   }
   return werte
 }

@@ -2,9 +2,9 @@ import { useState } from 'preact/hooks'
 import { aktionen } from './zustand.js'
 import { pruefeProjekt, hatFehler } from '../pruefung/regeln.js'
 import { erzeugeMod } from '../erzeuger/index.js'
-import { schreibeMod, pruefeZielordner } from '../speicher/ordner.js'
+import { schreibeMod, pruefeZielordner, modOrdnerVorhanden } from '../speicher/ordner.js'
 import { erstelleZip } from '../speicher/zip.js'
-import { setzeModFeld } from '../projekt/aenderungen.js'
+import { alsGespeichert } from '../projekt/aenderungen.js'
 
 const ORDNER_HILFE = 'Bitte wähle den Ordner «Hearts of Iron IV» unter Dokumente\\Paradox Interactive. ' +
   'Nutzt du OneDrive, liegt er unter OneDrive\\Dokumente\\Paradox Interactive\\Hearts of Iron IV.'
@@ -41,8 +41,9 @@ export function Speichern({ z }) {
   const gesperrt = hatFehler(meldungen) || !!laeuft
   const kannOrdner = typeof window.showDirectoryPicker === 'function' || !!z.zielordner
 
+  // Die Projektdatei in der Mod soll schon wissen, unter welcher modid sie gespeichert ist
   const erzeuge = () => {
-    const r = erzeugeMod(p, z.spieldaten)
+    const r = erzeugeMod(alsGespeichert(p, z.spieldaten), z.spieldaten)
     if (r.fehler.length) {
       setErgebnis({ fehler: r.fehler })
       return null
@@ -66,11 +67,13 @@ export function Speichern({ z }) {
         return
       }
       await aktionen.merkeZielordner(handle)
+      if (p.mod.gespeichertAls !== p.mod.modid && (await modOrdnerVorhanden(handle, p.mod.modid)) &&
+        !confirm(`Im Spielordner gibt es schon eine Mod mit dem internen Namen «${p.mod.modid}». Sie wird überschrieben. Fortfahren?\n\nTipp: Unter Mod-Einstellungen → Erweitert kannst du den internen Namen ändern.`)) return
       const dateien = erzeuge()
       if (!dateien) return
       setLaeuft({ anteil: 0 })
       const r = await schreibeMod(handle, p.mod.modid, dateien, (anteil) => setLaeuft({ anteil }))
-      aktionen.aendere((q, sd) => setzeModFeld(setzeModFeld(q, 'gespeichertAls', q.mod.modid), 'spielversion', sd.version))
+      aktionen.aendere((q, sd) => alsGespeichert(q, sd))
       setErgebnis({ ort: 'ordner', ...r })
     } catch (e) {
       if (e?.name !== 'AbortError') aktionen.zeigeMeldung(`Speichern hat nicht geklappt: ${e.message}`)
@@ -84,6 +87,7 @@ export function Speichern({ z }) {
     const dateien = erzeuge()
     if (!dateien) return
     ladeHerunter(new Blob([erstelleZip(dateien)], { type: 'application/zip' }), `${p.mod.modid}.zip`)
+    aktionen.aendere((q, sd) => alsGespeichert(q, sd))
     setErgebnis({ ort: 'zip', geschrieben: dateien.length, geloescht: [] })
   }
 

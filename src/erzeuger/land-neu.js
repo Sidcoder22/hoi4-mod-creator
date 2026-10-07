@@ -42,7 +42,7 @@ export function politikEintraege(spieldaten, regierung) {
   return [
     eintrag('set_politics', block([
       eintrag('ruling_party', wort(regierung.ideologie)),
-      eintrag('last_election', text('1933.3.5')),
+      eintrag('last_election', text(regierung.letzteWahl || '1933.3.5')),
       eintrag('election_frequency', wort(regierung.wahlintervall || 48)),
       eintrag('elections_allowed', wort(regierung.wahlen ? 'yes' : 'no')),
     ])),

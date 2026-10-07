@@ -61,4 +61,5 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Gibt ein Land Staaten ab, bleiben seine Startdivisionen dort stehen, wo das Spiel sie vorsieht.
 - Kopierte Spieldateien (Staaten, Verlauf, Farben) gehören zur eingelesenen Spielversion.
   Nach einem Spiel-Update liest du den Spielordner neu ein und speicherst die Mod noch einmal.
-- Zeigt der Launcher die Mod nicht an, trägst du unter *Mod-Einstellungen → Erweitert* deinen Windows-Benutzernamen ein.
+- Zeigt der Launcher die Mod nicht an, trägst du unter *Mod-Einstellungen → Erweitert* den vollständigen Pfad deines Ordners
+  «Hearts of Iron IV» ein, zum Beispiel `C:\Users\Name\OneDrive\Dokumente\Paradox Interactive\Hearts of Iron IV`.

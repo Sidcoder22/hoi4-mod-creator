@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { miniSpieldaten } from '../hilfe.js'
 import { neuesProjekt } from '../../src/projekt/modell.js'
 import { fuegeLandHinzu, aendereLand, entferneLand, schalteStaat, setzeBeliebtheit, fuegeGeistHinzu, aendereGeist,
-  entferneGeist, fuegeBildHinzu, setzeModFeld } from '../../src/projekt/aenderungen.js'
+  entferneGeist, fuegeBildHinzu, setzeModFeld, alsGespeichert } from '../../src/projekt/aenderungen.js'
 import { belegteTags, effektiveBesitzer, landFarbe, landName, verlaufsWerte, hauptstadtVon } from '../../src/projekt/abgeleitet.js'
 
 const sd = await miniSpieldaten()
@@ -90,7 +90,8 @@ test('abgeleitete Werte', () => {
   expect([...belegteTags(q2, sd)].sort()).toEqual(['FRA', 'GER', 'MRE', 'SWI'])
   expect(belegteTags(q2, sd, mre).has('MRE')).toBe(false)
   expect(verlaufsWerte(sd, 'GER')).toEqual({ stabilitaet: 60, kriegsunterstuetzung: 30, forschungsplaetze: 4,
-    beliebtheiten: { democratic: 10, fascism: 70, communism: 5, neutrality: 15 }, ideologie: 'fascism', wahlen: false })
+    beliebtheiten: { democratic: 10, fascism: 70, communism: 5, neutrality: 15 }, ideologie: 'fascism', wahlen: false,
+    letzteWahl: '1933.3.5', wahlintervall: 48 })
   expect(hauptstadtVon('GER', q2, sd)).toBe(1)
   expect(hauptstadtVon('MRE', q2, sd)).toBeNull()
 })
@@ -121,4 +122,14 @@ test('setzeModFeld', () => {
   expect(setzeModFeld(p, 'name', 'Noch anders').mod.modid).toBe('eigen')
   const gespeichert = { ...neuesProjekt('A'), mod: { ...neuesProjekt('A').mod, gespeichertAls: 'a' } }
   expect(setzeModFeld(gespeichert, 'name', 'B').mod.modid).toBe('a')
+})
+
+test('Wahldaten bestehender Laender bleiben erhalten (Review I5)', () => {
+  const [p, id] = fuegeLandHinzu(neuesProjekt('X'), sd, 'geaendert', 'SWI')
+  expect(land(p, id).regierung).toMatchObject({ wahlen: true, wahlintervall: 36, letzteWahl: '1935.10.27' })
+})
+
+test('alsGespeichert setzt gespeichertAls und Spielversion (Review I2b)', () => {
+  const p = alsGespeichert(neuesProjekt('Mein Reich'), sd)
+  expect(p.mod).toMatchObject({ gespeichertAls: 'mein_reich', spielversion: '1.15.4' })
 })

@@ -77,12 +77,22 @@ export function neuesProjekt(name) {
     formatVersion: FORMAT_VERSION,
     mod: {
       name, modid: modidAusName(name), modidManuell: false, version: '1.0', beschreibung: '', spielversion: null,
-      windowsBenutzer: '', gespeichertAls: null, vorschaubild: null,
+      benutzerOrdner: '', gespeichertAls: null, vorschaubild: null,
     },
     laender: [],
     ideen: [],
     bilder: {},
     zaehler: { geist: 0 },
+  }
+}
+
+/** Kopie eines Projekts mit eigener modid, damit sie die Mod des Originals nicht ueberschreibt. */
+export function kopiereProjekt(p) {
+  const name = `${p.mod.name} (Kopie)`
+  return {
+    ...structuredClone(p),
+    id: neueId(),
+    mod: { ...structuredClone(p.mod), name, modid: modidAusName(`${p.mod.name} Kopie`), modidManuell: false, gespeichertAls: null },
   }
 }
 

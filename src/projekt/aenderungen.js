@@ -75,7 +75,7 @@ export function fuegeLandHinzu(p, sd, art, tag) {
       grafikstil: (spiel.grafikstil || 'western_european_gfx').replace(/_gfx$/, ''),
       staaten: [], hauptstadt: spiel.hauptstadt, kerneAltBesitzerBehalten: true,
       regierung: {
-        ideologie, wahlen: werte.wahlen, wahlintervall: 48,
+        ideologie, wahlen: werte.wahlen, wahlintervall: werte.wahlintervall, letzteWahl: werte.letzteWahl,
         parteien: Object.fromEntries(ids.map(g => [g, { name: '', langname: '', beliebtheit: werte.beliebtheiten[g] ?? 0 }])),
       },
       anfuehrer: { name: leiter?.name ?? '', unterideologie: unter,
@@ -173,4 +173,9 @@ export function setzeModFeld(p, feld, wert) {
   if (feld === 'name' && !mod.modidManuell && !mod.gespeichertAls) mod.modid = modidAusName(wert)
   if (feld === 'modid') mod.modidManuell = true
   return { ...p, mod }
+}
+
+/** Markiert das Projekt als unter seiner modid gespeichert (vor dem Erzeugen, damit es auch in der Projektdatei steht). */
+export function alsGespeichert(p, sd) {
+  return { ...p, mod: { ...p.mod, gespeichertAls: p.mod.modid, spielversion: sd?.version ?? p.mod.spielversion } }
 }

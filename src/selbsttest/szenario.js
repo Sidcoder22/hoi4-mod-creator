@@ -208,6 +208,18 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Eigenes Land im Auswahldialog',
+    async lauf(h) {
+      await h.klicke('nav-laender')
+      await h.klicke('bestehendes-land')
+      await h.klickeKarte('karte-auswahl', 1)
+      await h.warte(async () => (await h.text('auswahl-bestaetigen')).includes('Mein Reich'), 3000, 'Auswahl Mein Reich')
+      await h.klicke('auswahl-bestaetigen')
+      await h.warte(async () => (await h.text('land-editor')).includes('Mein Reich'), 3000, 'Editor Mein Reich')
+      h.pruefe(zustand().projekt.laender.filter(l => l.tag === 'MRE').length === 1, 'MRE doppelt')
+    },
+  },
+  {
     name: 'Prüfung',
     async lauf(h) {
       await h.klicke('nav-pruefung')

@@ -40,6 +40,7 @@ const FAELLE = [
   ['anfuehrer-ideologie', () => land({ anfuehrer: { ...l0.anfuehrer, unterideologie: 'nazism' } })],
   ['geist-verweis', () => land({ ideen: ['gibtsnicht'] })],
   ['geist-name', () => aendereGeist(g, g.ideen[0].id, { name: '' })],
+  ['geist-bild-unbekannt', () => aendereGeist(g, g.ideen[0].id, { bild: { art: 'spiel', sprite: 'GFX_idea_gibtsnicht' } })],
   ['bild-fehlt', () => land({ flagge: { art: 'bild', bildId: 'weg' } })],
   ['bild-fehlt', () => land({ anfuehrer: { ...l0.anfuehrer, bild: { art: 'eigen', bildId: 'weg' } } })],
   ['ohne-anfuehrer', () => land({ anfuehrer: { ...l0.anfuehrer, name: '' } })],

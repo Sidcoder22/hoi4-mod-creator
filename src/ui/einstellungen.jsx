@@ -48,7 +48,9 @@ export function Einstellungen({ z }) {
         <details class="erweitert">
           <summary>Erweitert</summary>
           <TextFeld label="Interner Name (modid)" hilfe="Wird für Ordner und Kennungen benutzt: nur Kleinbuchstaben, Ziffern und _. Ändere ihn nach dem ersten Speichern besser nicht mehr." wert={m.modid} test="mod-modid" maxLaenge={20} onAendere={setze('modid', 'mod:modid')} />
-          <TextFeld label="Windows-Benutzername (nur bei Problemen)" hilfe="Nur ausfüllen, wenn der Launcher die Mod nicht anzeigt. Dann schreibt der Creator den vollständigen Pfad C:/Users/<Name>/Documents/… in die .mod-Datei." wert={m.windowsBenutzer} test="mod-windowsbenutzer" onAendere={setze('windowsBenutzer', 'mod:benutzer')} />
+          <TextFeld label="Pfad zum Ordner «Hearts of Iron IV» (nur bei Problemen)" platzhalter="C:\Users\Name\Documents\Paradox Interactive\Hearts of Iron IV"
+            hilfe="Nur ausfüllen, wenn der Launcher die Mod nicht anzeigt. Kopiere den Pfad aus der Adresszeile des Explorers, zum Beispiel C:\Users\Name\OneDrive\Dokumente\Paradox Interactive\Hearts of Iron IV."
+            wert={m.benutzerOrdner} test="mod-benutzerordner" onAendere={setze('benutzerOrdner', 'mod:ordner')} />
         </details>
       </div>
     </div>

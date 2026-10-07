@@ -1,7 +1,7 @@
 // Zentraler Zustand der Oberflaeche und alle Aktionen, die ihn veraendern.
 
 import { useEffect, useRef, useState } from 'preact/hooks'
-import { neuesProjekt as leeresProjekt, neueId, ladeProjektAusJson } from '../projekt/modell.js'
+import { neuesProjekt as leeresProjekt, kopiereProjekt, ladeProjektAusJson } from '../projekt/modell.js'
 import { erstelleVerlauf } from '../projekt/verlauf.js'
 import { leseSpielordner, LESER_VERSION } from '../leser/spielordner.js'
 import * as db from '../speicher/indexeddb.js'
@@ -127,7 +127,7 @@ export const aktionen = {
     if (!d) return
     const p = await db.ladeProjekt(d, id)
     if (!p) return
-    await db.speichereProjekt(d, { ...structuredClone(p), id: neueId(), mod: { ...p.mod, name: `${p.mod.name} (Kopie)` } })
+    await db.speichereProjekt(d, kopiereProjekt(p))
     await aktualisiereListe()
   },
 

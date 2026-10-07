@@ -135,7 +135,7 @@ set_technology = {
 set_politics = {
 	ruling_party = democratic
 	last_election = "1935.10.27"
-	election_frequency = 48
+	election_frequency = 36
 	elections_allowed = yes
 }
 set_popularities = {

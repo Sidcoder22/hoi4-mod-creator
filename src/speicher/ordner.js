@@ -66,6 +66,8 @@ export async function schreibeMod(wurzel, modid, dateien, fortschritt = () => {}
     } catch { /* kaputte Liste: nichts loeschen */ }
   }
   const neu = new Set(dateien.map(d => d.pfad))
+  // Windows unterscheidet nicht zwischen Gross- und Kleinschreibung: «Reich.txt» und «reich.txt» sind dieselbe Datei
+  const neuKlein = new Set([...neu].map(p => p.toLowerCase()))
   let n = 0
   for (const d of dateien) {
     await schreibeDatei(wurzel, d.pfad, d.inhalt)
@@ -73,7 +75,7 @@ export async function schreibeMod(wurzel, modid, dateien, fortschritt = () => {}
   }
   const geloescht = []
   for (const p of alt) {
-    if (neu.has(p)) continue
+    if (neuKlein.has(p.toLowerCase())) continue
     if (await loescheDatei(wurzel, p)) geloescht.push(p)
   }
   await schreibeDatei(wurzel, listenPfad, JSON.stringify([...neu]))
@@ -84,4 +86,14 @@ export async function schreibeMod(wurzel, modid, dateien, fortschritt = () => {}
 export async function leseFehlerlog(wurzel) {
   const b = await leseDatei(wurzel, 'logs/error.log')
   return b ? new TextDecoder().decode(b) : null
+}
+
+/** Gibt es im Benutzerordner schon einen Mod-Ordner mit dieser modid? */
+export async function modOrdnerVorhanden(wurzel, modid) {
+  try {
+    await holeOrdner(wurzel, ['mod', modid], false)
+    return true
+  } catch {
+    return false
+  }
 }
