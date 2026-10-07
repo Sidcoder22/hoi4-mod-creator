@@ -1,0 +1,23 @@
+{
+  "name": "hoi4-mod-creator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "HOI4 Mod Creator – Mods fuer Hearts of Iron IV ohne Programmierkenntnisse erstellen",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "selbsttest": "vite build && node tools/selbsttest.mjs"
+  },
+  "dependencies": {
+    "preact": "^11.0.0"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
+    "puppeteer-core": "^25.12.0",
+    "vite": "^8.3.3",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^5.0.3"
+  }
+}
