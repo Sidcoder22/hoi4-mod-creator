@@ -65,4 +65,55 @@ export const SCHRITTE = [
       h.pruefe(zustand().projekt.laender.some(l => l.tag === 'SWI' && l.art === 'geaendert'), 'SWI nicht im Projekt')
     },
   },
+  {
+    name: 'Neues Land',
+    async lauf(h) {
+      await h.klicke('nav-laender')
+      await h.klicke('neues-land')
+      await h.tippe('land-name', 'Mein Reich')
+      await h.warte(async () => (await h.wert('land-tag')) === 'MRE', 3000, 'Kürzel MRE')
+      await h.warte(async () => (await h.text('tag-status')).includes('frei'), 3000, 'Kürzel frei')
+    },
+  },
+  {
+    name: 'Kürzel belegt',
+    async lauf(h) {
+      await h.tippe('land-tag', 'GER')
+      await h.warte(async () => (await h.text('tag-status')).includes('Deutschland'), 3000, 'Hinweis Deutschland')
+      await h.tippe('land-tag', 'MRE')
+      await h.warte(async () => (await h.text('tag-status')).includes('frei'), 3000, 'wieder frei')
+    },
+  },
+  {
+    name: 'Flagge',
+    async lauf(h) {
+      await h.klicke('reiter-flagge')
+      await h.klicke('flagge-vorlage-drei_senkrecht')
+      await h.tippe('flagge-farbe-1', '#00ff00')
+      await h.warte(async () => mittelpixel(await h.element('flagge-vorschau')).join() === '0,255,0,255', 3000, 'grüne Mitte')
+    },
+  },
+  {
+    name: 'Flaggenbild',
+    async lauf(h) {
+      await h.klicke('flagge-art-bild')
+      await h.ladeHoch('flaggenbild-datei', await rotesBild(100, 60))
+      await h.klicke('flaggenbild-uebernehmen')
+      await h.warte(async () => mittelpixel(await h.element('flagge-vorschau')).join() === '255,0,0,255', 3000, 'rote Mitte')
+      await h.klicke('flagge-art-designer')
+      await h.warte(async () => mittelpixel(await h.element('flagge-vorschau')).join() === '0,255,0,255', 3000, 'wieder grün')
+    },
+  },
 ]
+
+function mittelpixel(canvas) {
+  return [...canvas.getContext('2d').getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data]
+}
+
+async function rotesBild(breite, hoehe) {
+  const c = new OffscreenCanvas(breite, hoehe)
+  const ctx = c.getContext('2d')
+  ctx.fillStyle = '#ff0000'
+  ctx.fillRect(0, 0, breite, hoehe)
+  return new File([await c.convertToBlob({ type: 'image/png' })], 'rot.png', { type: 'image/png' })
+}

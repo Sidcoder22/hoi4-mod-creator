@@ -69,7 +69,7 @@ function Arbeitsbereich({ z }) {
     : BEREICHE.find(b => b.id === z.ansicht.bereich) || BEREICHE.find(b => b.id === 'laender')
   const Ansicht = bereich.ansicht
   return (
-    <div class="haupt">
+    <div class="arbeitsbereich">
       <Seitenleiste z={z} />
       <main class="inhalt">
         {!z.spieldaten && bereich.id !== 'einstellungen'

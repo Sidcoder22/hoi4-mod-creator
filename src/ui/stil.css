@@ -77,7 +77,8 @@ a { color: var(--messing-hell); }
 .banner.fehler { background: #3d2320; border-color: var(--rot); }
 
 /* Layout */
-.haupt { display: flex; flex: 1; min-height: 0; }
+.arbeitsbereich { display: flex; flex: 1; min-height: 0; }
+.feld code { align-self: flex-start; }
 .seitenleiste {
   width: 220px; flex-shrink: 0; padding: 0.8rem 0.6rem;
   background: var(--flaeche); border-right: 1px solid var(--rand);
