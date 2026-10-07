@@ -10,10 +10,7 @@ import { ReiterGebiet } from './reiter-gebiet.jsx'
 import { ReiterRegierung } from './reiter-regierung.jsx'
 import { ReiterAnfuehrer } from './reiter-anfuehrer.jsx'
 import { ReiterStartwerte } from './reiter-startwerte.jsx'
-
-function Folgt() {
-  return <p class="leise">Dieser Reiter folgt.</p>
-}
+import { ReiterGeister } from './reiter-geister.jsx'
 
 export const REITER = [
   { id: 'name', text: 'Name & Farbe', ansicht: ReiterName, schalter: 'Name ändern' },
@@ -22,7 +19,7 @@ export const REITER = [
   { id: 'regierung', text: 'Regierung', ansicht: ReiterRegierung, schalter: 'Regierung und Parteien ändern' },
   { id: 'anfuehrer', text: 'Anführer', ansicht: ReiterAnfuehrer, schalter: 'Anführer ändern' },
   { id: 'startwerte', text: 'Startwerte', ansicht: ReiterStartwerte, schalter: 'Startwerte ändern' },
-  { id: 'geister', text: 'Nationale Geister', ansicht: Folgt, schalter: 'Nationale Geister hinzufügen' },
+  { id: 'geister', text: 'Nationale Geister', ansicht: ReiterGeister, schalter: 'Nationale Geister hinzufügen' },
 ]
 
 function AendernSchalter({ land, reiter, feld = reiter.id, text = reiter.schalter }) {

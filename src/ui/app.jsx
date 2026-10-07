@@ -5,6 +5,8 @@ import { Spielordner } from './spielordner.jsx'
 import { Einstellungen } from './einstellungen.jsx'
 import { Uebersicht } from './laender/uebersicht.jsx'
 import { LandEditor } from './laender/land-editor.jsx'
+import { GeisterListe } from './geister/geister-liste.jsx'
+import { GeistEditor } from './geister/geist-editor.jsx'
 
 function Folgt({ titel }) {
   return <div class="ansicht"><h1>{titel}</h1><p class="leise">Dieser Bereich folgt.</p></div>
@@ -14,7 +16,7 @@ function Folgt({ titel }) {
 export const BEREICHE = [
   { id: 'einstellungen', text: 'Mod-Einstellungen', ansicht: Einstellungen },
   { id: 'laender', text: 'Länder', ansicht: Uebersicht },
-  { id: 'geister', text: 'Nationale Geister', ansicht: () => <Folgt titel="Nationale Geister" /> },
+  { id: 'geister', text: 'Nationale Geister', ansicht: GeisterListe },
   { id: 'pruefung', text: 'Prüfung', ansicht: () => <Folgt titel="Prüfung" /> },
   { id: 'speichern', text: 'Mod speichern', ansicht: () => <Folgt titel="Mod speichern" /> },
   { id: 'spielfehler', text: 'Spielfehler', ansicht: () => <Folgt titel="Spielfehler" /> },
@@ -61,7 +63,7 @@ function Seitenleiste({ z }) {
 }
 
 /** Ansichten ohne eigenen Eintrag in der Seitenleiste. */
-const UNTERANSICHTEN = { land: LandEditor }
+const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor }
 
 function Arbeitsbereich({ z }) {
   const bereich = UNTERANSICHTEN[z.ansicht.bereich]

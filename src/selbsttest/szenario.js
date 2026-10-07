@@ -152,6 +152,57 @@ export const SCHRITTE = [
       h.pruefe(land.armee.divisionen === 4, 'Divisionen nicht 4')
     },
   },
+  {
+    name: 'Geist',
+    async lauf(h) {
+      await h.klicke('nav-geister')
+      await h.klicke('neuer-geist')
+      await h.tippe('geist-name', 'Alpenfestung')
+      await h.klicke('bonus-neu')
+      await h.waehle('bonus-art-0', 'stabilitaet')
+      await h.tippe('bonus-wert-0', '5')
+      const geist = zustand().projekt.ideen[0]
+      h.pruefe(geist.name === 'Alpenfestung', 'Name des Geists fehlt')
+      h.pruefe(JSON.stringify(geist.boni) === JSON.stringify([{ art: 'stabilitaet', wert: 5 }]), 'Bonus falsch: ' + JSON.stringify(geist.boni))
+    },
+  },
+  {
+    name: 'Geist zuweisen',
+    async lauf(h) {
+      const mre = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      const geist = zustand().projekt.ideen[0]
+      await h.klicke('nav-laender')
+      await h.klicke(`land-${mre.id}`)
+      await h.klicke('reiter-geister')
+      await h.hakeAn(`land-geist-${geist.id}`, true)
+      await h.warte(() => zustand().projekt.laender.find(l => l.tag === 'MRE').ideen.includes(geist.id), 3000, 'Geist zugewiesen')
+    },
+  },
+  {
+    name: 'Schweiz ändern',
+    async lauf(h) {
+      const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
+      await h.klicke('nav-laender')
+      await h.klicke(`land-${swi.id}`)
+      await h.klicke('reiter-name')
+      await h.hakeAn('aendern-name', true)
+      await h.tippe('land-name', 'Helvetien')
+      await h.klicke('nav-laender')
+      await h.warte(async () => (await h.text(`land-${swi.id}`)).includes('Helvetien'), 3000, 'Kachel Helvetien')
+    },
+  },
+  {
+    name: 'Schweiz Anführer',
+    async lauf(h) {
+      const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
+      await h.klicke(`land-${swi.id}`)
+      await h.klicke('reiter-anfuehrer')
+      await h.hakeAn('aendern-anfuehrer', true)
+      await h.tippe('anfuehrer-name', 'Wilhelm Tell')
+      const land = zustand().projekt.laender.find(l => l.tag === 'SWI')
+      h.pruefe(land.aendern.anfuehrer && land.anfuehrer.name === 'Wilhelm Tell', 'Anführer der Schweiz nicht geändert')
+    },
+  },
 ]
 
 function mittelpixel(canvas) {
