@@ -6,6 +6,10 @@ import { aendereFeld } from './gemeinsam.js'
 import { Haken } from '../felder.jsx'
 import { ReiterName } from './reiter-name.jsx'
 import { ReiterFlagge } from './reiter-flagge.jsx'
+import { ReiterGebiet } from './reiter-gebiet.jsx'
+import { ReiterRegierung } from './reiter-regierung.jsx'
+import { ReiterAnfuehrer } from './reiter-anfuehrer.jsx'
+import { ReiterStartwerte } from './reiter-startwerte.jsx'
 
 function Folgt() {
   return <p class="leise">Dieser Reiter folgt.</p>
@@ -14,10 +18,10 @@ function Folgt() {
 export const REITER = [
   { id: 'name', text: 'Name & Farbe', ansicht: ReiterName, schalter: 'Name ändern' },
   { id: 'flagge', text: 'Flagge', ansicht: ReiterFlagge, schalter: 'Flagge ändern' },
-  { id: 'gebiet', text: 'Gebiet', ansicht: Folgt, schalter: 'Gebiet und Hauptstadt ändern' },
-  { id: 'regierung', text: 'Regierung', ansicht: Folgt, schalter: 'Regierung und Parteien ändern' },
-  { id: 'anfuehrer', text: 'Anführer', ansicht: Folgt, schalter: 'Anführer ändern' },
-  { id: 'startwerte', text: 'Startwerte', ansicht: Folgt, schalter: 'Startwerte ändern' },
+  { id: 'gebiet', text: 'Gebiet', ansicht: ReiterGebiet, schalter: 'Gebiet und Hauptstadt ändern' },
+  { id: 'regierung', text: 'Regierung', ansicht: ReiterRegierung, schalter: 'Regierung und Parteien ändern' },
+  { id: 'anfuehrer', text: 'Anführer', ansicht: ReiterAnfuehrer, schalter: 'Anführer ändern' },
+  { id: 'startwerte', text: 'Startwerte', ansicht: ReiterStartwerte, schalter: 'Startwerte ändern' },
   { id: 'geister', text: 'Nationale Geister', ansicht: Folgt, schalter: 'Nationale Geister hinzufügen' },
 ]
 

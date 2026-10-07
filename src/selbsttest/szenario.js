@@ -104,6 +104,54 @@ export const SCHRITTE = [
       await h.warte(async () => mittelpixel(await h.element('flagge-vorschau')).join() === '0,255,0,255', 3000, 'wieder grün')
     },
   },
+  {
+    name: 'Gebiet',
+    async lauf(h) {
+      await h.klicke('reiter-gebiet')
+      await h.klickeKarte('karte-gebiet', 1)
+      await h.klickeKarte('karte-gebiet', 4)
+      await h.element('gebiet-staat-1')
+      await h.element('gebiet-staat-4')
+      await h.warte(async () => (await h.wert('land-hauptstadt')) === '1', 3000, 'Hauptstadt 1')
+    },
+  },
+  {
+    name: 'Regierung',
+    async lauf(h) {
+      await h.klicke('reiter-regierung')
+      await h.waehle('land-ideologie', 'democratic')
+      await h.tippe('partei-beliebtheit-democratic', '60')
+      await h.warte(async () => (await h.text('beliebtheit-summe')).includes('100 %'), 3000, 'Summe 100 %')
+      await h.tippe('partei-name-democratic', 'Volkspartei')
+      const land = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      h.pruefe(land.regierung.parteien.democratic.beliebtheit === 60, 'Beliebtheit nicht 60')
+      h.pruefe(land.regierung.parteien.democratic.name === 'Volkspartei', 'Parteiname fehlt')
+    },
+  },
+  {
+    name: 'Anführer',
+    async lauf(h) {
+      await h.klicke('reiter-anfuehrer')
+      await h.tippe('anfuehrer-name', 'Max Muster')
+      const auswahl = await h.element('anfuehrer-unterideologie')
+      h.pruefe([...auswahl.options].some(o => o.value === 'conservatism'), 'conservatism fehlt')
+      await h.warte(() => auswahl.value === 'conservatism', 3000, 'Unterideologie conservatism')
+      await h.klicke('portraet-1')
+      const land = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      h.pruefe(land.anfuehrer.bild.pfad === 'gfx/leaders/Europe/portrait_europe_generic_2.dds', 'Porträt nicht gewählt')
+    },
+  },
+  {
+    name: 'Startwerte',
+    async lauf(h) {
+      await h.klicke('reiter-startwerte')
+      await h.tippe('start-stabilitaet', '70')
+      await h.tippe('start-divisionen', '4')
+      const land = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      h.pruefe(land.startwerte.stabilitaet === 70, 'Stabilität nicht 70')
+      h.pruefe(land.armee.divisionen === 4, 'Divisionen nicht 4')
+    },
+  },
 ]
 
 function mittelpixel(canvas) {

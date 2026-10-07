@@ -201,9 +201,11 @@ details.erweitert .feld { margin-bottom: 0.8rem; }
 .dialog { background: var(--flaeche); border: 1px solid var(--messing-dunkel); border-radius: 10px; padding: 1.2rem; width: min(1100px, 100%); max-height: 100%; overflow: auto; box-shadow: var(--schatten); }
 .zwei-spalten { display: grid; grid-template-columns: 1fr 300px; gap: 1rem; }
 .liste { max-height: 420px; overflow: auto; border: 1px solid var(--rand); border-radius: var(--radius); }
-.liste button, .liste .zeile { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.4rem 0.6rem; background: transparent; color: var(--text); border: none; border-bottom: 1px solid var(--rand); font: inherit; text-align: left; cursor: pointer; }
-.liste button:hover { background: var(--flaeche2); }
-.liste .zeile { cursor: default; justify-content: space-between; }
+.liste > button, .liste > .zeile { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.4rem 0.6rem; background: transparent; color: var(--text); border: none; border-bottom: 1px solid var(--rand); font: inherit; text-align: left; cursor: pointer; }
+.liste > button:hover, .liste > button.aktiv { background: var(--flaeche2); }
+.liste > button.aktiv { box-shadow: inset 3px 0 0 var(--messing); }
+.liste > .zeile { cursor: default; justify-content: space-between; }
+.parteien .regler-wert { min-width: 11.5rem; }
 
 /* Flaggen-Designer */
 .vorlagen { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; }
