@@ -8,9 +8,10 @@ import { aendereStaatsdatei, aendereColors, verlaufMitAnhang } from './kern.js'
 import { pruefeAusgabe } from './ausgabepruefung.js'
 import { modPfad } from './kennungen.js'
 import { erzeugeIdeen } from './ideen.js'
+import { erzeugeNeueLaender } from './land-neu.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = [erzeugeIdeen]
+export const ERZEUGER = [erzeugeIdeen, erzeugeNeueLaender]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
