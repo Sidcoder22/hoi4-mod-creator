@@ -3,7 +3,7 @@
 import { schreibeParadox } from '../leser/paradox.js'
 import { aendereLandDatei } from './kern.js'
 import { modPfad, zahl } from './kennungen.js'
-import { politikEintraege, parteiTexte, schreibeAnfuehrer, schreibeFlaggen, geisterKennungen, technikVon } from './land-neu.js'
+import { politikEintraege, parteiTexte, schreibeAnfuehrer, schreibeFlaggen, geisterKennungen, eigenschaftenKennungen, bevoelkerungAnpassen, technikVon } from './land-neu.js'
 
 const wort = (t) => ({ typ: 'wort', text: String(t) })
 const block = (inhalt) => ({ typ: 'block', inhalt })
@@ -46,14 +46,20 @@ export function erzeugeGeaenderteLaender(k) {
       )
       const technik = land.technikWie ? technikVon(spieldaten, land.technikWie) : []
       if (technik.length) anhang.push(...alsZeilen([eintrag('set_technology', block(technik.map(t => eintrag(t, wort(1)))))]))
+      if (Number(land.startwerte.rekruten) > 0) anhang.push(`add_manpower = ${Math.round(land.startwerte.rekruten)}`)
+      bevoelkerungAnpassen(k, land)
     }
     if (a.regierung) {
       anhang.push(...alsZeilen(politikEintraege(spieldaten, land.regierung)))
       parteiTexte(k, land, { nurGesetzte: true })
     }
     if (a.anfuehrer) {
-      const kennung = schreibeAnfuehrer(k, land)
-      if (kennung) anhang.push(`recruit_character = ${kennung}`, `promote_character = ${kennung}`)
+      if (land.anfuehrer.modus === 'behalten') {
+        for (const id of eigenschaftenKennungen(projekt, land)) anhang.push(`add_country_leader_trait = ${id}`)
+      } else {
+        const kennung = schreibeAnfuehrer(k, land)
+        if (kennung) anhang.push(`recruit_character = ${kennung}`, `promote_character = ${kennung}`)
+      }
     }
     if (a.geister) {
       const geister = geisterKennungen(projekt, land)

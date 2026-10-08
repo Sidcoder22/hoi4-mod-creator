@@ -3,7 +3,8 @@
 import { parseParadox, schreibeParadox, findeAlle } from '../leser/paradox.js'
 import { schreibeTga, schreibeDds, skaliereRgba } from './bilder.js'
 import { zeichneFlagge } from './flagge.js'
-import { anfuehrerKennung, asciiDateiname, geistKennung, modPfad, zahl } from './kennungen.js'
+import { anfuehrerKennung, asciiDateiname, geistKennung, eigenschaftKennung, modPfad, zahl } from './kennungen.js'
+import { effektiveBesitzer } from '../projekt/abgeleitet.js'
 
 const MINIMALE_TECHNIK = ['infantry_weapons', 'infantry_weapons1', 'tech_support', 'tech_engineers', 'gw_artillery']
 export const FLAGGEN_GROESSEN = [['', 82, 52], ['medium/', 41, 26], ['small/', 10, 7]]
@@ -80,11 +81,14 @@ export function schreibeAnfuehrer(k, land) {
   }
   const inhalt = [eintrag('name', wort(kennung))]
   if (portraet) inhalt.push(eintrag('portraits', block([eintrag('civilian', block([eintrag('large', text(portraet))]))])))
-  inhalt.push(eintrag('country_leader', block([
+  const leiter = [
     eintrag('ideology', wort(land.anfuehrer.unterideologie)),
     eintrag('expire', text('1965.1.1.1')),
     eintrag('id', wort(-1)),
-  ])))
+  ]
+  const eigenschaften = eigenschaftenKennungen(projekt, land)
+  if (eigenschaften.length) leiter.push(eintrag('traits', block(eigenschaften.map(wort))))
+  inhalt.push(eintrag('country_leader', block(leiter)))
   k.schreibe(modPfad(modid, `common/characters/${modid}_${land.tag}.txt`),
     schreibeParadox([eintrag('characters', block([eintrag(kennung, block(inhalt))]))]))
   k.sprache.setze(kennung, land.anfuehrer.name)
@@ -101,8 +105,28 @@ export function schreibeFlaggen(k, flagge, dateinamen) {
   }
 }
 
+/** Eigene Geister (Kennungen) und Geister aus dem Spiel (IDs) fuer add_ideas. */
 export function geisterKennungen(projekt, land) {
-  return land.ideen.map(id => projekt.ideen.find(g => g.id === id)).filter(Boolean).map(g => geistKennung(projekt, g))
+  const eigene = land.ideen.map(id => projekt.ideen.find(g => g.id === id)).filter(Boolean).map(g => geistKennung(projekt, g))
+  return [...eigene, ...(land.spielIdeen ?? [])]
+}
+
+/** Eigenschaften des Anfuehrers: Spiel-IDs und Kennungen eigener Eigenschaften. */
+export function eigenschaftenKennungen(projekt, land) {
+  return (land.anfuehrer?.eigenschaften ?? []).map(x => {
+    if (x.art === 'spiel') return x.id
+    const e = (projekt.eigenschaften ?? []).find(y => y.id === x.id)
+    return e ? eigenschaftKennung(projekt, e) : null
+  }).filter(Boolean)
+}
+
+/** Bevoelkerung der Staaten, die dem Land zum Start gehoeren. */
+export function bevoelkerungAnpassen(k, land) {
+  const prozent = Number(land.startwerte?.bevoelkerung) || 0
+  if (!prozent) return
+  for (const [staatId, tag] of effektiveBesitzer(k.projekt, k.spieldaten)) {
+    if (tag === land.tag) k.staatManpower(staatId, 1 + prozent / 100)
+  }
 }
 
 function einheiten(spieldaten, land) {
@@ -151,7 +175,9 @@ export function erzeugeNeueLaender(k) {
     if (anfuehrer) verlauf.push(eintrag('recruit_character', wort(anfuehrer)))
     const geister = geisterKennungen(projekt, land)
     if (geister.length) verlauf.push(eintrag('add_ideas', block(geister.map(wort))))
-    k.schreibe(modPfad(modid, `history/countries/${tag} - ${asciiDateiname(land.name) || tag}.txt`), schreibeParadox(verlauf))
+    if (Number(land.startwerte.rekruten) > 0) verlauf.push(eintrag('add_manpower', wort(Math.round(land.startwerte.rekruten))))
+    k.neuerVerlauf(tag, modPfad(modid, `history/countries/${tag} - ${asciiDateiname(land.name) || tag}.txt`), schreibeParadox(verlauf))
+    bevoelkerungAnpassen(k, land)
 
     if (mitArmee) k.schreibe(modPfad(modid, `history/units/${tag}_1936.txt`), einheiten(spieldaten, land))
     for (const s of land.staaten) k.staatAnLand(s, tag, { kernAltEntfernen: !land.kerneAltBesitzerBehalten })

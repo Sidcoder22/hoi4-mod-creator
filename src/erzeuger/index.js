@@ -1,7 +1,7 @@
 // Erzeugt aus Projekt und Spieldaten alle Dateien der Mod.
 // Ergebnis: Pfade relativ zum Ordner «Hearts of Iron IV» im Benutzerverzeichnis.
 
-import { parseParadox, findeI, findeAlleI, wertText } from '../leser/paradox.js'
+import { parseParadox, schreibeParadox, findeI, findeAlleI, wertText } from '../leser/paradox.js'
 import { ausBase64 } from '../projekt/base64.js'
 import { erstelleSprachsammler } from './sprache.js'
 import { aendereStaatsdatei, aendereColors, verlaufMitAnhang } from './kern.js'
@@ -11,9 +11,10 @@ import { erzeugeIdeen } from './ideen.js'
 import { erzeugeNeueLaender } from './land-neu.js'
 import { erzeugeGeaenderteLaender } from './land-geaendert.js'
 import { erzeugeFokusbaeume } from './fokus.js'
+import { erzeugeEigenschaften } from './eigenschaften.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = [erzeugeIdeen, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeFokusbaeume]
+export const ERZEUGER = [erzeugeIdeen, erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeFokusbaeume]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
@@ -49,6 +50,11 @@ export function erzeugeMod(projekt, spieldaten) {
   const anhaenge = new Map()
   const farben = new Map()
   const staatsAenderungen = new Map()
+  const manpower = new Map()
+  const neueVerlaeufe = new Map()
+  const neueZeilen = new Map()
+  const entfernen = new Map()
+  const neueTags = new Set(projekt.laender.filter(l => l.art === 'neu').map(l => l.tag))
 
   const kontext = {
     projekt, spieldaten, modid, sprache,
@@ -69,6 +75,23 @@ export function erzeugeMod(projekt, spieldaten) {
       anhaenge.get(tag).push(...zeilen)
     },
     neueFarbe: (tag, rgb) => farben.set(tag, rgb),
+    /** Verlaufsdatei eines neuen Landes; wird am Schluss mit allen Startzeilen geschrieben. */
+    neuerVerlauf: (tag, pfad, text) => neueVerlaeufe.set(tag, { pfad, text }),
+    /** Zeilen fuer den Spielstart: bei neuen Laendern in ihre Datei, sonst als Anhang an die Spieldatei. */
+    startZeilen(tag, zeilen) {
+      if (neueTags.has(tag)) {
+        if (!neueZeilen.has(tag)) neueZeilen.set(tag, [])
+        neueZeilen.get(tag).push(...zeilen)
+      } else {
+        kontext.verlaufAnhaengen(tag, zeilen)
+      }
+    },
+    /** Entfernt in der kopierten Verlaufsdatei eines Spiel-Landes Eintraege auf oberster Ebene. */
+    verlaufEntfernen(tag, pruefe) {
+      if (!entfernen.has(tag)) entfernen.set(tag, [])
+      entfernen.get(tag).push(pruefe)
+    },
+    staatManpower: (staatId, faktor) => manpower.set(staatId, faktor),
     staatAnLand(staatId, tag, { kernAltEntfernen = false } = {}) {
       const vorher = staatsAenderungen.get(staatId)
       if (vorher && vorher.tag !== tag) fehler.push(`Staat ${staatId} ist zwei Ländern zugewiesen (${vorher.tag}, ${tag})`)
@@ -84,22 +107,36 @@ export function erzeugeMod(projekt, spieldaten) {
     }
   }
 
-  for (const [staatId, { tag, kernAltEntfernen }] of staatsAenderungen) {
+  for (const [tag, { pfad, text }] of neueVerlaeufe) {
+    const extra = neueZeilen.get(tag) ?? []
+    kontext.schreibe(pfad, extra.length ? `${text}${extra.join('\n')}\n` : text)
+  }
+  for (const staatId of new Set([...staatsAenderungen.keys(), ...manpower.keys()])) {
     const staat = spieldaten.staaten[staatId]
     const original = staat && spieldaten.originaltexte[staat.datei]
     if (!original) {
       fehler.push(`Staat ${staatId} gibt es im Spiel nicht`)
       continue
     }
-    kontext.schreibe(modPfad(modid, staat.datei), aendereStaatsdatei(original, { neuerBesitzer: tag, kernAltEntfernen }), { kopie: true })
+    const aenderung = staatsAenderungen.get(staatId)
+    kontext.schreibe(modPfad(modid, staat.datei), aendereStaatsdatei(original, {
+      neuerBesitzer: aenderung?.tag, kernAltEntfernen: aenderung?.kernAltEntfernen, manpowerFaktor: manpower.get(staatId),
+    }), { kopie: true })
   }
-  for (const [tag, zeilen] of anhaenge) {
+  for (const tag of new Set([...anhaenge.keys(), ...entfernen.keys()])) {
     const datei = spieldaten.laender[tag]?.verlaufDatei
     if (!datei || spieldaten.originaltexte[datei] === undefined) {
       fehler.push(`Für ${tag} gibt es keine Verlaufsdatei im Spiel.`)
       continue
     }
-    kontext.schreibe(modPfad(modid, datei), verlaufMitAnhang(spieldaten.originaltexte[datei], zeilen, modid), { kopie: true })
+    let basis = spieldaten.originaltexte[datei]
+    const pruefungen = entfernen.get(tag)
+    if (pruefungen?.length) {
+      const { eintraege } = parseParadox(basis)
+      basis = schreibeParadox(eintraege.filter(x => !(x.schluessel && pruefungen.some(f => f(x)))))
+    }
+    const zeilen = anhaenge.get(tag) ?? []
+    kontext.schreibe(modPfad(modid, datei), zeilen.length ? verlaufMitAnhang(basis, zeilen, modid) : basis, { kopie: true })
   }
   if (farben.size) {
     kontext.schreibe(modPfad(modid, 'common/countries/colors.txt'), aendereColors(spieldaten.originaltexte['common/countries/colors.txt'] ?? null, farben), { kopie: true })

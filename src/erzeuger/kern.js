@@ -15,11 +15,16 @@ function setze(inhalt, schluessel, wert) {
   else inhalt.push({ schluessel, op: '=', wert })
 }
 
-/** Neuer Besitzer fuer einen Staat; Datumsbloecke bleiben unangetastet. */
-export function aendereStaatsdatei(text, { neuerBesitzer, kernAltEntfernen }) {
+/** Neuer Besitzer und/oder geaenderte Bevoelkerung fuer einen Staat; Datumsbloecke bleiben unangetastet. */
+export function aendereStaatsdatei(text, { neuerBesitzer, kernAltEntfernen, manpowerFaktor } = {}) {
   const { eintraege } = parseParadox(text)
   const staat = finde(eintraege, 'state')
   if (!staat || staat.wert.typ !== 'block') throw new Error('Kein Staat in der Datei')
+  if (manpowerFaktor && manpowerFaktor !== 1) {
+    const mp = finde(staat.wert.inhalt, 'manpower')
+    if (mp && mp.wert.typ !== 'block') mp.wert = wort(Math.max(0, Math.round(Number(mp.wert.text) * manpowerFaktor)))
+  }
+  if (!neuerBesitzer) return '# Geaendert durch HOI4 Mod Creator\n' + schreibeParadox(eintraege)
   let hist = finde(staat.wert.inhalt, 'history')
   if (!hist || hist.wert.typ !== 'block') {
     hist = { schluessel: 'history', op: '=', wert: { typ: 'block', inhalt: [] } }

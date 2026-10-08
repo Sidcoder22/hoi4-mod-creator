@@ -1,7 +1,7 @@
 // Nationale Geister (common/ideas) samt eigenen Bildern.
 
 import { schreibeParadox } from '../leser/paradox.js'
-import { bonusInfo, bonusWertImSpiel } from '../projekt/boni.js'
+import { bonusModifier, bonusWertImSpiel } from '../projekt/boni.js'
 import { schreibeDds, skaliereRgba } from './bilder.js'
 import { geistKennung, modPfad, zahl } from './kennungen.js'
 
@@ -36,8 +36,8 @@ export function erzeugeIdeen(k) {
     }
     const modifier = []
     for (const bonus of geist.boni || []) {
-      const info = bonusInfo(bonus.art)
-      if (info) modifier.push(eintrag(info.modifier, wort(zahl(bonusWertImSpiel(bonus)))))
+      const name = bonusModifier(bonus)
+      if (name) modifier.push(eintrag(name, wort(zahl(bonusWertImSpiel(bonus)))))
     }
     ideen.push(eintrag(kennung, block([
       eintrag('picture', wort(bild)),
