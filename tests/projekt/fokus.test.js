@@ -26,7 +26,7 @@ test('Baum und Fokusse anlegen', () => {
   expect(p.fokusbaeume[0]).toMatchObject({ id: b, nummer: 1, name: 'Weg zur Grösse', land: 'MRE' })
   expect(p.fokusbaeume[0].fokusse.map(f => f.nummer)).toEqual([1, 2])
   expect(fokus(p, a)).toEqual({ id: a, nummer: 1, name: '', beschreibung: '', x: 0, y: 0, dauer: 10,
-    symbol: { art: 'spiel', sprite: 'GFX_goal_generic_army_doctrines' }, voraussetzungen: [], voraussetzungsArt: 'alle',
+    symbol: { art: 'spiel', sprite: 'GFX_goal_generic_construct_civ_factory' }, voraussetzungen: [], voraussetzungsArt: 'alle',
     ausschluss: [], verfuegbar: { modus: 'alle', liste: [] }, belohnung: [], kiGewicht: 1 })
   expect(fuegeFokusHinzu(p, sd, b, 0, 0)[1]).toBeNull()
   expect(aendereBaum(p, b, { name: 'Neu' }).fokusbaeume[0].name).toBe('Neu')
@@ -63,4 +63,11 @@ test('alte Projektdatei bekommt die neuen Felder', () => {
   const p = ladeProjektAusJson(JSON.stringify(alt))
   expect(p.zaehler).toEqual({ geist: 2, baum: 0, fokus: 0, fraktion: 0 })
   expect(p.fokusbaeume).toEqual([])
+})
+
+test('Standard-Symbol: Zivilfabrik, sonst das erste Symbol (Review)', () => {
+  const ohne = { ...sd, fokusSymbole: ['GFX_focus_aaa', 'GFX_goal_x'] }
+  let [p, b] = fuegeBaumHinzu(neuesProjekt('M'), 'MRE', 'B')
+  const [q, id] = fuegeFokusHinzu(p, ohne, b, 0, 0)
+  expect(fokus(q, id).symbol.sprite).toBe('GFX_focus_aaa')
 })

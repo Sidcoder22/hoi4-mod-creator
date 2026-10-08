@@ -57,7 +57,8 @@ export function erzeugeFokusbaeume(k) {
       e('id', wort(baumKennung(projekt, baum))),
       e('country', block([e('factor', wort(0)), e('modifier', block([e('add', wort(100)), e('tag', wort(baum.land))]))])),
       e('default', wort('no')),
-      e('continuous_focus_position', block([e('x', wort(50)), e('y', wort(1200))])),
+      // Die Leiste fuer Dauer-Fokusse liegt unter dem tiefsten Fokus (eine Zeile im Spiel = 130 Pixel)
+      e('continuous_focus_position', block([e('x', wort(50)), e('y', wort(Math.max(1200, (Math.max(0, ...baum.fokusse.map(f => f.y)) + 2) * 130)))])),
     ]
     for (const f of baum.fokusse) {
       const kennung = kennungVon.get(f.id)

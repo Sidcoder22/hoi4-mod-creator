@@ -37,7 +37,7 @@ export function fuegeFokusHinzu(p, sd, baumId, x, y) {
   const [q, nummer] = zaehle(p, 'fokus')
   const fokus = {
     id, nummer, name: '', beschreibung: '', x, y, dauer: 10,
-    symbol: { art: 'spiel', sprite: sd?.fokusSymbole?.[0] ?? STANDARD_SYMBOL },
+    symbol: { art: 'spiel', sprite: sd?.fokusSymbole?.includes(STANDARD_SYMBOL) ? STANDARD_SYMBOL : (sd?.fokusSymbole?.[0] ?? STANDARD_SYMBOL) },
     voraussetzungen: [], voraussetzungsArt: 'alle', ausschluss: [],
     verfuegbar: { modus: 'alle', liste: [] }, belohnung: [], kiGewicht: 1,
   }

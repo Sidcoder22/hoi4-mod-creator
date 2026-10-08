@@ -44,7 +44,7 @@ test('Fokusbaum wird erzeugt', () => {
   expect(wertText(finde(baum, 'default').wert)).toBe('no')
   const a = fokusMit(dateien, 'mein_reich_fokus_1')
   expect(wertText(finde(a, 'cost').wert)).toBe('10')
-  expect(wertText(finde(a, 'icon').wert)).toBe('GFX_goal_generic_army_doctrines')
+  expect(wertText(finde(a, 'icon').wert)).toBe('GFX_goal_generic_construct_civ_factory')
   expect(wertText(finde(finde(a, 'completion_reward').wert.inhalt, 'add_political_power').wert)).toBe('50')
   expect(finde(a, 'prerequisite')).toBeUndefined()
   const b = fokusMit(dateien, 'mein_reich_fokus_2')
@@ -110,4 +110,12 @@ test('Merker und Fraktion im Fokus', () => {
   expect(fraktion).toMatch(/^mein_reich_fraktion_e[0-9a-z]{10}$/)
   expect(parseYml(text(dateien, m + 'localisation/german/mein_reich_l_german.yml')).eintraege.get(fraktion)).toBe('Alpenbund')
   expect(wertText(finde(finde(belohnung, 'add_tech_bonus').wert.inhalt, 'name').wert)).toBe('mein_reich_fokus_1')
+})
+
+test('Dauer-Fokus-Leiste unterhalb des tiefsten Fokus (Review)', () => {
+  let { p, baum } = aufbau()
+  const pos = (q) => finde(finde(finde(parseParadox(text(erzeugeMod(q, sd).dateien, PFAD)).eintraege, 'focus_tree').wert.inhalt, 'continuous_focus_position').wert.inhalt, 'y').wert.text
+  expect(pos(p)).toBe('1200')
+  ;[p] = fuegeFokusHinzu(p, sd, baum, 0, 12)
+  expect(pos(p)).toBe('1820')
 })

@@ -62,7 +62,12 @@ export const WIRKUNGEN = [
       if (FABRIKEN.has(w.gebaeude)) innen.push(e('add_extra_state_shared_building_slots', zahlWort(w.anzahl)))
       innen.push(e('add_building_construction', block([e('type', wort(w.gebaeude)), e('level', zahlWort(w.anzahl)), e('instant_build', wort('yes'))])))
       if (w.wo === 'staat') return [e(String(w.staat), block(innen))]
-      const grenze = w.gebaeude === 'dockyard' ? [e('limit', block([e('is_coastal', wort('yes'))]))] : []
+      // Nur Staaten waehlen, in denen das Gebaeude auch Platz hat; sonst verpufft die Belohnung
+      const grenze = w.gebaeude === 'dockyard'
+        ? [e('limit', block([e('is_coastal', wort('yes'))]))]
+        : FABRIKEN.has(w.gebaeude) ? [] : [e('limit', block([e('free_building_slots', block([
+          e('building', wort(w.gebaeude)), e('size', zahlWort(Number(w.anzahl) - 1), '>'), e('include_locked', wort('yes')),
+        ]))]))]
       return [e('random_owned_controlled_state', block([...grenze, ...innen]))]
     } },
   { art: 'forschungsplatz', gruppe: 'Wirtschaft und Forschung', name: 'Forschungsplatz', satz: 'Einen zusätzlichen Forschungsplatz erhalten',

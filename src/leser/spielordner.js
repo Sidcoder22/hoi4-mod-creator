@@ -121,6 +121,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   // Grafik-Verweise
   fortschritt(0.15, 'Grafiken werden verzeichnet …')
   const sprites = {}
+  const spriteDatei = {}
   for (const pfad of imOrdner('interface/', '.gfx')) {
     const e = await leseSkript(pfad)
     if (!e) continue
@@ -130,7 +131,10 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
         if (s.wert.typ !== 'block') continue
         const n = wertText(finde(s.wert.inhalt, 'name')?.wert)
         const t = wertText(finde(s.wert.inhalt, 'texturefile')?.wert)
-        if (n && t) sprites[n] = t.replace(/\\/g, '/').replace(/^\//, '')
+        if (n && t) {
+          sprites[n] = t.replace(/\\/g, '/').replace(/^\//, '')
+          spriteDatei[n] = pfad
+        }
       }
     }
   }
@@ -354,7 +358,10 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   }
 
   fortschritt(0.88, 'Fokus-Symbole werden gelesen …')
-  const fokusSymbole = Object.keys(sprites).filter(n => n.startsWith('GFX_goal_') && !/_shine$/i.test(n)).sort()
+  // Alle Symbole aus den goals-Dateien (GFX_goal_* und GFX_focus_*), dazu GFX_goal_* von anderswo; ohne Schimmer
+  const fokusSymbole = Object.keys(sprites)
+    .filter(n => !/_shine$/i.test(n) && (/goals/i.test(spriteDatei[n].split('/').pop()) || n.startsWith('GFX_goal_')))
+    .sort()
   const fokusGroessen = []
   let fokusSymboleGelesen = 0
   for (const sprite of fokusSymbole) {

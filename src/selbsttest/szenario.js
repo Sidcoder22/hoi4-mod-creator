@@ -283,8 +283,8 @@ export const SCHRITTE = [
     async lauf(h) {
       const a = zustand().projekt.fokusbaeume[0].fokusse[0]
       await h.klicke(`fokus-${a.id}`)
-      await h.klicke('fokussymbol-GFX_goal_generic_construct_civ_factory')
-      h.pruefe(zustand().projekt.fokusbaeume[0].fokusse[0].symbol.sprite === 'GFX_goal_generic_construct_civ_factory', 'Symbol nicht gesetzt')
+      await h.klicke('fokussymbol-GFX_goal_generic_army_doctrines')
+      h.pruefe(zustand().projekt.fokusbaeume[0].fokusse[0].symbol.sprite === 'GFX_goal_generic_army_doctrines', 'Symbol nicht gesetzt')
     },
   },
   {

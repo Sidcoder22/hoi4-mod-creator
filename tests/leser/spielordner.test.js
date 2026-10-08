@@ -118,3 +118,15 @@ test('Technologie-Kategorien: Rueckfall ohne Datei', async () => {
   const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
   expect(spieldaten.technologieKategorien.map(k => k.id)).toEqual(['industry', 'electronics', 'infantry_weapons', 'artillery', 'armor', 'land_doctrine', 'naval_doctrine', 'air_doctrine', 'naval_equipment', 'air_equipment'])
 })
+
+test('Fokus-Symbole aus allen goals-Dateien, ohne Rahmen-Sprites (Review I1)', async () => {
+  const { schreibeDds } = await import('../../src/erzeuger/bilder.js')
+  const o = erstelleMiniSpielordner()
+  o['interface/goals.gfx'] = o['interface/goals.gfx'].replace(/\}\s*$/, '\tSpriteType = {\n\t\tname = "GFX_focus_swi_alpen"\n\t\ttexturefile = "gfx/interface/goals/focus_swi_alpen.dds"\n\t}\n}\n')
+  o['gfx/interface/goals/focus_swi_alpen.dds'] = schreibeDds(new Uint8ClampedArray(94 * 86 * 4).fill(200), 94, 86)
+  o['interface/nationalfocusview.gfx'] = 'spriteTypes = {\n\tspriteType = {\n\t\tname = "GFX_focus_frame"\n\t\ttexturefile = "gfx/interface/focus_frame.dds"\n\t}\n}\n'
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.fokusSymbole).toContain('GFX_focus_swi_alpen')
+  expect(spieldaten.fokusSymbole).not.toContain('GFX_focus_frame')
+  expect(spieldaten.fokusSymbole.some(n => n.endsWith('_shine'))).toBe(false)
+})
