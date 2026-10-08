@@ -7,6 +7,8 @@ import { Uebersicht } from './laender/uebersicht.jsx'
 import { LandEditor } from './laender/land-editor.jsx'
 import { GeisterListe } from './geister/geister-liste.jsx'
 import { GeistEditor } from './geister/geist-editor.jsx'
+import { Baeume } from './fokus/baeume.jsx'
+import { BaumEditor } from './fokus/baum-editor.jsx'
 import { Pruefung, ampelZustand } from './pruefung.jsx'
 import { Speichern } from './speichern.jsx'
 import { Spielfehler } from './spielfehler.jsx'
@@ -17,6 +19,7 @@ export const BEREICHE = [
   { id: 'einstellungen', text: 'Mod-Einstellungen', ansicht: Einstellungen },
   { id: 'laender', text: 'Länder', ansicht: Uebersicht },
   { id: 'geister', text: 'Nationale Geister', ansicht: GeisterListe },
+  { id: 'fokusbaeume', text: 'Fokusbäume', ansicht: Baeume },
   { id: 'pruefung', text: 'Prüfung', ansicht: Pruefung },
   { id: 'speichern', text: 'Mod speichern', ansicht: Speichern },
   { id: 'spielfehler', text: 'Spielfehler', ansicht: Spielfehler },
@@ -54,7 +57,7 @@ function Seitenleiste({ z }) {
   return (
     <nav class="seitenleiste" data-test="seitenleiste">
       {BEREICHE.map(b => (
-        <button key={b.id} data-test={`nav-${b.id}`} class={z.ansicht.bereich === b.id || (b.id === 'laender' && z.ansicht.bereich === 'land') || (b.id === 'geister' && z.ansicht.bereich === 'geist') ? 'aktiv' : ''}
+        <button key={b.id} data-test={`nav-${b.id}`} class={z.ansicht.bereich === b.id || (b.id === 'laender' && z.ansicht.bereich === 'land') || (b.id === 'geister' && z.ansicht.bereich === 'geist') || (b.id === 'fokusbaeume' && z.ansicht.bereich === 'fokus') ? 'aktiv' : ''}
           onClick={() => aktionen.gehe({ bereich: b.id })}>
           {b.text}
           {b.id === 'pruefung' && ampel && <span class="ampel" data-test="ampel" data-zustand={ampel} title={{ rot: 'Es gibt Fehler', gelb: 'Nur Hinweise', gruen: 'Alles bereit' }[ampel]} />}
@@ -65,7 +68,7 @@ function Seitenleiste({ z }) {
 }
 
 /** Ansichten ohne eigenen Eintrag in der Seitenleiste. */
-const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor }
+const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor, fokus: BaumEditor }
 
 function Arbeitsbereich({ z }) {
   const bereich = UNTERANSICHTEN[z.ansicht.bereich]

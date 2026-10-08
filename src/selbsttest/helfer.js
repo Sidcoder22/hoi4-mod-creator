@@ -102,3 +102,31 @@ export async function klickeKarte(test, staatId) {
   canvas.dispatchEvent(new PointerEvent('pointerup', { ...optionen, buttons: 0 }))
   await pause(50)
 }
+
+function mitte(el) {
+  const r = el.getBoundingClientRect()
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+}
+
+/** Zieht mit der Maus vom Element testStart zum Element testZiel (Pointer-Events). */
+export async function zieheVon(testStart, testZiel, { shift = false } = {}) {
+  const start = await element(testStart)
+  start.scrollIntoView?.({ block: 'center', inline: 'center' })
+  await pause(20)
+  const ziel = await element(testZiel)
+  const a = mitte(start), b = mitte(ziel)
+  const basis = { bubbles: true, pointerId: 1, button: 0, isPrimary: true, shiftKey: shift }
+  start.dispatchEvent(new PointerEvent('pointerdown', { ...basis, buttons: 1, clientX: a.x, clientY: a.y }))
+  for (let i = 1; i <= 5; i++) {
+    document.dispatchEvent(new PointerEvent('pointermove', { ...basis, buttons: 1, clientX: a.x + ((b.x - a.x) * i) / 5, clientY: a.y + ((b.y - a.y) * i) / 5 }))
+  }
+  document.dispatchEvent(new PointerEvent('pointerup', { ...basis, buttons: 0, clientX: b.x, clientY: b.y }))
+  await pause(50)
+}
+
+export async function doppelklicke(test) {
+  const e = await element(test)
+  e.scrollIntoView?.({ block: 'center', inline: 'center' })
+  e.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+  await pause(50)
+}

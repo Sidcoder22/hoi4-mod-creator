@@ -252,3 +252,41 @@ details.erweitert .feld { margin-bottom: 0.8rem; }
 .fehlerliste { color: #f0a294; }
 .spielfehler-eintrag { padding: 0.6rem 0.8rem; background: var(--flaeche); border: 1px solid var(--rand); border-left: 4px solid var(--rot); border-radius: var(--radius); margin-bottom: 0.5rem; }
 .spielfehler-eintrag pre { white-space: pre-wrap; word-break: break-all; font-size: 0.8rem; color: var(--leise); margin: 0.4rem 0 0; }
+
+/* Fokusbaum-Editor */
+.baum-editor { max-width: none; }
+input.baum-titel { font-family: Georgia, serif; font-size: 1.4rem; color: var(--messing-hell); background: transparent; border: 1px solid transparent; padding: 0.1rem 0.3rem; width: 26rem; max-width: 100%; }
+input.baum-titel:hover, input.baum-titel:focus { border-color: var(--rand); }
+.baum-arbeitsflaeche { display: flex; gap: 1rem; align-items: flex-start; }
+.raster-huelle { flex: 1; min-width: 0; overflow: auto; max-height: calc(100vh - 220px); border: 1px solid var(--messing-dunkel); border-radius: 8px;
+  background: radial-gradient(ellipse at top, #2b2a22 0%, #191a17 60%, #121310 100%); }
+.raster { position: relative; user-select: none; }
+.zelle { position: absolute; width: 110px; height: 130px; border-right: 1px dashed rgba(201, 162, 74, 0.07); border-bottom: 1px dashed rgba(201, 162, 74, 0.07); }
+.zelle:hover { background: rgba(201, 162, 74, 0.05); }
+.raster-linien { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.linie-voraussetzung { fill: none; stroke: #c9a24a; stroke-width: 2.5; }
+.linie-voraussetzung.eine { stroke-dasharray: 6 5; }
+.linie-ausschluss line { stroke: #d0503c; stroke-width: 2.5; }
+.linie-ausschluss text { fill: #f07a64; font-size: 18px; font-weight: 700; }
+.linie-neu { stroke: #e3c271; stroke-width: 2; stroke-dasharray: 4 4; }
+.fokus-karte { position: absolute; width: 96px; height: 104px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  cursor: grab; touch-action: none; z-index: 2; }
+.fokus-karte .fokus-symbol { width: 72px; height: 66px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
+.fokus-karte .bild-platzhalter.fokus-symbol { display: block; border-radius: 6px; }
+.fokus-schild { margin-top: 2px; max-width: 104px; padding: 2px 6px; font-size: 0.72rem; line-height: 1.2; text-align: center; color: #f0e6cc;
+  background: linear-gradient(180deg, #3b3524, #24211a); border: 1px solid #6b5a2e; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fokus-karte.gewaehlt .fokus-schild { border-color: var(--messing-hell); box-shadow: 0 0 8px rgba(227, 194, 113, 0.6); }
+.fokus-karte.gewaehlt .fokus-symbol { filter: drop-shadow(0 0 6px rgba(227, 194, 113, 0.8)); }
+.fokus-griff { position: absolute; bottom: -9px; width: 12px; height: 12px; border-radius: 50%; background: var(--messing); border: 2px solid #1b1a14; cursor: crosshair; opacity: 0.55; }
+.fokus-karte:hover .fokus-griff, .fokus-karte.gewaehlt .fokus-griff { opacity: 1; }
+.fokus-seite { width: 380px; flex-shrink: 0; max-height: calc(100vh - 220px); overflow: auto; padding: 1rem; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 8px;
+  display: flex; flex-direction: column; gap: 0.8rem; }
+.fokus-seite.leer { justify-content: center; min-height: 200px; }
+.fokus-seite-kopf { display: flex; align-items: center; gap: 0.6rem; }
+.fokus-seite-kopf .fokus-symbol { width: 54px; height: 50px; object-fit: contain; }
+.fokus-seite-kopf h2 { margin: 0; }
+details.abschnitt { border-top: 1px solid var(--rand); padding-top: 0.5rem; }
+details.abschnitt > summary { cursor: pointer; font-weight: 600; margin-bottom: 0.4rem; }
+details.abschnitt .haken { margin: 0.2rem 0; }
+.fokus-galerie { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); max-height: 240px; }
+.fokus-galerie img, .fokus-galerie .bild-platzhalter { aspect-ratio: 94 / 86; }

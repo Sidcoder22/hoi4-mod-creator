@@ -229,6 +229,65 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Fokusbaum anlegen',
+    async lauf(h) {
+      await h.klicke('nav-fokusbaeume')
+      await h.klicke('neuer-baum')
+      await h.waehle('baum-land', 'MRE')
+      await h.tippe('baum-name', 'Weg zur Grösse')
+      await h.klicke('baum-anlegen')
+      await h.element('baum-editor')
+      h.pruefe(zustand().projekt.fokusbaeume[0]?.land === 'MRE', 'Baum gehört nicht zu MRE')
+    },
+  },
+  {
+    name: 'Fokusse anlegen',
+    async lauf(h) {
+      for (const [zelle, name] of [['zelle-0-0', 'A'], ['zelle-1-1', 'B'], ['zelle-2-1', 'C']]) {
+        await h.doppelklicke(zelle)
+        await h.tippe('fokus-name', name)
+      }
+      const fokusse = zustand().projekt.fokusbaeume[0].fokusse
+      h.pruefe(fokusse.map(f => f.name).join() === 'A,B,C', 'Fokusse: ' + fokusse.map(f => f.name).join())
+      for (const f of fokusse) await h.element(`fokus-${f.id}`)
+    },
+  },
+  {
+    name: 'Verbinden',
+    async lauf(h) {
+      const [a, b, c] = zustand().projekt.fokusbaeume[0].fokusse
+      await h.zieheVon(`griff-${a.id}`, `fokus-${b.id}`)
+      await h.klicke(`fokus-${c.id}`)
+      await h.hakeAn(`voraussetzung-${a.id}`, true)
+      await h.zieheVon(`griff-${b.id}`, `fokus-${c.id}`, { shift: true })
+      const [, b2, c2] = zustand().projekt.fokusbaeume[0].fokusse
+      h.pruefe(JSON.stringify(b2.voraussetzungen) === JSON.stringify([a.id]), 'B braucht nicht A')
+      h.pruefe(JSON.stringify(c2.voraussetzungen) === JSON.stringify([a.id]), 'C braucht nicht A')
+      h.pruefe(b2.ausschluss.includes(c.id) && c2.ausschluss.includes(b.id), 'Ausschluss fehlt')
+    },
+  },
+  {
+    name: 'Verschieben',
+    async lauf(h) {
+      const c = zustand().projekt.fokusbaeume[0].fokusse[2]
+      await h.zieheVon(`fokus-${c.id}`, 'zelle-3-1')
+      let c2 = zustand().projekt.fokusbaeume[0].fokusse[2]
+      h.pruefe(c2.x === 3 && c2.y === 1, `C steht auf ${c2.x},${c2.y}`)
+      await h.zieheVon(`fokus-${c.id}`, 'zelle-0-0')
+      c2 = zustand().projekt.fokusbaeume[0].fokusse[2]
+      h.pruefe(c2.x === 3 && c2.y === 1, 'C durfte auf ein besetztes Feld')
+    },
+  },
+  {
+    name: 'Symbol',
+    async lauf(h) {
+      const a = zustand().projekt.fokusbaeume[0].fokusse[0]
+      await h.klicke(`fokus-${a.id}`)
+      await h.klicke('fokussymbol-GFX_goal_generic_construct_civ_factory')
+      h.pruefe(zustand().projekt.fokusbaeume[0].fokusse[0].symbol.sprite === 'GFX_goal_generic_construct_civ_factory', 'Symbol nicht gesetzt')
+    },
+  },
+  {
     name: 'Prüfung',
     async lauf(h) {
       await h.klicke('nav-pruefung')
