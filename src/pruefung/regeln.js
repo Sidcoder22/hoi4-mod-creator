@@ -3,6 +3,8 @@
 import { tagGesperrt } from '../projekt/modell.js'
 import { effektiveBesitzer, landName, verlaufsWerte } from '../projekt/abgeleitet.js'
 import { fuegeLandHinzu, aendereLand } from '../projekt/aenderungen.js'
+import { fokusZyklus } from '../projekt/fokus.js'
+import { pruefeBausteine } from '../bausteine/erzeugen.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
 
@@ -124,6 +126,43 @@ export function pruefeProjekt(p, sd) {
     if (geist.bild?.art === 'eigen' && !p.bilder?.[geist.bild.bildId]) fehler('bild-fehlt', `Das Bild des nationalen Geists «${geist.name}» fehlt.`, ziel)
     if (geist.bild?.art !== 'eigen' && !sd.sprites?.[geist.bild?.sprite]) {
       fehler('geist-bild-unbekannt', `Das Bild des nationalen Geists «${geist.name || 'ohne Namen'}» gibt es im eingelesenen Spiel nicht. Bitte wähle ein anderes.`, ziel)
+    }
+  }
+
+  // Fokusbaeume
+  const tags = new Set(Object.keys(sd.laender))
+  for (const l of p.laender) if (l.art === 'neu') tags.add(l.tag)
+  const baumZaehler = new Map()
+  for (const baum of p.fokusbaeume ?? []) {
+    const zielBaum = { bereich: 'fokus', id: baum.id }
+    const bname = `Fokusbaum «${baum.name || 'ohne Namen'}»`
+    if (!tags.has(baum.land)) fehler('baum-land', `${bname} gehört zu keinem Land mehr. Wähle ein Land aus.`, zielBaum)
+    baumZaehler.set(baum.land, (baumZaehler.get(baum.land) || 0) + 1)
+    if (baumZaehler.get(baum.land) === 2) fehler('baum-doppelt', `${landName(baum.land, p, sd)} hat mehr als einen Fokusbaum. Das Spiel kann nur einen benutzen.`, zielBaum)
+    if (!baum.fokusse.length) hinweis('baum-leer', `${bname} hat noch keine Fokusse.`, zielBaum)
+    const ids = new Set(baum.fokusse.map(f => f.id))
+    const felder = new Map()
+    for (const f of baum.fokusse) {
+      const ziel = { bereich: 'fokus', id: baum.id, fokus: f.id }
+      const fname = `Fokus «${f.name || 'ohne Namen'}»`
+      if (!String(f.name || '').trim()) fehler('fokus-name', `Ein Fokus in ${bname} braucht einen Namen.`, ziel)
+      const feld = `${f.x},${f.y}`
+      if (felder.has(feld)) fehler('fokus-ueberlappung', `${fname} liegt auf demselben Feld wie «${felder.get(feld).name || 'ohne Namen'}».`, ziel)
+      else felder.set(feld, f)
+      if ([...f.voraussetzungen, ...f.ausschluss].some(v => !ids.has(v))) fehler('fokus-verweis', `${fname} verweist auf einen Fokus, den es nicht mehr gibt.`, ziel)
+      if (f.symbol?.art === 'eigen' ? !p.bilder?.[f.symbol.bildId] : !sd.sprites?.[f.symbol?.sprite]) {
+        fehler('fokus-symbol', `Das Symbol von ${fname} fehlt. Bitte wähle ein anderes.`, ziel)
+      }
+      for (const m of [...pruefeBausteine(f.verfuegbar, { projekt: p, spieldaten: sd }, fname), ...pruefeBausteine(f.belohnung, { projekt: p, spieldaten: sd }, fname)]) {
+        fehler('baustein', m.text, ziel)
+      }
+      if (!f.belohnung?.length) hinweis('fokus-ohne-belohnung', `${fname} hat keine Belohnung.`, ziel)
+      if (String(f.name || '').trim() && !String(f.beschreibung || '').trim()) hinweis('fokus-beschreibung', `${fname} hat keine Beschreibung.`, ziel)
+    }
+    const kreis = fokusZyklus(baum)
+    if (kreis) {
+      const namen = kreis.map(id => baum.fokusse.find(f => f.id === id)?.name || 'ohne Namen').join(' → ')
+      fehler('fokus-kreis', `Die Voraussetzungen in ${bname} drehen sich im Kreis: ${namen}.`, { bereich: 'fokus', id: baum.id, fokus: kreis[0] })
     }
   }
 

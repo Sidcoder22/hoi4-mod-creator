@@ -11,6 +11,7 @@ export function ampelZustand(meldungen) {
 export function zielAnsicht(ziel) {
   if (ziel.bereich === 'land') return ziel.id ? { bereich: 'land', id: ziel.id, reiter: ziel.reiter || 'name' } : { bereich: 'laender' }
   if (ziel.bereich === 'geist') return ziel.id ? { bereich: 'geist', id: ziel.id } : { bereich: 'geister' }
+  if (ziel.bereich === 'fokus') return ziel.id ? { bereich: 'fokus', id: ziel.id, ...(ziel.fokus ? { fokus: ziel.fokus } : {}) } : { bereich: 'fokusbaeume' }
   return { bereich: 'einstellungen' }
 }
 

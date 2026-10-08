@@ -93,3 +93,67 @@ test('geaendertes Land ohne Gebietsaenderung zaehlt nicht doppelt', () => {
   const q = aendereLand(p, sd, swi, { staaten: [2] })
   expect(regeln(q)).not.toContain('staat-doppelt')
 })
+
+// ---- Etappe 2: Fokusbaeume und Bausteine ----
+import { fuegeBaumHinzu, fuegeFokusHinzu, aendereFokus, setzeVoraussetzung, entferneFokus } from '../../src/projekt/fokus.js'
+import { neueWirkung, neueBedingung } from '../../src/bausteine/erzeugen.js'
+import { entferneLand } from '../../src/projekt/aenderungen.js'
+
+const mitWerten = (b, werte) => ({ ...b, werte: { ...b.werte, ...werte } })
+
+function mitBaum() {
+  let p = gueltig()
+  let baum, a, b
+  ;[p, baum] = fuegeBaumHinzu(p, 'MRE', 'Baum')
+  ;[p, a] = fuegeFokusHinzu(p, sd, baum, 0, 0)
+  ;[p, b] = fuegeFokusHinzu(p, sd, baum, 0, 1)
+  p = aendereFokus(p, baum, a, { name: 'A', beschreibung: 'a', belohnung: [mitWerten(neueWirkung('politische_macht'), { menge: 50 })] })
+  p = aendereFokus(p, baum, b, { name: 'B', beschreibung: 'b', belohnung: [mitWerten(neueWirkung('politische_macht'), { menge: 50 })],
+    verfuegbar: { modus: 'alle', liste: [mitWerten(neueBedingung('fokus_erledigt'), { fokus: a })] } })
+  p = setzeVoraussetzung(p, baum, a, b, true)
+  return { p, baum, a, b }
+}
+
+test('gueltiges Projekt mit Fokusbaum hat keine Meldungen', () => {
+  expect(regeln(mitBaum().p)).toEqual([])
+})
+
+const FOKUS_FAELLE = [
+  ['baum-land', ({ p, baum }) => ({ ...p, fokusbaeume: p.fokusbaeume.map(x => (x.id === baum ? { ...x, land: 'XYZ' } : x)) })],
+  ['baum-doppelt', ({ p }) => fuegeBaumHinzu(p, 'MRE', 'Zweiter')[0]],
+  ['baum-leer', ({ p }) => fuegeBaumHinzu(p, 'GER', 'Leer')[0]],
+  ['fokus-name', ({ p, baum, a }) => aendereFokus(p, baum, a, { name: '' })],
+  ['fokus-ueberlappung', ({ p, baum, b }) => aendereFokus(p, baum, b, { x: 0, y: 0 })],
+  ['fokus-kreis', ({ p, baum, a, b }) => setzeVoraussetzung(p, baum, b, a, true)],
+  ['fokus-verweis', ({ p, baum, b }) => aendereFokus(p, baum, b, { voraussetzungen: ['weg'] })],
+  ['fokus-symbol', ({ p, baum, a }) => aendereFokus(p, baum, a, { symbol: { art: 'spiel', sprite: 'GFX_goal_gibtsnicht' } })],
+  ['fokus-symbol', ({ p, baum, a }) => aendereFokus(p, baum, a, { symbol: { art: 'eigen', bildId: 'weg' } })],
+  ['baustein', ({ p, baum, a }) => aendereFokus(p, baum, a, { belohnung: [mitWerten(neueWirkung('staat_bekommen'), { staat: 999 })] })],
+  ['baustein', ({ p, baum, a }) => aendereFokus(p, baum, a, { belohnung: [mitWerten(neueWirkung('code'), { code: 'x = {' })] })],
+  ['baustein', ({ p, baum, a }) => aendereFokus(p, baum, a, { belohnung: [mitWerten(neueWirkung('code'), { code: 'x = "ä"' })] })],
+  ['fokus-ohne-belohnung', ({ p, baum, a }) => aendereFokus(p, baum, a, { belohnung: [] })],
+  ['fokus-beschreibung', ({ p, baum, a }) => aendereFokus(p, baum, a, { beschreibung: '' })],
+]
+
+for (const [regel, erzeuge] of FOKUS_FAELLE) {
+  test(`Fokus-Regel ${regel}`, () => {
+    const m = pruefeProjekt(erzeuge(mitBaum()), sd).filter(x => x.regel === regel)
+    expect(m.length).toBeGreaterThan(0)
+    expect(m[0].schwere).toBe(['baum-leer', 'fokus-ohne-belohnung', 'fokus-beschreibung'].includes(regel) ? 'hinweis' : 'fehler')
+    expect(m[0].ziel.bereich).toBe('fokus')
+  })
+}
+
+test('Bedingung auf geloeschten Fokus ist ein Fehler (Review Focus 2)', () => {
+  const { p, baum, a } = mitBaum()
+  const m = pruefeProjekt(entferneFokus(p, baum, a), sd).filter(x => x.regel === 'baustein')
+  expect(m.length).toBe(1)
+  expect(m[0].text).toContain('Fokus «B»')
+  expect(m[0].ziel.fokus).toBeTruthy()
+})
+
+test('Baum ohne Land nach Loeschen des Landes (Review Focus 5)', () => {
+  const { p } = mitBaum()
+  const ohne = entferneLand(p, p.laender.find(l => l.tag === 'MRE').id)
+  expect(regeln(ohne)).toContain('baum-land')
+})
