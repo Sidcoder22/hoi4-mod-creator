@@ -339,6 +339,17 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Sprung aus der Prüfung',
+    async lauf(h) {
+      await h.klicke('nav-pruefung')
+      const meldung = await h.element('meldung-fokus-beschreibung-0')
+      meldung.querySelector('.text').click()
+      await h.element('baum-editor')
+      await h.element('fokus-seite')
+      h.pruefe(zustand().ansicht.bereich === 'fokus' && zustand().ansicht.fokus, 'Kein Fokus gewählt nach dem Sprung')
+    },
+  },
+  {
     name: 'Speichern in Ordner',
     async lauf(h) {
       fakeOrdner = erstelleFakeOrdner({ 'settings.txt': '' })
@@ -355,6 +366,12 @@ export const SCHRITTE = [
       for (const [pfad, inhalt] of Object.entries(dateien)) {
         if (pfad.endsWith('.txt') && pfad.startsWith('mod/')) parseParadox(new TextDecoder().decode(inhalt), { streng: true })
       }
+      const baum = dateien['mod/selbsttest_reich/common/national_focus/selbsttest_reich_selbsttest_reich_baum_1.txt']
+      h.pruefe(baum, 'Fokusbaum-Datei fehlt')
+      const baumText = new TextDecoder().decode(baum)
+      h.pruefe(baumText.includes('add_political_power = 50'), 'Belohnung fehlt im Fokusbaum')
+      h.pruefe(baumText.includes('mutually_exclusive'), 'Ausschluss fehlt im Fokusbaum')
+      h.pruefe(baumText.includes('has_stability > 0.5'), 'Bedingung fehlt im Fokusbaum')
       h.pruefe(zustand().projekt.mod.gespeichertAls === 'selbsttest_reich', 'gespeichertAls nicht gesetzt')
     },
   },
