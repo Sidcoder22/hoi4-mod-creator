@@ -177,7 +177,10 @@ const ETAPPE2B_FAELLE = [
   ['bonus-unbekannt', () => aendereGeist(g, g.ideen[0].id, { boni: [{ art: 'frei', modifier: 'gibts_nicht_factor', wert: 0.1 }] })],
   ['bonus-wert', () => aendereGeist(g, g.ideen[0].id, { boni: [{ art: 'stabilitaet', wert: 500 }] })],
   ['spielgeist-fehlt', () => mitMre(g, { spielIdeen: ['gibtsnicht'] })],
-  ['eigenschaft-name', () => fuegeEigenschaftHinzu(g)[0]],
+  ['eigenschaft-name', () => {
+    const [p, e] = fuegeEigenschaftHinzu(g)
+    return mitMre(p, (l) => ({ anfuehrer: { ...l.anfuehrer, eigenschaften: [{ art: 'eigen', id: e }] } }))
+  }],
   ['eigenschaft-fehlt', () => mitMre(g, (l) => ({ anfuehrer: { ...l.anfuehrer, eigenschaften: [{ art: 'spiel', id: 'gibtsnicht' }] } }))],
   ['eigenschaft-fehlt', () => mitMre(g, (l) => ({ anfuehrer: { ...l.anfuehrer, eigenschaften: [{ art: 'eigen', id: 'weg' }] } }))],
   ['diplomatie-ziel', () => dipl(g, { kriegsziele: [{ tag: 'XYZ', art: 'annex_everything' }] })],
@@ -208,4 +211,19 @@ for (const [regel, erzeuge] of ETAPPE2B_FAELLE) {
 
 test('Beitreten zu einer Fraktion aus dem Spiel ist erlaubt', () => {
   expect(regeln(dipl(gueltig(), { fraktion: { art: 'beitreten', anfuehrer: 'GER' } }))).not.toContain('fraktion-ohne')
+})
+
+test('unbenutzte namenlose Eigenschaft blockiert nicht (Review C2)', () => {
+  const [p] = fuegeEigenschaftHinzu(gueltig())
+  expect(regeln(p)).not.toContain('eigenschaft-name')
+  const [q, e] = fuegeEigenschaftHinzu(gueltig())
+  expect(regeln(aendereEigenschaft(q, e, { boni: [{ art: 'frei', modifier: 'Kaputt Name', wert: 1 }] }))).not.toContain('bonus-name')
+})
+
+test('Fraktionsfuehrer aus dem Spiel zaehlen fuer fraktion-doppelt (Review I3)', () => {
+  let [p, ger] = fuegeLandHinzu(gueltig(), sd, 'geaendert', 'GER')
+  const l = p.laender.find(x => x.id === ger)
+  const gruendet = aendereLand(p, sd, ger, { diplomatie: { ...l.diplomatie, fraktion: { art: 'gruenden', name: 'Neu', mitglieder: [] } }, aendern: { ...l.aendern, diplomatie: true } })
+  expect(regeln(gruendet)).toContain('fraktion-doppelt')
+  expect(regeln(dipl(gueltig(), { fraktion: { art: 'gruenden', name: 'Bund', mitglieder: ['GER'] } }))).toContain('fraktion-doppelt')
 })

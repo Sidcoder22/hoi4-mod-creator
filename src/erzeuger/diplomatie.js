@@ -20,7 +20,7 @@ const VERTRAG = {
 function marionettenEintrag(ziel) {
   return (x) => {
     const k = x.schluessel.toLowerCase()
-    if (k === 'puppet') return x.wert.typ !== 'block' && x.wert.text === ziel
+    if (k === 'puppet') return x.wert.typ === 'block' ? wertText(finde(x.wert.inhalt, 'target')?.wert) === ziel : x.wert.text === ziel
     if (k === 'set_autonomy' && x.wert.typ === 'block') return wertText(finde(x.wert.inhalt, 'target')?.wert) === ziel
     return false
   }
@@ -29,6 +29,8 @@ function marionettenEintrag(ziel) {
 export function erzeugeDiplomatie(k) {
   const { projekt, spieldaten, modid } = k
   const meinungsWerte = new Set()
+  // Beitritte kommen erst nach allen Gruendungen, sonst steht add_to_faction vor create_faction
+  const beitritte = []
   for (const land of projekt.laender) {
     if (land.art === 'geaendert' && !land.aendern?.diplomatie) continue
     const d = land.diplomatie
@@ -67,13 +69,15 @@ export function erzeugeDiplomatie(k) {
       zeilen.push(`create_faction = ${kennung}`)
       for (const mitglied of d.fraktion.mitglieder ?? []) zeilen.push(`add_to_faction = ${mitglied}`)
     } else if (d.fraktion?.art === 'beitreten' && d.fraktion.anfuehrer) {
-      k.startZeilen(d.fraktion.anfuehrer, [`add_to_faction = ${tag}`])
+      beitritte.push([d.fraktion.anfuehrer, `add_to_faction = ${tag}`])
     }
 
     for (const z of d.kriegsziele ?? []) zeilen.push(`create_wargoal = { type = ${z.art} target = ${z.tag} }`)
 
     if (zeilen.length) k.startZeilen(tag, zeilen)
   }
+
+  for (const [anfuehrer, zeile] of beitritte) k.startZeilen(anfuehrer, [zeile])
 
   if (meinungsWerte.size) {
     const eintraege = [...meinungsWerte].sort((a, b) => a - b).map(wert => {

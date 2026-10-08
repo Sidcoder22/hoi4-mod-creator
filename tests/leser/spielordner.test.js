@@ -157,3 +157,12 @@ test('Autonomiestufen: Rueckfall ohne Dateien', async () => {
   const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
   expect(spieldaten.autonomieStufen.map(a => a.id)).toEqual(['autonomy_dominion', 'autonomy_colony', 'autonomy_puppet', 'autonomy_integrated_puppet'])
 })
+
+test('Marionetten in if/else und in Blockform werden gelesen (Review I4)', async () => {
+  const o = erstelleMiniSpielordner()
+  o['history/countries/GER - Germany.txt'] += 'if = {\n\tlimit = { has_dlc = "Together for Victory" }\n\tset_autonomy = { target = FRA autonomous_state = autonomy_dominion }\n}\nelse = {\n\tpuppet = FRA\n}\n'
+  o['history/countries/SWI - Switzerland.txt'] += 'puppet = { target = GER }\n'
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.laender.GER.marionetten).toEqual([{ tag: 'FRA', autonomie: 'autonomy_dominion', bedingt: true }])
+  expect(spieldaten.laender.SWI.marionetten).toEqual([{ tag: 'GER', autonomie: 'autonomy_puppet' }])
+})

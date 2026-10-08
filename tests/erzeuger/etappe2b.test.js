@@ -82,3 +82,9 @@ test('Spielgeister bei bestehenden Laendern und Rekruten im Anhang', () => {
   expect(v).toContain('add_ideas = { schweizer_neutralitaet }')
   expect(v).toContain('add_manpower = 50000')
 })
+
+test('kleine freie Werte bleiben genau (Review)', () => {
+  let p = projekt()
+  p = aendereGeist(p, p.ideen[0].id, { boni: [{ art: 'frei', modifier: 'monthly_population', wert: 0.0025 }] })
+  expect(text(erzeugeMod(p, sd).dateien, m + 'common/ideas/mein_reich_ideas.txt')).toContain('monthly_population = 0.0025')
+})

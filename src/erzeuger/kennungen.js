@@ -19,9 +19,10 @@ export function asciiDateiname(text) {
   return transliteriere(text).replace(/[^A-Za-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-/** Zahl mit hoechstens 3 Nachkommastellen, ohne Nullen am Ende. */
-export function zahl(x) {
-  const gerundet = Math.round(Number(x) * 1000) / 1000
+/** Zahl mit hoechstens `stellen` Nachkommastellen (Vorgabe 3), ohne Nullen am Ende. */
+export function zahl(x, stellen = 3) {
+  const faktor = 10 ** stellen
+  const gerundet = Math.round(Number(x) * faktor) / faktor
   return String(Object.is(gerundet, -0) ? 0 : gerundet)
 }
 

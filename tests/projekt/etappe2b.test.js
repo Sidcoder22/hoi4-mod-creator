@@ -73,3 +73,7 @@ test('eigene Eigenschaften', () => {
   expect(ohne.eigenschaften).toEqual([])
   expect(land(ohne, mre).anfuehrer.eigenschaften).toEqual([{ art: 'spiel', id: 'war_monger' }])
 })
+
+test('Spielwert ausserhalb des Bereichs wird freier Bonus (Review)', () => {
+  expect(bonusAusSpiel('stability_factor', -0.6)).toEqual({ art: 'frei', modifier: 'stability_factor', wert: -0.6 })
+})

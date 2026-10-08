@@ -64,7 +64,7 @@ export function ReiterDiplomatie({ land, z }) {
               {(sd.autonomieStufen ?? []).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
             <span>
-              {ausSpiel.some(x => x.tag === m.tag) && <span class="leise">aus dem Spiel </span>}
+              {ausSpiel.some(x => x.tag === m.tag) && <span class="leise">aus dem Spiel{ausSpiel.find(x => x.tag === m.tag)?.bedingt ? ' (nur unter Bedingungen, z. B. mit DLC)' : ''} </span>}
               <button class="knopf klein leise" data-test={`marionette-${i}-weg`} onClick={() => mar.weg(i)}>{ausSpiel.some(x => x.tag === m.tag) ? 'Freilassen' : 'Entfernen'}</button>
             </span>
           </div>
@@ -98,6 +98,7 @@ export function ReiterDiplomatie({ land, z }) {
       <div class="karte">
         <h3>Fraktion</h3>
         <p class="leise">Ein Bündnis zu Spielbeginn: selbst gründen oder einer bestehenden Fraktion beitreten.</p>
+        {sd.laender[land.tag]?.fraktion && <p class="leise" data-test="fraktion-im-spiel">Im Spiel leitet dieses Land schon eine Fraktion ({sd.laender[land.tag].fraktion}). Sie bleibt bestehen; eine zweite Fraktion ist nicht möglich.</p>}
         <div class="formular">
           <label class="feld">
             <span class="feld-titel">Fraktion</span>

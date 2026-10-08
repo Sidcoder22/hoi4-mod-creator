@@ -37,7 +37,7 @@ export function erzeugeIdeen(k) {
     const modifier = []
     for (const bonus of geist.boni || []) {
       const name = bonusModifier(bonus)
-      if (name) modifier.push(eintrag(name, wort(zahl(bonusWertImSpiel(bonus)))))
+      if (name) modifier.push(eintrag(name, wort(zahl(bonusWertImSpiel(bonus), 6))))
     }
     ideen.push(eintrag(kennung, block([
       eintrag('picture', wort(bild)),

@@ -185,6 +185,8 @@ export function pruefeProjekt(p, sd) {
   const nutzerVon = (eigId) => p.laender.find(l => (l.anfuehrer?.eigenschaften ?? []).some(x => x.art === 'eigen' && x.id === eigId))
   for (const eig of p.eigenschaften ?? []) {
     const nutzer = nutzerVon(eig.id)
+    // Unbenutzte Eigenschaften kommen nicht in die Mod und duerfen das Speichern nicht blockieren
+    if (!nutzer) continue
     const ziel = nutzer ? { bereich: 'land', id: nutzer.id, reiter: 'anfuehrer' } : { bereich: 'land' }
     if (!String(eig.name || '').trim()) fehler('eigenschaft-name', 'Eine eigene Anführer-Eigenschaft braucht einen Namen.', ziel)
     pruefeBoni(eig.boni, `Eigenschaft «${eig.name || 'ohne Namen'}»`, ziel)
@@ -208,6 +210,12 @@ export function pruefeProjekt(p, sd) {
     if (l.diplomatie.fraktion?.art === 'gruenden') fraktionen.add(l.tag)
   }
   const mitgliedschaften = new Map()
+  const mitglied = (t, l) => {
+    if (!mitgliedschaften.has(t)) mitgliedschaften.set(t, [])
+    mitgliedschaften.get(t).push(l)
+  }
+  // Wer im Spiel eine Fraktion leitet, ist schon in einer Fraktion
+  for (const spiel of Object.values(sd.laender)) if (spiel.fraktion) mitglied(spiel.tag, null)
   for (const l of p.laender) {
     const anzeige = `«${landName(l.tag, p, sd)}»`
     const ziel = (reiter) => ({ bereich: 'land', id: l.id, reiter })
@@ -246,18 +254,17 @@ export function pruefeProjekt(p, sd) {
     doppelt(d.vertraege, x => `${x.art}:${x.tag}`, 'Der Vertrag')
     doppelt(d.kriegsziele, x => x.tag, 'Das Kriegsziel')
     if (d.fraktion?.art === 'gruenden') {
+      mitglied(l.tag, l)
       for (const t of d.fraktion.mitglieder ?? []) {
         pruefeZiel(t, 'Ein Fraktionsmitglied')
-        if (!mitgliedschaften.has(t)) mitgliedschaften.set(t, [])
-        mitgliedschaften.get(t).push(l)
+        mitglied(t, l)
       }
     } else if (d.fraktion?.art === 'beitreten') {
       pruefeZiel(d.fraktion.anfuehrer, 'Der Fraktionsbeitritt')
       if (d.fraktion.anfuehrer && !fraktionen.has(d.fraktion.anfuehrer)) {
         fehler('fraktion-ohne', `${anzeige} möchte der Fraktion von ${landName(d.fraktion.anfuehrer, p, sd)} beitreten, aber dieses Land hat zu Spielbeginn keine Fraktion.`, ziel('diplomatie'))
       }
-      if (!mitgliedschaften.has(l.tag)) mitgliedschaften.set(l.tag, [])
-      mitgliedschaften.get(l.tag).push(l)
+      mitglied(l.tag, l)
     }
   }
   for (const [marionette, herren] of oberherren) {
@@ -267,7 +274,11 @@ export function pruefeProjekt(p, sd) {
       projektLand ? { bereich: 'land', id: projektLand.id, reiter: 'diplomatie' } : { bereich: 'land' })
   }
   for (const [t, laender] of mitgliedschaften) {
-    if (laender.length > 1) fehler('fraktion-doppelt', `${landName(t, p, sd)} wäre Mitglied in mehreren Fraktionen.`, { bereich: 'land', id: laender[1].id, reiter: 'diplomatie' })
+    if (laender.length < 2) continue
+    const projektLand = laender.find(Boolean)
+    const imSpiel = sd.laender[t]?.fraktion ? ` (im Spiel leitet ${landName(t, p, sd)} bereits eine Fraktion)` : ''
+    fehler('fraktion-doppelt', `${landName(t, p, sd)} wäre Mitglied in mehreren Fraktionen${imSpiel}.`,
+      projektLand ? { bereich: 'land', id: projektLand.id, reiter: 'diplomatie' } : { bereich: 'land' })
   }
 
   // Hinweise zur Mod

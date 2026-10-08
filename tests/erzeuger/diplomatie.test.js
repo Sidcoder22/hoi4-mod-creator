@@ -75,3 +75,40 @@ test('negative Meinung', () => {
   expect(text(dateien, m + 'common/opinion_modifiers/mein_reich_meinungen.txt')).toContain('mein_reich_meinung_m30 = {\n\t\tvalue = -30')
   expect(text(dateien, m + 'history/countries/MRE - Mein Reich.txt')).not.toContain('GER = { add_opinion_modifier')
 })
+
+test('Beitritt wird nach der Gruendung geschrieben, auch wenn das beitretende Land zuerst kommt (Review C1)', () => {
+  let p = testprojekt(sd)
+  ;[p] = fuegeLandHinzu(p, sd, 'geaendert', 'SWI')
+  ;[p] = fuegeLandHinzu(p, sd, 'geaendert', 'FRA')
+  p = mitDiplomatie(p, 'SWI', { fraktion: { art: 'beitreten', anfuehrer: 'FRA' } })
+  p = mitDiplomatie(p, 'FRA', { fraktion: { art: 'gruenden', name: 'Westbund', mitglieder: [] } })
+  const fra = text(erzeugeMod(p, sd).dateien, m + 'history/countries/FRA - France.txt')
+  expect(fra.indexOf('create_faction')).toBeGreaterThan(-1)
+  expect(fra.indexOf('add_to_faction = SWI')).toBeGreaterThan(fra.indexOf('create_faction'))
+  let q = testprojekt(sd)
+  ;[q] = fuegeLandHinzu(q, sd, 'geaendert', 'SWI')
+  q = { ...q, laender: [q.laender[1], q.laender[0]] }
+  q = mitDiplomatie(q, 'SWI', { fraktion: { art: 'beitreten', anfuehrer: 'MRE' } })
+  q = mitDiplomatie(q, 'MRE', { fraktion: { art: 'gruenden', name: 'Alpenbund', mitglieder: [] } })
+  const mre = text(erzeugeMod(q, sd).dateien, m + 'history/countries/MRE - Mein Reich.txt')
+  expect(mre.indexOf('add_to_faction = SWI')).toBeGreaterThan(mre.indexOf('create_faction'))
+})
+
+test('Freilassen entfernt auch Marionetten in if/else-Bloecken (Review I4)', async () => {
+  const { erstelleMiniSpielordner } = await import('../../src/selbsttest/mini-spielordner.js')
+  const { dateiquelleAusObjekt } = await import('../../src/leser/dateiquelle.js')
+  const { leseSpielordner } = await import('../../src/leser/spielordner.js')
+  const o = erstelleMiniSpielordner()
+  o['history/countries/GER - Germany.txt'] += 'if = {\n\tlimit = { has_dlc = "Together for Victory" }\n\tset_autonomy = { target = FRA autonomous_state = autonomy_dominion }\n}\nelse = {\n\tpuppet = FRA\n}\n'
+  const sd2 = (await leseSpielordner(dateiquelleAusObjekt(o))).spieldaten
+  let [p, ger] = fuegeLandHinzu(testprojekt(sd2), sd2, 'geaendert', 'GER')
+  const l = p.laender.find(x => x.id === ger)
+  expect(l.diplomatie.marionetten.map(x => x.tag)).toEqual(['FRA'])
+  p = aendereLand(p, sd2, ger, { diplomatie: { ...l.diplomatie, marionetten: [] }, aendern: { ...l.aendern, diplomatie: true } })
+  const { dateien, fehler } = erzeugeMod(p, sd2)
+  expect(fehler).toEqual([])
+  const v = text(dateien, m + 'history/countries/GER - Germany.txt')
+  expect(v).not.toContain('target = FRA')
+  expect(v).not.toContain('puppet = FRA')
+  expect(v).toContain('has_dlc')
+})

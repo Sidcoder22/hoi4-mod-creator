@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks'
 import { aktionen } from '../zustand.js'
 import { aendereFeld } from './gemeinsam.js'
 import { aendereLand } from '../../projekt/aenderungen.js'
-import { fuegeEigenschaftHinzu, aendereEigenschaft } from '../../projekt/eigenschaften.js'
+import { fuegeEigenschaftHinzu, aendereEigenschaft, entferneEigenschaft } from '../../projekt/eigenschaften.js'
 import { TextFeld } from '../felder.jsx'
 import { BonusEditor, bonusText } from '../bonus-editor.jsx'
 
@@ -25,6 +25,10 @@ function EigeneBearbeiten({ eig, sd, onFertig }) {
       <BonusEditor boni={eig.boni} spieldaten={sd} test="eigenschaft-bonus" onAendere={(boni) => setze({ boni }, 'boni')} />
       <div class="knopfreihe">
         <button class="knopf haupt" data-test="eigenschaft-fertig" onClick={onFertig}>Fertig</button>
+        <button class="knopf leise gefahr" data-test="eigenschaft-loeschen"
+          onClick={() => { if (confirm(`Eigenschaft «${eig.name || 'ohne Namen'}» bei allen Anführern entfernen und löschen?`)) { aktionen.aendere((p) => entferneEigenschaft(p, eig.id)); onFertig() } }}>
+          Eigenschaft löschen
+        </button>
       </div>
     </div>
   )

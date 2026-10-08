@@ -263,23 +263,33 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     land.hauptstadt = Number.isInteger(hauptstadt) && hauptstadt > 0 ? hauptstadt : null
     const politik = finde(e, 'set_politics')
     land.regierung = politik && politik.wert.typ === 'block' ? wertText(finde(politik.wert.inhalt, 'ruling_party')?.wert) || null : null
-    for (const x of e) {
-      if (!x.schluessel) continue
-      const k = x.schluessel.toLowerCase()
-      if (k === 'puppet' && x.wert.typ !== 'block') {
-        land.marionetten = land.marionetten.filter(m => m.tag !== x.wert.text)
-        land.marionetten.push({ tag: x.wert.text, autonomie: 'autonomy_puppet' })
-      } else if (k === 'set_autonomy' && x.wert.typ === 'block') {
-        const ziel = wertText(finde(x.wert.inhalt, 'target')?.wert)
-        const stufe = wertText(finde(x.wert.inhalt, 'autonomous_state')?.wert) || wertText(finde(x.wert.inhalt, 'autonomy_state')?.wert)
-        if (ziel && stufe) {
-          land.marionetten = land.marionetten.filter(m => m.tag !== ziel)
-          land.marionetten.push({ tag: ziel, autonomie: stufe })
+    // Marionetten und Fraktion: oberste Ebene und bedingte Bloecke (if/else_if/else), keine Datumsbloecke
+    const merkeMarionette = (ziel, stufe, bedingt) => {
+      const alt = land.marionetten.find(m => m.tag === ziel)
+      land.marionetten = land.marionetten.filter(m => m.tag !== ziel)
+      const eintrag = { tag: ziel, autonomie: alt && stufe === 'autonomy_puppet' ? alt.autonomie : stufe }
+      if (bedingt || alt?.bedingt) eintrag.bedingt = true
+      land.marionetten.push(eintrag)
+    }
+    const durchsuche = (inhalt, bedingt) => {
+      for (const x of inhalt) {
+        if (!x.schluessel) continue
+        const k = x.schluessel.toLowerCase()
+        if (k === 'puppet') {
+          const ziel = x.wert.typ === 'block' ? wertText(finde(x.wert.inhalt, 'target')?.wert) : x.wert.text
+          if (ziel) merkeMarionette(ziel, 'autonomy_puppet', bedingt)
+        } else if (k === 'set_autonomy' && x.wert.typ === 'block') {
+          const ziel = wertText(finde(x.wert.inhalt, 'target')?.wert)
+          const stufe = wertText(finde(x.wert.inhalt, 'autonomous_state')?.wert) || wertText(finde(x.wert.inhalt, 'autonomy_state')?.wert)
+          if (ziel && stufe) merkeMarionette(ziel, stufe, bedingt)
+        } else if (k === 'create_faction' && x.wert.typ !== 'block') {
+          land.fraktion = x.wert.text
+        } else if (['if', 'else_if', 'else'].includes(k) && x.wert.typ === 'block') {
+          durchsuche(x.wert.inhalt, true)
         }
-      } else if (k === 'create_faction' && x.wert.typ !== 'block') {
-        land.fraktion = x.wert.text
       }
     }
+    durchsuche(e, false)
     for (const r of findeAlle(e, 'recruit_character')) {
       const c = charaktere[wertText(r.wert)]
       if (c && c.ideologie && gruppeVon.get(c.ideologie) === land.regierung) {

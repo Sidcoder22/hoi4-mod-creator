@@ -15,7 +15,7 @@ export function erzeugeEigenschaften(k) {
     k.sprache.setze(kennung, eig.name)
     k.sprache.setze(`${kennung}_desc`, eig.beschreibung || '')
     k.braucheSprache(kennung)
-    const boni = (eig.boni ?? []).map(b => [bonusModifier(b), bonusWertImSpiel(b)]).filter(([m]) => m).map(([m, w]) => e(m, wort(zahl(w))))
+    const boni = (eig.boni ?? []).map(b => [bonusModifier(b), bonusWertImSpiel(b)]).filter(([m]) => m).map(([m, w]) => e(m, wort(zahl(w, 6))))
     return e(kennung, block([e('random', wort('no')), ...boni]))
   })
   k.schreibe(modPfad(modid, `common/country_leader/${modid}_eigenschaften.txt`), schreibeParadox([e('leader_traits', block(eintraege))]))

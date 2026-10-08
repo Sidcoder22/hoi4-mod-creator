@@ -35,7 +35,10 @@ export function bonusModifier(bonus) {
 export function bonusAusSpiel(modifier, wert) {
   const info = BONI.find(b => b.modifier === modifier)
   if (!info) return { art: 'frei', modifier, wert }
-  return { art: info.art, wert: info.einheit === 'prozent' ? Math.round(wert * 100 * 1000) / 1000 : wert }
+  const umgerechnet = info.einheit === 'prozent' ? Math.round(wert * 100 * 1000) / 1000 : wert
+  // Ausserhalb des Bereichs der festen Liste: als freier Bonus uebernehmen, damit die Kopie gueltig bleibt
+  if (umgerechnet < info.min || umgerechnet > info.max) return { art: 'frei', modifier, wert }
+  return { art: info.art, wert: umgerechnet }
 }
 
 /** Wert, wie er in die Spieldatei kommt (Prozent geteilt durch 100; frei bleibt unveraendert). */

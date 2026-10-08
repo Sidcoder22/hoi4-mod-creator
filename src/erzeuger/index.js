@@ -133,8 +133,12 @@ export function erzeugeMod(projekt, spieldaten) {
     let basis = spieldaten.originaltexte[datei]
     const pruefungen = entfernen.get(tag)
     if (pruefungen?.length) {
-      const { eintraege } = parseParadox(basis)
-      basis = schreibeParadox(eintraege.filter(x => !(x.schluessel && pruefungen.some(f => f(x)))))
+      // Oberste Ebene und bedingte Bloecke (if/else_if/else), aber keine Datumsbloecke
+      const filtere = (inhalt) => inhalt
+        .filter(x => !(x.schluessel && pruefungen.some(f => f(x))))
+        .map(x => (x.schluessel && ['if', 'else_if', 'else'].includes(x.schluessel.toLowerCase()) && x.wert.typ === 'block'
+          ? { ...x, wert: { ...x.wert, inhalt: filtere(x.wert.inhalt) } } : x))
+      basis = schreibeParadox(filtere(parseParadox(basis).eintraege))
     }
     const zeilen = anhaenge.get(tag) ?? []
     kontext.schreibe(modPfad(modid, datei), zeilen.length ? verlaufMitAnhang(basis, zeilen, modid) : basis, { kopie: true })
