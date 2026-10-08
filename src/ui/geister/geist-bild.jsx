@@ -1,5 +1,6 @@
 import { SpielBild } from '../bild.jsx'
 import { projektBildUrl } from '../bilder.js'
+import { bonusText } from '../bonus-editor.jsx'
 
 /** Bild eines nationalen Geists (Spielbild oder eigenes Bild). */
 export function GeistBild({ geist, projekt, groesse = 48 }) {
@@ -11,11 +12,6 @@ export function GeistBild({ geist, projekt, groesse = 48 }) {
   return <span style={{ display: 'inline-block', ...stil }}><SpielBild schluessel={`idee:${geist.bild?.sprite}`} alt="" klasse="" /></span>
 }
 
-export function boniText(geist, BONI) {
-  return (geist.boni || []).map(b => {
-    const info = BONI.find(x => x.art === b.art)
-    if (!info) return ''
-    const vorzeichen = b.wert > 0 ? '+' : ''
-    return `${info.name} ${vorzeichen}${b.wert}${info.einheit === 'prozent' ? ' %' : ' pro Tag'}`
-  }).filter(Boolean).join(', ')
+export function boniText(geist, _boni, sd) {
+  return (geist.boni || []).map(b => bonusText(b, sd)).filter(Boolean).join(', ')
 }

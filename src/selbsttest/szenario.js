@@ -192,6 +192,47 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Geist aus dem Spiel kopieren',
+    async lauf(h) {
+      await h.klicke('nav-geister')
+      await h.klicke('geister-spiel')
+      await h.tippe('spielgeist-suche', 'Schweiz')
+      await h.klicke('kopieren-schweizer_neutralitaet')
+      await h.warte(async () => (await h.wert('geist-name')) === 'Kopie von Schweizer Neutralität', 3000, 'Kopie geöffnet')
+      h.pruefe((await h.wert('bonus-art-0')) === 'konsumgueter', 'Konsumgüter nicht übernommen')
+      await h.klicke('bonus-neu')
+      await h.waehle('bonus-art-2', 'frei')
+      await h.tippe('bonus-frei-2', 'industrial')
+      await h.klicke('bonus-frei-2-industrial_capacity_factory')
+      await h.tippe('bonus-wert-2', '10')
+      const kopie = zustand().projekt.ideen.find(g => g.name === 'Kopie von Schweizer Neutralität')
+      h.pruefe(JSON.stringify(kopie.boni[2]) === JSON.stringify({ art: 'frei', modifier: 'industrial_capacity_factory', wert: 0.1 }), 'Freier Bonus falsch: ' + JSON.stringify(kopie.boni[2]))
+    },
+  },
+  {
+    name: 'Spielgeist zuweisen',
+    async lauf(h) {
+      const mre = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      await h.klicke('nav-laender')
+      await h.klicke(`land-${mre.id}`)
+      await h.klicke('reiter-geister')
+      await h.tippe('land-spielgeist-suche', 'Industrie')
+      await h.klicke('land-spielgeist-hinzu-deutsche_industrie')
+      await h.element('land-spielgeist-deutsche_industrie')
+      h.pruefe(zustand().projekt.laender.find(l => l.tag === 'MRE').spielIdeen.includes('deutsche_industrie'), 'Spielgeist nicht zugewiesen')
+    },
+  },
+  {
+    name: 'Rekruten',
+    async lauf(h) {
+      await h.klicke('reiter-startwerte')
+      await h.tippe('start-rekruten', '200000')
+      await h.tippe('start-bevoelkerung', '50')
+      const sw = zustand().projekt.laender.find(l => l.tag === 'MRE').startwerte
+      h.pruefe(sw.rekruten === 200000 && sw.bevoelkerung === 50, 'Rekruten/Bevölkerung falsch: ' + JSON.stringify(sw))
+    },
+  },
+  {
     name: 'Schweiz ändern',
     async lauf(h) {
       const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
