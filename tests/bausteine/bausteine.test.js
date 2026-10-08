@@ -34,6 +34,8 @@ const WIRKUNGS_FAELLE = [
   ['erfahrung', { teilstreitkraft: 'navy_experience', menge: 25 }, 'navy_experience = 25\n'],
   ['geist_hinzu', { geist: geistId }, 'add_ideas = m_geist_1\n'],
   ['geist_weg', { geist: geistId }, 'remove_ideas = m_geist_1\n'],
+  ['spielgeist_hinzu', { spielgeist: 'deutsche_industrie' }, 'add_ideas = deutsche_industrie\n'],
+  ['spielgeist_weg', { spielgeist: 'deutsche_industrie' }, 'remove_ideas = deutsche_industrie\n'],
   ['gebaeude', { gebaeude: 'industrial_complex', anzahl: 2, wo: 'staat', staat: 1 },
     '1 = {\n\tadd_extra_state_shared_building_slots = 2\n\tadd_building_construction = {\n\t\ttype = industrial_complex\n\t\tlevel = 2\n\t\tinstant_build = yes\n\t}\n}\n'],
   ['gebaeude', { gebaeude: 'dockyard', anzahl: 1, wo: 'irgendwo' },
@@ -153,4 +155,9 @@ test('neue Bausteine haben Standardwerte', () => {
   expect(neueWirkung('bei_land').wirkungen).toEqual([])
   expect(neueBedingung('stabilitaet')).toMatchObject({ art: 'stabilitaet', nicht: false, werte: { vergleich: '>', prozent: 50 } })
   expect(neueWirkung('politische_macht').id).not.toBe(neueWirkung('politische_macht').id)
+})
+
+test('Geist aus dem Spiel: Pruefung und Klartext', () => {
+  expect(pruefeBausteine([w('spielgeist_hinzu', { spielgeist: 'gibtsnicht' })], kontext, 'A').length).toBe(1)
+  expect(satzText(WIRKUNGEN.find(d => d.art === 'spielgeist_hinzu'), { spielgeist: 'deutsche_industrie' }, kontext)).toBe('Geist «Deutsche Industrie» aus dem Spiel erhalten')
 })

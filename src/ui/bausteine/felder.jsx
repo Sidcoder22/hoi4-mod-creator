@@ -38,6 +38,9 @@ export function BausteinFeld({ feld, wert, onAendere, kontext, test }) {
     case 'geist':
       eingabe = auswahl(projekt.ideen.map(g => ({ wert: g.id, text: g.name || '(ohne Namen)' })), projekt.ideen.length ? '– Geist wählen –' : '– zuerst einen Geist anlegen –')
       break
+    case 'spielgeist':
+      eingabe = auswahl((sd.spielGeister ?? []).map(g => ({ wert: g.id, text: g.land ? `${g.name} (${g.land})` : g.name })), '– Geist aus dem Spiel wählen –')
+      break
     case 'fokus':
       eingabe = auswahl(alleFokusse(projekt).map(({ baum, fokus }) => ({ wert: fokus.id, text: `${fokus.name || '(ohne Namen)'} · ${baum.name}` })), '– Fokus wählen –')
       break

@@ -47,6 +47,11 @@ export const WIRKUNGEN = [
   { art: 'geist_weg', gruppe: 'Politik', name: 'Nationalen Geist entfernen', satz: 'Nationalen Geist «{geist}» entfernen',
     felder: [GEIST], erzeuge: (w, k) => [e('remove_ideas', wort(k.kennung.geist(w.geist)))] },
 
+  { art: 'spielgeist_hinzu', gruppe: 'Politik', name: 'Geist aus dem Spiel hinzufügen', satz: 'Geist «{spielgeist}» aus dem Spiel erhalten',
+    felder: [{ name: 'spielgeist', typ: 'spielgeist', label: 'Geist aus dem Spiel', standard: '' }], erzeuge: (w) => [e('add_ideas', wort(w.spielgeist))] },
+  { art: 'spielgeist_weg', gruppe: 'Politik', name: 'Geist aus dem Spiel entfernen', satz: 'Geist «{spielgeist}» aus dem Spiel entfernen',
+    felder: [{ name: 'spielgeist', typ: 'spielgeist', label: 'Geist aus dem Spiel', standard: '' }], erzeuge: (w) => [e('remove_ideas', wort(w.spielgeist))] },
+
   { art: 'rekruten', gruppe: 'Wirtschaft und Forschung', name: 'Rekruten', satz: '{menge} Rekruten erhalten',
     felder: [mengeFeld(10000, 0, 10000000)], erzeuge: (w) => [e('add_manpower', zahlWort(w.menge))] },
   { art: 'gebaeude', gruppe: 'Wirtschaft und Forschung', name: 'Gebäude bauen',

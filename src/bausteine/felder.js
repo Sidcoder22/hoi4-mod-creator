@@ -51,6 +51,9 @@ export function pruefeFeld(feld, wert, kontext) {
     case 'geist':
       if (leer) return 'Nationaler Geist fehlt'
       return kontext.projekt?.ideen?.some(g => g.id === wert) ? null : 'Der nationale Geist wurde gelöscht'
+    case 'spielgeist':
+      if (leer) return 'Geist aus dem Spiel fehlt'
+      return sd?.spielGeister?.some(g => g.id === wert) ? null : `Den Geist «${wert}» gibt es im eingelesenen Spiel nicht`
     case 'fokus':
       if (leer) return 'Fokus fehlt'
       return alleFokusse(kontext.projekt ?? {}).some(x => x.fokus.id === wert) ? null : 'Der Fokus wurde gelöscht'
@@ -86,6 +89,7 @@ export function feldAnzeige(feld, wert, kontext) {
     case 'land': return landName(wert, kontext.projekt ?? { laender: [] }, sd ?? { laender: {} })
     case 'staat': return sd?.staaten?.[wert]?.name ?? `Staat ${wert}`
     case 'geist': return kontext.projekt?.ideen?.find(g => g.id === wert)?.name || '(ohne Namen)'
+    case 'spielgeist': return sd?.spielGeister?.find(g => g.id === wert)?.name ?? wert
     case 'fokus': return alleFokusse(kontext.projekt ?? {}).find(x => x.fokus.id === wert)?.fokus.name || '(ohne Namen)'
     case 'ideologie': return sd?.ideologien?.find(g => g.id === wert)?.name ?? wert
     case 'kategorie': return sd?.technologieKategorien?.find(k => k.id === wert)?.name ?? wert
