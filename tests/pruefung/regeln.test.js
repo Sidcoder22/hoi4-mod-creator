@@ -157,3 +157,55 @@ test('Baum ohne Land nach Loeschen des Landes (Review Focus 5)', () => {
   const ohne = entferneLand(p, p.laender.find(l => l.tag === 'MRE').id)
   expect(regeln(ohne)).toContain('baum-land')
 })
+
+// ---- Etappe 2b ----
+import { fuegeEigenschaftHinzu, aendereEigenschaft } from '../../src/projekt/eigenschaften.js'
+
+const mre = (p) => p.laender.find(l => l.tag === 'MRE')
+const mitMre = (p, patch) => aendereLand(p, sd, mre(p).id, typeof patch === 'function' ? patch(mre(p)) : patch)
+const dipl = (p, d) => mitMre(p, (l) => ({ diplomatie: { ...l.diplomatie, ...d } }))
+
+test('Etappe 2b: gueltiges Projekt mit Diplomatie hat keine neuen Meldungen', () => {
+  let p = dipl(gueltig(), { marionetten: [{ tag: 'FRA', autonomie: 'autonomy_dominion' }], meinungen: [{ tag: 'FRA', wert: 50, gegenseitig: true }],
+    vertraege: [{ art: 'garantie', tag: 'FRA' }], fraktion: { art: 'gruenden', name: 'Bund', mitglieder: ['SWI'] }, kriegsziele: [{ tag: 'GER', art: 'annex_everything' }] })
+  p = mitMre(p, (l) => ({ spielIdeen: ['deutsche_industrie'], anfuehrer: { ...l.anfuehrer, eigenschaften: [{ art: 'spiel', id: 'war_monger' }] } }))
+  expect(regeln(p)).toEqual([])
+})
+
+const ETAPPE2B_FAELLE = [
+  ['bonus-name', () => aendereGeist(g, g.ideen[0].id, { boni: [{ art: 'frei', modifier: 'Consumer Goods', wert: 0.1 }] })],
+  ['bonus-unbekannt', () => aendereGeist(g, g.ideen[0].id, { boni: [{ art: 'frei', modifier: 'gibts_nicht_factor', wert: 0.1 }] })],
+  ['bonus-wert', () => aendereGeist(g, g.ideen[0].id, { boni: [{ art: 'stabilitaet', wert: 500 }] })],
+  ['spielgeist-fehlt', () => mitMre(g, { spielIdeen: ['gibtsnicht'] })],
+  ['eigenschaft-name', () => fuegeEigenschaftHinzu(g)[0]],
+  ['eigenschaft-fehlt', () => mitMre(g, (l) => ({ anfuehrer: { ...l.anfuehrer, eigenschaften: [{ art: 'spiel', id: 'gibtsnicht' }] } }))],
+  ['eigenschaft-fehlt', () => mitMre(g, (l) => ({ anfuehrer: { ...l.anfuehrer, eigenschaften: [{ art: 'eigen', id: 'weg' }] } }))],
+  ['diplomatie-ziel', () => dipl(g, { kriegsziele: [{ tag: 'XYZ', art: 'annex_everything' }] })],
+  ['diplomatie-ziel', () => dipl(g, { vertraege: [{ art: 'garantie', tag: 'MRE' }] })],
+  ['diplomatie-doppelt', () => dipl(g, { meinungen: [{ tag: 'FRA', wert: 50 }, { tag: 'FRA', wert: -20 }] })],
+  ['diplomatie-doppelt', () => dipl(g, { kriegsziele: [{ tag: 'GER', art: 'annex_everything' }, { tag: 'GER', art: 'topple_government' }] })],
+  // SWI ist im Spiel schon Dominion von FRA
+  ['marionette-doppelt', () => dipl(g, { marionetten: [{ tag: 'SWI', autonomie: 'autonomy_puppet' }] })],
+  ['fraktion-ohne', () => dipl(g, { fraktion: { art: 'beitreten', anfuehrer: 'FRA' } })],
+  ['fraktion-doppelt', () => {
+    let [p, fraId] = fuegeLandHinzu(dipl(g, { fraktion: { art: 'gruenden', name: 'A', mitglieder: ['SWI'] } }), sd, 'geaendert', 'FRA')
+    const fra = p.laender.find(l => l.id === fraId)
+    return aendereLand(p, sd, fraId, { diplomatie: { ...fra.diplomatie, fraktion: { art: 'gruenden', name: 'B', mitglieder: ['SWI'] } }, aendern: { ...fra.aendern, diplomatie: true } })
+  }],
+  ['diplomatie-ohne-staaten', () => {
+    let p = mitMre(g, (l) => ({ staaten: [...l.staaten, 1] }))
+    return dipl(p, { meinungen: [{ tag: 'GER', wert: 10 }] })
+  }],
+]
+
+for (const [regel, erzeuge] of ETAPPE2B_FAELLE) {
+  test(`Etappe 2b Regel ${regel}`, () => {
+    const m = pruefeProjekt(erzeuge(), sd).filter(x => x.regel === regel)
+    expect(m.length).toBeGreaterThan(0)
+    expect(m[0].schwere).toBe(['bonus-unbekannt', 'diplomatie-ohne-staaten'].includes(regel) ? 'hinweis' : 'fehler')
+  })
+}
+
+test('Beitreten zu einer Fraktion aus dem Spiel ist erlaubt', () => {
+  expect(regeln(dipl(gueltig(), { fraktion: { art: 'beitreten', anfuehrer: 'GER' } }))).not.toContain('fraktion-ohne')
+})

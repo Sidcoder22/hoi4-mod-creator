@@ -5,6 +5,7 @@ import { effektiveBesitzer, landName, verlaufsWerte } from '../projekt/abgeleite
 import { fuegeLandHinzu, aendereLand } from '../projekt/aenderungen.js'
 import { fokusZyklus } from '../projekt/fokus.js'
 import { pruefeBausteine } from '../bausteine/erzeugen.js'
+import { BONI } from '../projekt/boni.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
 
@@ -164,6 +165,109 @@ export function pruefeProjekt(p, sd) {
       const namen = kreis.map(id => baum.fokusse.find(f => f.id === id)?.name || 'ohne Namen').join(' → ')
       fehler('fokus-kreis', `Die Voraussetzungen in ${bname} drehen sich im Kreis: ${namen}.`, { bereich: 'fokus', id: baum.id, fokus: kreis[0] })
     }
+  }
+
+  // Etappe 2b: Boni, Spielgeister, Eigenschaften, Diplomatie
+  const bekannteModifikatoren = new Set((sd.modifikatoren ?? []).map(m => m.id))
+  const pruefeBoni = (boni, wer, ziel) => {
+    for (const b of boni ?? []) {
+      if (b.art === 'frei') {
+        if (!/^[a-z0-9_]+$/.test(b.modifier ?? '')) fehler('bonus-name', `${wer}: Der Bonus «${b.modifier ?? ''}» hat einen ungültigen Namen. Erlaubt sind nur Kleinbuchstaben, Ziffern und _.`, ziel)
+        else if (!bekannteModifikatoren.has(b.modifier)) hinweis('bonus-unbekannt', `${wer}: Den Bonus «${b.modifier}» kennt das eingelesene Spiel nicht. Prüfe die Schreibweise.`, ziel)
+        continue
+      }
+      const info = BONI.find(x => x.art === b.art)
+      const w = Number(b.wert)
+      if (info && (!Number.isFinite(w) || w < info.min || w > info.max)) fehler('bonus-wert', `${wer}: «${info.name}» muss zwischen ${info.min} und ${info.max} liegen.`, ziel)
+    }
+  }
+  for (const geist of p.ideen) pruefeBoni(geist.boni, `Nationaler Geist «${geist.name || 'ohne Namen'}»`, { bereich: 'geist', id: geist.id })
+  const nutzerVon = (eigId) => p.laender.find(l => (l.anfuehrer?.eigenschaften ?? []).some(x => x.art === 'eigen' && x.id === eigId))
+  for (const eig of p.eigenschaften ?? []) {
+    const nutzer = nutzerVon(eig.id)
+    const ziel = nutzer ? { bereich: 'land', id: nutzer.id, reiter: 'anfuehrer' } : { bereich: 'land' }
+    if (!String(eig.name || '').trim()) fehler('eigenschaft-name', 'Eine eigene Anführer-Eigenschaft braucht einen Namen.', ziel)
+    pruefeBoni(eig.boni, `Eigenschaft «${eig.name || 'ohne Namen'}»`, ziel)
+  }
+  const spielGeistIds = new Set((sd.spielGeister ?? []).map(x => x.id))
+  const spielEigenschaften = new Set((sd.anfuehrerEigenschaften ?? []).map(x => x.id))
+  const eigeneEigenschaften = new Set((p.eigenschaften ?? []).map(x => x.id))
+  const oberherren = new Map()
+  const merkeOberherr = (marionette, herr) => {
+    if (!oberherren.has(marionette)) oberherren.set(marionette, new Set())
+    oberherren.get(marionette).add(herr)
+  }
+  const aktiveDiplomatie = new Map(p.laender.filter(l => l.diplomatie && (l.art === 'neu' || l.aendern?.diplomatie)).map(l => [l.tag, l]))
+  for (const spiel of Object.values(sd.laender)) {
+    if (aktiveDiplomatie.has(spiel.tag)) continue
+    for (const m of spiel.marionetten ?? []) merkeOberherr(m.tag, spiel.tag)
+  }
+  const fraktionen = new Set(Object.values(sd.laender).filter(x => x.fraktion).map(x => x.tag))
+  for (const l of aktiveDiplomatie.values()) {
+    for (const m of l.diplomatie.marionetten ?? sd.laender[l.tag]?.marionetten ?? []) merkeOberherr(m.tag, l.tag)
+    if (l.diplomatie.fraktion?.art === 'gruenden') fraktionen.add(l.tag)
+  }
+  const mitgliedschaften = new Map()
+  for (const l of p.laender) {
+    const anzeige = `«${landName(l.tag, p, sd)}»`
+    const ziel = (reiter) => ({ bereich: 'land', id: l.id, reiter })
+    if (l.art === 'neu' || l.aendern?.geister) {
+      for (const id of l.spielIdeen ?? []) if (!spielGeistIds.has(id)) fehler('spielgeist-fehlt', `${anzeige} hat den Geist «${id}» aus dem Spiel, den es im eingelesenen Spiel nicht gibt.`, ziel('geister'))
+    }
+    if (l.art === 'neu' || l.aendern?.anfuehrer) {
+      for (const x of l.anfuehrer?.eigenschaften ?? []) {
+        const da = x.art === 'spiel' ? spielEigenschaften.has(x.id) : eigeneEigenschaften.has(x.id)
+        if (!da) fehler('eigenschaft-fehlt', `Der Anführer von ${anzeige} hat eine Eigenschaft, die es nicht mehr gibt.`, ziel('anfuehrer'))
+      }
+    }
+    if (!aktiveDiplomatie.has(l.tag) || aktiveDiplomatie.get(l.tag) !== l) continue
+    const d = l.diplomatie
+    const pruefeZiel = (zielTag, was) => {
+      if (!zielTag || !tags.has(zielTag) || zielTag === l.tag) {
+        fehler('diplomatie-ziel', `${anzeige}: ${was} zielt auf ${zielTag === l.tag ? 'das Land selbst' : `ein unbekanntes Land «${zielTag ?? ''}»`}.`, ziel('diplomatie'))
+        return
+      }
+      if (![...besitzer.values()].includes(zielTag)) hinweis('diplomatie-ohne-staaten', `${anzeige}: ${landName(zielTag, p, sd)} besitzt zum Start keine Staaten.`, ziel('diplomatie'))
+    }
+    const doppelt = (liste, schluessel, was) => {
+      const gesehen = new Set()
+      for (const x of liste ?? []) {
+        const k = schluessel(x)
+        if (gesehen.has(k)) fehler('diplomatie-doppelt', `${anzeige}: ${was} mit ${landName(x.tag, p, sd)} steht doppelt in der Liste.`, ziel('diplomatie'))
+        gesehen.add(k)
+      }
+    }
+    for (const m of d.marionetten ?? []) pruefeZiel(m.tag, 'Eine Marionette')
+    for (const m of d.meinungen ?? []) pruefeZiel(m.tag, 'Eine Meinung')
+    for (const v of d.vertraege ?? []) pruefeZiel(v.tag, 'Ein Vertrag')
+    for (const z of d.kriegsziele ?? []) pruefeZiel(z.tag, 'Ein Kriegsziel')
+    doppelt(d.marionetten, x => x.tag, 'Die Marionette')
+    doppelt(d.meinungen, x => x.tag, 'Die Meinung')
+    doppelt(d.vertraege, x => `${x.art}:${x.tag}`, 'Der Vertrag')
+    doppelt(d.kriegsziele, x => x.tag, 'Das Kriegsziel')
+    if (d.fraktion?.art === 'gruenden') {
+      for (const t of d.fraktion.mitglieder ?? []) {
+        pruefeZiel(t, 'Ein Fraktionsmitglied')
+        if (!mitgliedschaften.has(t)) mitgliedschaften.set(t, [])
+        mitgliedschaften.get(t).push(l)
+      }
+    } else if (d.fraktion?.art === 'beitreten') {
+      pruefeZiel(d.fraktion.anfuehrer, 'Der Fraktionsbeitritt')
+      if (d.fraktion.anfuehrer && !fraktionen.has(d.fraktion.anfuehrer)) {
+        fehler('fraktion-ohne', `${anzeige} möchte der Fraktion von ${landName(d.fraktion.anfuehrer, p, sd)} beitreten, aber dieses Land hat zu Spielbeginn keine Fraktion.`, ziel('diplomatie'))
+      }
+      if (!mitgliedschaften.has(l.tag)) mitgliedschaften.set(l.tag, [])
+      mitgliedschaften.get(l.tag).push(l)
+    }
+  }
+  for (const [marionette, herren] of oberherren) {
+    if (herren.size < 2) continue
+    const projektLand = [...herren].map(h => aktiveDiplomatie.get(h)).find(Boolean)
+    fehler('marionette-doppelt', `${landName(marionette, p, sd)} wäre Marionette von ${[...herren].map(h => landName(h, p, sd)).join(' und ')}.`,
+      projektLand ? { bereich: 'land', id: projektLand.id, reiter: 'diplomatie' } : { bereich: 'land' })
+  }
+  for (const [t, laender] of mitgliedschaften) {
+    if (laender.length > 1) fehler('fraktion-doppelt', `${landName(t, p, sd)} wäre Mitglied in mehreren Fraktionen.`, { bereich: 'land', id: laender[1].id, reiter: 'diplomatie' })
   }
 
   // Hinweise zur Mod
