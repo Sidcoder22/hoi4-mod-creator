@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 2
+export const LESER_VERSION = 3
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -18,6 +18,12 @@ export class SpielordnerFehler extends Error {
     this.name = 'SpielordnerFehler'
   }
 }
+
+const STANDARD_KATEGORIEN = [
+  ['industry', 'Industrie'], ['electronics', 'Elektronik'], ['infantry_weapons', 'Infanteriewaffen'], ['artillery', 'Artillerie'],
+  ['armor', 'Panzer'], ['land_doctrine', 'Heeresdoktrin'], ['naval_doctrine', 'Marinedoktrin'], ['air_doctrine', 'Luftwaffendoktrin'],
+  ['naval_equipment', 'Marineausrüstung'], ['air_equipment', 'Luftwaffenausrüstung'],
+]
 
 const FALSCHER_ORDNER = 'Das ist nicht der Hearts-of-Iron-IV-Spielordner. Bitte wähle den Ordner «Hearts of Iron IV» ' +
   '(in Steam: Rechtsklick auf das Spiel → Verwalten → Lokale Dateien durchsuchen).'
@@ -347,6 +353,36 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     }
   }
 
+  fortschritt(0.88, 'Fokus-Symbole werden gelesen …')
+  const fokusSymbole = Object.keys(sprites).filter(n => n.startsWith('GFX_goal_') && !/_shine$/i.test(n)).sort()
+  const fokusGroessen = []
+  let fokusSymboleGelesen = 0
+  for (const sprite of fokusSymbole) {
+    const pfad = sprites[sprite]
+    if (!quelle.hat(pfad)) continue
+    try {
+      const bild = dekodiereBild(pfad, await quelle.bytes(pfad))
+      if (!bild) continue
+      fokusGroessen.push([bild.breite, bild.hoehe])
+      bilder.set(`fokus:${sprite}`, await kodiere(bild.rgba, bild.breite, bild.hoehe))
+      fokusSymboleGelesen++
+    } catch (e) {
+      warnungen.push(`${pfad}: ${e.message}`)
+    }
+  }
+
+  // Technologie-Kategorien fuer Forschungsboni
+  const kategorien = []
+  for (const pfad of imOrdner('common/technology_tags/', '.txt')) {
+    const e = await leseSkript(pfad)
+    const block = finde(e, 'technology_categories')
+    if (!block || block.wert.typ !== 'block') continue
+    for (const x of block.wert.inhalt) if (!x.schluessel && x.typ === 'wort' && !kategorien.includes(x.text)) kategorien.push(x.text)
+  }
+  const standardNamen = new Map(STANDARD_KATEGORIEN)
+  const technologieKategorien = (kategorien.length ? kategorien : STANDARD_KATEGORIEN.map(([id]) => id))
+    .map(id => ({ id, name: text(id) ?? standardNamen.get(id) ?? id }))
+
   fortschritt(0.93, 'Porträts werden gelesen …')
   const portraets = []
   const portraetGroessen = []
@@ -364,11 +400,12 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
 
   const spieldaten = {
     leserVersion: LESER_VERSION, version, supportedVersion,
-    laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets,
+    laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
       portraet: haeufigsteGroesse(portraetGroessen, [156, 210]),
+      fokus: haeufigsteGroesse(fokusGroessen, [94, 86]),
     },
     originaltexte,
     bericht: {
@@ -377,6 +414,8 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       flaggen: flaggenBericht,
       ideenBilder: ideenBilder.length,
       portraets: portraets.length,
+      fokusSymbole: fokusSymbole.length,
+      fokusSymboleGelesen,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

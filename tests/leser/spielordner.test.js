@@ -41,7 +41,7 @@ test('Provinzen, Bilder und Groessen', () => {
   expect(sd.sprites.GFX_idea_generic_army).toBe('gfx/interface/ideas/idea_generic_army.dds')
   expect(sd.ideenBilder).toEqual(['GFX_idea_generic_army', 'GFX_idea_generic_industry'])
   expect(sd.portraets).toEqual(['gfx/leaders/Europe/portrait_europe_generic_1.dds', 'gfx/leaders/Europe/portrait_europe_generic_2.dds'])
-  expect(sd.bildgroessen).toEqual({ flagge: [82, 52], idee: [64, 64], portraet: [156, 210] })
+  expect(sd.bildgroessen).toEqual({ flagge: [82, 52], idee: [64, 64], portraet: [156, 210], fokus: [94, 86] })
   expect(ergebnis.bilder.get('flagge:SWI')).toMatchObject({ breite: 82, hoehe: 52 })
   expect(ergebnis.bilder.get('idee:GFX_idea_generic_army')).toMatchObject({ breite: 64, hoehe: 64 })
   expect(ergebnis.bilder.get('portraet:gfx/leaders/Europe/portrait_europe_generic_1.dds')).toMatchObject({ breite: 156 })
@@ -100,4 +100,21 @@ test('Flaggen-Bericht nennt unlesbare Dateien mit Grund', async () => {
   const { spieldaten: sd } = await leseSpielordner(dateiquelleAusObjekt(o))
   expect(sd.bericht.flaggen.fehler).toEqual([{ datei: 'gfx/flags/FRA.tga', grund: 'TGA-Typ 1 wird nicht unterstuetzt' }])
   expect(sd.bericht.flaggen.ohneFlagge).toEqual(['FRA'])
+})
+
+test('Fokus-Symbole und Technologie-Kategorien (Etappe 2)', () => {
+  expect(LESER_VERSION).toBe(3)
+  expect(sd.fokusSymbole).toEqual(['GFX_goal_generic_army_doctrines', 'GFX_goal_generic_construct_civ_factory', 'GFX_goal_kaputt'])
+  expect(ergebnis.bilder.get('fokus:GFX_goal_generic_construct_civ_factory')).toMatchObject({ breite: 94, hoehe: 86 })
+  expect(ergebnis.bilder.has('fokus:GFX_goal_kaputt')).toBe(false)
+  expect(sd.technologieKategorien).toEqual([{ id: 'industry', name: 'Industrie' }, { id: 'electronics', name: 'Elektronik' }, { id: 'land_doctrine', name: 'Heeresdoktrin' }])
+  expect(sd.bildgroessen.fokus).toEqual([94, 86])
+  expect(sd.bericht).toMatchObject({ fokusSymbole: 3, fokusSymboleGelesen: 2 })
+})
+
+test('Technologie-Kategorien: Rueckfall ohne Datei', async () => {
+  const o = erstelleMiniSpielordner()
+  delete o['common/technology_tags/00_technology.txt']
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.technologieKategorien.map(k => k.id)).toEqual(['industry', 'electronics', 'infantry_weapons', 'artillery', 'armor', 'land_doctrine', 'naval_doctrine', 'air_doctrine', 'naval_equipment', 'air_equipment'])
 })

@@ -39,6 +39,20 @@ ${kerne.map(k => `		add_core_of = ${k}`).join('\n')}
 `
 }
 
+// DDS mit DX10-Kopf (z. B. BC7), den der Creator nicht lesen kann
+function ddsDx10() {
+  const b = new Uint8Array(128 + 20 + 64)
+  const dv = new DataView(b.buffer)
+  b.set([0x44, 0x44, 0x53, 0x20])
+  dv.setUint32(4, 124, true)
+  dv.setUint32(12, 4, true)
+  dv.setUint32(16, 4, true)
+  dv.setUint32(76, 32, true)
+  dv.setUint32(80, 0x4, true)
+  b.set([0x44, 0x58, 0x31, 0x30], 84)
+  return b
+}
+
 export function erstelleMiniSpielordner() {
   const o = {}
   o['launcher-settings.json'] = '{"gameId":"hoi4","version":"Seelöwe v1.15.4.0c7d","rawVersion":"v1.15.4.0c7d"}'
@@ -251,6 +265,35 @@ set_popularities = {
   o['gfx/leaders/Europe/portrait_europe_generic_1.dds'] = schreibeDds(einfarbig(156, 210, [180, 150, 120]), 156, 210)
   o['gfx/leaders/Europe/portrait_europe_generic_2.dds'] = schreibeDds(einfarbig(156, 210, [120, 150, 180]), 156, 210)
   o['gfx/leaders/GER/Portrait_Germany_Adolf_Hitler.dds'] = schreibeDds(einfarbig(156, 210, [90, 90, 90]), 156, 210)
+
+  // Fokus-Symbole (Etappe 2): Schreibweise wie im Spiel mit SpriteType
+  o['interface/goals.gfx'] = `spriteTypes = {
+	SpriteType = {
+		name = "GFX_goal_generic_construct_civ_factory"
+		texturefile = "gfx/interface/goals/goal_generic_construct_civ_factory.dds"
+	}
+	SpriteType = {
+		name = "GFX_goal_generic_army_doctrines"
+		texturefile = "gfx/interface/goals/goal_generic_army_doctrines.dds"
+	}
+	SpriteType = {
+		name = "GFX_goal_kaputt"
+		texturefile = "gfx/interface/goals/goal_kaputt.dds"
+	}
+}
+`
+  o['interface/goals_shine.gfx'] = `spriteTypes = {
+	SpriteType = {
+		name = "GFX_goal_generic_construct_civ_factory_shine"
+		texturefile = "gfx/interface/goals/goal_generic_construct_civ_factory.dds"
+	}
+}
+`
+  o['gfx/interface/goals/goal_generic_construct_civ_factory.dds'] = schreibeDds(einfarbig(94, 86, [40, 80, 200]), 94, 86)
+  o['gfx/interface/goals/goal_generic_army_doctrines.dds'] = schreibeDds(einfarbig(94, 86, [200, 40, 40]), 94, 86)
+  o['gfx/interface/goals/goal_kaputt.dds'] = ddsDx10()
+  o['common/technology_tags/00_technology.txt'] = 'technology_categories = {\n\tindustry\n\telectronics\n\tland_doctrine\n}\n'
+  o['localisation/german/technology_l_german.yml'] = schreibeYml('german', [['industry', 'Industrie'], ['electronics', 'Elektronik'], ['land_doctrine', 'Heeresdoktrin']])
 
   o['gfx/flags/GER.tga'] = schreibeTga(einfarbig(82, 52, [75, 75, 75]), 82, 52)
   o['gfx/flags/GER_fascism.tga'] = schreibeTga(einfarbig(82, 52, [20, 20, 20]), 82, 52)
