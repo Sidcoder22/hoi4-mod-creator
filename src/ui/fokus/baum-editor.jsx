@@ -5,7 +5,7 @@ import { aendereBaum, entferneBaum } from '../../projekt/fokus.js'
 import { landName } from '../../projekt/abgeleitet.js'
 import { landOptionen } from './gemeinsam.js'
 
-export function BaumEditor({ z, seitenInhalt }) {
+export function BaumEditor({ z }) {
   const baum = z.projekt.fokusbaeume?.find(b => b.id === z.ansicht.id)
   if (!baum) {
     return (
@@ -23,7 +23,7 @@ export function BaumEditor({ z, seitenInhalt }) {
         <div>
           <input class="baum-titel" type="text" value={baum.name} data-test="baum-titel"
             onInput={(e) => { const v = e.currentTarget.value; aktionen.aendere((p) => aendereBaum(p, baum.id, { name: v }), { gruppe: `baum:${baum.id}:name` }) }} />
-          <span class="kuerzel">Fokusbaum für {landName(baum.land, z.projekt, z.spieldaten)} · ersetzt den Fokusbaum des Spiels</span>
+          <span class="leise" style={{ display: 'block' }}>Fokusbaum für {landName(baum.land, z.projekt, z.spieldaten)} · ersetzt den Fokusbaum des Spiels</span>
         </div>
         <div class="rechts">
           <select value={baum.land} data-test="baum-land-aendern" title="Land ändern"
@@ -41,7 +41,7 @@ export function BaumEditor({ z, seitenInhalt }) {
       <div class="baum-arbeitsflaeche">
         <Raster baum={baum} projekt={z.projekt} gewaehlt={fokus?.id} onWaehle={waehle} />
         {fokus
-          ? <FokusSeite baum={baum} fokus={fokus} z={z} kinder={seitenInhalt ? seitenInhalt(baum, fokus, z) : null} />
+          ? <FokusSeite baum={baum} fokus={fokus} z={z} />
           : <aside class="fokus-seite leer"><p class="leise">Wähle einen Fokus aus oder lege mit einem Doppelklick einen neuen an.</p></aside>}
       </div>
     </div>

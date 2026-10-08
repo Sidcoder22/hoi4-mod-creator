@@ -8,8 +8,11 @@ import { BildZuschnitt } from '../bild-zuschnitt.jsx'
 import { SymbolGalerie, FokusSymbol } from './symbole.jsx'
 import { aendereFokusFeld } from './gemeinsam.js'
 import { aendereFokus } from '../../projekt/fokus.js'
+import { WirkungenEditor } from '../bausteine/wirkungen.jsx'
+import { BedingungenEditor } from '../bausteine/bedingungen.jsx'
 
-export function FokusSeite({ baum, fokus, z, kinder }) {
+export function FokusSeite({ baum, fokus, z }) {
+  const kontext = { projekt: z.projekt, spieldaten: z.spieldaten }
   const sd = z.spieldaten
   const [b, h] = sd.bildgroessen?.fokus || [94, 86]
   const andere = baum.fokusse.filter(f => f.id !== fokus.id)
@@ -55,7 +58,15 @@ export function FokusSeite({ baum, fokus, z, kinder }) {
         <p class="leise">Wer einen dieser Fokusse wählt, kann den anderen nicht mehr wählen. Tipp: Punkt mit gedrückter Umschalttaste ziehen.</p>
       </details>
 
-      {kinder}
+      <details class="abschnitt" open>
+        <summary>Verfügbar wenn</summary>
+        <BedingungenEditor block={fokus.verfuegbar} kontext={kontext} test="verfuegbar" onAendere={(v) => setze({ verfuegbar: v }, 'verfuegbar')} />
+      </details>
+
+      <details class="abschnitt" open>
+        <summary>Belohnungen</summary>
+        <WirkungenEditor liste={fokus.belohnung} kontext={kontext} test="belohnung" onAendere={(v) => setze({ belohnung: v }, 'belohnung')} />
+      </details>
 
       <details class="abschnitt">
         <summary>Symbol</summary>

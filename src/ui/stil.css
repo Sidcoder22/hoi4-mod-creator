@@ -290,3 +290,19 @@ details.abschnitt > summary { cursor: pointer; font-weight: 600; margin-bottom: 
 details.abschnitt .haken { margin: 0.2rem 0; }
 .fokus-galerie { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); max-height: 240px; }
 .fokus-galerie img, .fokus-galerie .bild-platzhalter { aspect-ratio: 94 / 86; }
+
+/* Baukasten */
+.bausteine { display: flex; flex-direction: column; gap: 0.5rem; }
+.baustein { padding: 0.55rem 0.6rem; background: var(--flaeche2); border: 1px solid var(--rand); border-left: 3px solid var(--messing-dunkel); border-radius: var(--radius); display: flex; flex-direction: column; gap: 0.4rem; }
+.baustein-kopf { display: flex; gap: 0.4rem; align-items: center; }
+.baustein-kopf select { flex: 1; }
+.baustein-felder { display: flex; flex-direction: column; gap: 0.4rem; }
+.baustein-feld { display: flex; flex-direction: column; gap: 0.2rem; }
+.baustein-feld .feld-titel { font-size: 0.8rem; font-weight: 600; color: var(--leise); }
+.baustein-satz { margin: 0; font-size: 0.85rem; color: var(--messing-hell); }
+.baustein-fehler { margin: 0; font-size: 0.8rem; color: #f0a294; }
+.baustein-innen { margin-left: 0.6rem; padding-left: 0.6rem; border-left: 2px dashed var(--rand); }
+.haken.klein { font-size: 0.8rem; gap: 0.25rem; }
+.zahl-zeile.datum input { max-width: 5.5rem; }
+textarea.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+.bausteine > .knopf { align-self: flex-start; }

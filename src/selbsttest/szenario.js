@@ -288,6 +288,45 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Belohnungen',
+    async lauf(h) {
+      const [a, b, c] = zustand().projekt.fokusbaeume[0].fokusse
+      const geist = zustand().projekt.ideen[0]
+      await h.klicke(`fokus-${a.id}`)
+      await h.klicke('belohnung-neu')
+      await h.waehle('belohnung-art-0', 'politische_macht')
+      await h.tippe('belohnung-0-menge', '50')
+      await h.klicke(`fokus-${b.id}`)
+      await h.klicke('belohnung-neu')
+      await h.waehle('belohnung-art-0', 'geist_hinzu')
+      await h.waehle('belohnung-0-geist', geist.id)
+      await h.klicke(`fokus-${c.id}`)
+      await h.klicke('belohnung-neu')
+      await h.waehle('belohnung-art-0', 'gebaeude')
+      await h.waehle('belohnung-0-gebaeude', 'industrial_complex')
+      await h.waehle('belohnung-0-wo', 'irgendwo')
+      const [a2, b2, c2] = zustand().projekt.fokusbaeume[0].fokusse
+      h.pruefe(a2.belohnung[0]?.art === 'politische_macht' && a2.belohnung[0].werte.menge === 50, 'Belohnung A falsch')
+      h.pruefe(b2.belohnung[0]?.werte.geist === geist.id, 'Belohnung B falsch')
+      h.pruefe(c2.belohnung[0]?.werte.gebaeude === 'industrial_complex', 'Belohnung C falsch')
+      h.pruefe((await h.text('belohnung-satz-0')).includes('Zivilfabrik'), 'Klartext für C fehlt')
+    },
+  },
+  {
+    name: 'Bedingungen',
+    async lauf(h) {
+      const b = zustand().projekt.fokusbaeume[0].fokusse[1]
+      await h.klicke(`fokus-${b.id}`)
+      await h.klicke('verfuegbar-neu')
+      await h.waehle('verfuegbar-art-0', 'stabilitaet')
+      await h.waehle('verfuegbar-0-vergleich', '>')
+      await h.tippe('verfuegbar-0-prozent', '50')
+      await h.warte(async () => (await h.text('verfuegbar-satz-0')).includes('Stabilität über 50 %'), 3000, 'Klartext Stabilität')
+      const b2 = zustand().projekt.fokusbaeume[0].fokusse[1]
+      h.pruefe(b2.verfuegbar.liste[0]?.werte.prozent === 50, 'Bedingung nicht gespeichert')
+    },
+  },
+  {
     name: 'Prüfung',
     async lauf(h) {
       await h.klicke('nav-pruefung')
