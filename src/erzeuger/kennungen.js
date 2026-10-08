@@ -24,3 +24,21 @@ export function zahl(x) {
   const gerundet = Math.round(Number(x) * 1000) / 1000
   return String(Object.is(gerundet, -0) ? 0 : gerundet)
 }
+
+export function baumKennung(p, baum) {
+  return `${p.mod.modid}_baum_${baum.nummer}`
+}
+
+export function fokusKennung(p, fokus) {
+  return `${p.mod.modid}_fokus_${fokus.nummer}`
+}
+
+/** Merker aus Freitext: «Armee Reform» → <modid>_armee_reform */
+export function merkerKennung(p, text) {
+  const teil = transliteriere(String(text ?? '')).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 30)
+  return `${p.mod.modid}_${teil || 'merker'}`
+}
+
+export function fraktionKennung(p, bausteinId) {
+  return `${p.mod.modid}_fraktion_${bausteinId}`
+}

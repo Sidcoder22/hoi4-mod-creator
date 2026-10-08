@@ -10,9 +10,10 @@ import { modPfad } from './kennungen.js'
 import { erzeugeIdeen } from './ideen.js'
 import { erzeugeNeueLaender } from './land-neu.js'
 import { erzeugeGeaenderteLaender } from './land-geaendert.js'
+import { erzeugeFokusbaeume } from './fokus.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = [erzeugeIdeen, erzeugeNeueLaender, erzeugeGeaenderteLaender]
+export const ERZEUGER = [erzeugeIdeen, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeFokusbaeume]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
