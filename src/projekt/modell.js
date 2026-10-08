@@ -9,6 +9,8 @@ export class ProjektFehler extends Error {
 
 export const FORMAT_VERSION = 1
 
+const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0 }
+
 export const GRAFIKSTILE = [
   { id: 'western_european', name: 'Westeuropa', beschreibung: 'Soldaten und Fahrzeuge im westeuropäischen Stil' },
   { id: 'eastern_european', name: 'Osteuropa', beschreibung: 'Soldaten und Fahrzeuge im osteuropäischen Stil' },
@@ -81,8 +83,9 @@ export function neuesProjekt(name) {
     },
     laender: [],
     ideen: [],
+    fokusbaeume: [],
     bilder: {},
-    zaehler: { geist: 0 },
+    zaehler: { ...STANDARD_ZAEHLER },
   }
 }
 
@@ -109,5 +112,13 @@ export function ladeProjektAusJson(text) {
   if (obj.formatVersion > FORMAT_VERSION) {
     throw new ProjektFehler('Diese Projektdatei stammt aus einer neueren Version des HOI4 Mod Creators.')
   }
-  return { ...obj, id: neueId() }
+  // Aeltere Projekte kennen manche Felder noch nicht
+  return {
+    ...obj,
+    id: neueId(),
+    ideen: obj.ideen ?? [],
+    fokusbaeume: obj.fokusbaeume ?? [],
+    bilder: obj.bilder ?? {},
+    zaehler: { ...STANDARD_ZAEHLER, ...(obj.zaehler ?? {}) },
+  }
 }
