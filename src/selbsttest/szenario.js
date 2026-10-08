@@ -270,6 +270,53 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Eigenschaften',
+    async lauf(h) {
+      const mre = zustand().projekt.laender.find(l => l.tag === 'MRE')
+      await h.klicke('nav-laender')
+      await h.klicke(`land-${mre.id}`)
+      await h.klicke('reiter-anfuehrer')
+      await h.tippe('eigenschaft-suche', 'Volks')
+      await h.klicke('eigenschaft-hinzu-popular_figurehead')
+      await h.klicke('neue-eigenschaft')
+      await h.tippe('eigenschaft-name', 'Eiserner Wille')
+      await h.klicke('eigenschaft-bonus-neu')
+      await h.klicke('eigenschaft-fertig')
+      const z = zustand().projekt
+      const l = z.laender.find(x => x.tag === 'MRE')
+      h.pruefe(l.anfuehrer.eigenschaften.length === 2, 'Eigenschaften: ' + JSON.stringify(l.anfuehrer.eigenschaften))
+      h.pruefe(z.eigenschaften[0]?.name === 'Eiserner Wille' && z.eigenschaften[0].boni[0]?.art === 'stabilitaet', 'Eigene Eigenschaft falsch')
+    },
+  },
+  {
+    name: 'Diplomatie',
+    async lauf(h) {
+      await h.klicke('reiter-diplomatie')
+      await h.klicke('marionette-neu')
+      await h.waehle('marionette-0-land', 'FRA')
+      await h.waehle('marionette-0-autonomie', 'autonomy_dominion')
+      await h.klicke('meinung-neu')
+      await h.waehle('meinung-0-land', 'FRA')
+      await h.tippe('meinung-0-wert', '50')
+      await h.hakeAn('meinung-0-gegenseitig', true)
+      await h.klicke('vertrag-neu')
+      await h.waehle('vertrag-0-art', 'nichtangriffspakt')
+      await h.waehle('vertrag-0-land', 'FRA')
+      await h.klicke('kriegsziel-neu')
+      await h.waehle('kriegsziel-0-land', 'GER')
+      await h.waehle('kriegsziel-0-art', 'topple_government')
+      await h.waehle('fraktion-art', 'gruenden')
+      await h.tippe('fraktion-name', 'Alpenbund')
+      await h.hakeAn('fraktion-mitglied-SWI', true)
+      const d = zustand().projekt.laender.find(x => x.tag === 'MRE').diplomatie
+      h.pruefe(JSON.stringify(d.marionetten) === JSON.stringify([{ tag: 'FRA', autonomie: 'autonomy_dominion' }]), 'Marionetten: ' + JSON.stringify(d.marionetten))
+      h.pruefe(d.meinungen[0]?.wert === 50 && d.meinungen[0].gegenseitig, 'Meinung falsch')
+      h.pruefe(d.vertraege[0]?.art === 'nichtangriffspakt' && d.vertraege[0].tag === 'FRA', 'Vertrag falsch')
+      h.pruefe(d.kriegsziele[0]?.tag === 'GER' && d.kriegsziele[0].art === 'topple_government', 'Kriegsziel falsch')
+      h.pruefe(d.fraktion?.art === 'gruenden' && d.fraktion.name === 'Alpenbund' && d.fraktion.mitglieder.includes('SWI'), 'Fraktion falsch')
+    },
+  },
+  {
     name: 'Fokusbaum anlegen',
     async lauf(h) {
       await h.klicke('nav-fokusbaeume')
@@ -413,6 +460,14 @@ export const SCHRITTE = [
       h.pruefe(baumText.includes('add_political_power = 50'), 'Belohnung fehlt im Fokusbaum')
       h.pruefe(baumText.includes('mutually_exclusive'), 'Ausschluss fehlt im Fokusbaum')
       h.pruefe(baumText.includes('has_stability > 0.5'), 'Bedingung fehlt im Fokusbaum')
+      h.pruefe(dateien['mod/selbsttest_reich/common/opinion_modifiers/selbsttest_reich_meinungen.txt'], 'Meinungs-Datei fehlt')
+      const verlauf = new TextDecoder().decode(dateien['mod/selbsttest_reich/history/countries/MRE - Mein Reich.txt'])
+      for (const teil of ['puppet = FRA', 'create_faction', 'add_manpower = 200000', 'add_ideas']) h.pruefe(verlauf.includes(teil), `Verlauf ohne «${teil}»`)
+      const charakter = new TextDecoder().decode(dateien['mod/selbsttest_reich/common/characters/selbsttest_reich_MRE.txt'])
+      h.pruefe(charakter.includes('traits = { popular_figurehead selbsttest_reich_eigenschaft_1 }'), 'Eigenschaften fehlen beim Anführer')
+      const eig = dateien['mod/selbsttest_reich/common/country_leader/selbsttest_reich_eigenschaften.txt']
+      h.pruefe(eig, 'Eigenschaften-Datei fehlt')
+      parseParadox(new TextDecoder().decode(eig), { streng: true })
       h.pruefe(zustand().projekt.mod.gespeichertAls === 'selbsttest_reich', 'gespeichertAls nicht gesetzt')
     },
   },

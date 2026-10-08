@@ -5,6 +5,7 @@ import { aendereLand, fuegeBildHinzu } from '../../projekt/aenderungen.js'
 import { SpielBild } from '../bild.jsx'
 import { BildZuschnitt } from '../bild-zuschnitt.jsx'
 import { projektBildUrl } from '../bilder.js'
+import { AnfuehrerEigenschaften } from './eigenschaften.jsx'
 
 export function ReiterAnfuehrer({ land, z }) {
   const sd = z.spieldaten
@@ -15,9 +16,18 @@ export function ReiterAnfuehrer({ land, z }) {
   const [b, h] = sd.bildgroessen?.portraet || [156, 210]
   const spielLeiter = land.art === 'geaendert' && sd.laender[land.tag]?.anfuehrer ? sd.charaktere[sd.laender[land.tag].anfuehrer] : null
   const setzeBild = (bild) => aendereFeld(land, (l) => ({ anfuehrer: { ...l.anfuehrer, bild } }))
+  const behalten = land.art === 'geaendert' && a.modus === 'behalten'
   return (
     <fieldset disabled={!an} style={{ border: 'none', padding: 0, margin: 0 }}>
-      {spielLeiter && <p class="leise">Im Spiel führt zurzeit {spielLeiter.name} das Land. Mit dem Schalter oben setzt du einen neuen Anführer ein.</p>}
+      {spielLeiter && <p class="leise">Im Spiel führt zurzeit {spielLeiter.name} das Land.</p>}
+      {land.art === 'geaendert' && (
+        <div class="formular" style={{ marginBottom: '1rem' }}>
+          <Auswahl label="Was soll mit dem Anführer passieren?" test="anfuehrer-modus" wert={a.modus ?? 'neu'}
+            optionen={[{ wert: 'neu', text: 'Neuen Anführer einsetzen' }, { wert: 'behalten', text: 'Bisherigen Anführer behalten und ihm Eigenschaften geben' }]}
+            onAendere={(v) => aendereFeld(land, (l) => ({ anfuehrer: { ...l.anfuehrer, modus: v } }))} />
+        </div>
+      )}
+      {!behalten && <>
       <div class="formular">
         <TextFeld label="Name des Anführers" wert={a.name} test="anfuehrer-name" hilfe="Das Staatsoberhaupt zu Spielbeginn."
           onAendere={(v) => aendereFeld(land, (l) => ({ anfuehrer: { ...l.anfuehrer, name: v } }), 'anfuehrer-name')} />
@@ -48,6 +58,8 @@ export function ReiterAnfuehrer({ land, z }) {
             return aendereLand(q, spieldaten, land.id, { anfuehrer: { ...l.anfuehrer, bild: { art: 'eigen', bildId } } })
           })} />
       </div>
+      </>}
+      <AnfuehrerEigenschaften land={land} z={z} />
     </fieldset>
   )
 }

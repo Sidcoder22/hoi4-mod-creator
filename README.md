@@ -18,6 +18,16 @@ Etappe 2 bringt dazu:
 
 Der eigene Fokusbaum **ersetzt** im Spiel den Baum des gewählten Landes.
 
+Etappe 2b bringt dazu:
+
+- **Alle Boni des Spiels** für Geister und Eigenschaften, zum Beispiel Konsumgüter oder Ausbildungszeit.
+  Oben steht eine deutsche Liste der wichtigsten Boni, darunter kannst du alle weiteren aus dem Spiel durchsuchen.
+- **Geister aus dem Spiel:** durchsuchen, als Vorlage kopieren und verändern, oder einem Land direkt zuweisen.
+- **Rekruten:** zusätzliche Soldaten zu Beginn und mehr oder weniger Bevölkerung in den eigenen Staaten.
+- **Anführer-Eigenschaften:** aus dem Spiel oder selbst erstellt. Bei bestehenden Ländern kann der bisherige Anführer bleiben.
+- **Diplomatie zum Spielstart:** Marionetten mit Autonomiestatus, Meinung (−100 bis +100), Garantien,
+  Nichtangriffspakte, Militärzugang, Fraktion gründen oder beitreten, Kriegsziele.
+
 Geplant sind Events und Entscheidungen (Etappe 3). Mit ihnen kommt auch der Baustein «Event auslösen».
 
 ## Benutzen (Windows-PC)

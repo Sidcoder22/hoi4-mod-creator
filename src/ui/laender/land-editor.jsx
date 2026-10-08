@@ -11,6 +11,7 @@ import { ReiterRegierung } from './reiter-regierung.jsx'
 import { ReiterAnfuehrer } from './reiter-anfuehrer.jsx'
 import { ReiterStartwerte } from './reiter-startwerte.jsx'
 import { ReiterGeister } from './reiter-geister.jsx'
+import { ReiterDiplomatie } from './reiter-diplomatie.jsx'
 
 export const REITER = [
   { id: 'name', text: 'Name & Farbe', ansicht: ReiterName, schalter: 'Name ändern' },
@@ -20,6 +21,7 @@ export const REITER = [
   { id: 'anfuehrer', text: 'Anführer', ansicht: ReiterAnfuehrer, schalter: 'Anführer ändern' },
   { id: 'startwerte', text: 'Startwerte', ansicht: ReiterStartwerte, schalter: 'Startwerte ändern' },
   { id: 'geister', text: 'Nationale Geister', ansicht: ReiterGeister, schalter: 'Nationale Geister hinzufügen' },
+  { id: 'diplomatie', text: 'Diplomatie', ansicht: ReiterDiplomatie, schalter: 'Diplomatie ändern' },
 ]
 
 function AendernSchalter({ land, reiter, feld = reiter.id, text = reiter.schalter }) {
