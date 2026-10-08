@@ -17,6 +17,8 @@ export function leseTga(bytes) {
   if (typ !== 2 && typ !== 10) throw new Error(`TGA-Typ ${typ} wird nicht unterstuetzt`)
   if (bits !== 24 && bits !== 32) throw new Error(`TGA mit ${bits} Bit wird nicht unterstuetzt`)
   const bpp = bits / 8
+  // Viele Paradox-Flaggen haben 32 Bit, aber «0 Alpha-Bits» im Kopf und lauter Nullen im vierten Byte
+  const mitAlpha = bpp === 4 && (beschreibung & 0x0F) > 0
   let pos = 18 + idLaenge + (farbtabelle ? tabellenLaenge * Math.ceil(tabellenBits / 8) : 0)
   const anzahl = breite * hoehe
   // Pixel in Dateireihenfolge sammeln
@@ -25,7 +27,7 @@ export function leseTga(bytes) {
     roh[ziel] = bytes[pos + 2]
     roh[ziel + 1] = bytes[pos + 1]
     roh[ziel + 2] = bytes[pos]
-    roh[ziel + 3] = bpp === 4 ? bytes[pos + 3] : 255
+    roh[ziel + 3] = mitAlpha ? bytes[pos + 3] : 255
     pos += bpp
   }
   if (typ === 2) {
@@ -43,6 +45,12 @@ export function leseTga(bytes) {
         for (let k = 0; k < laenge && i < anzahl; k++, i++) lesePixel(i * 4)
       }
     }
+  }
+  if (mitAlpha) {
+    let sichtbar = false
+    for (let i = 3; i < roh.length; i += 4) if (roh[i]) { sichtbar = true; break }
+    // Ein komplett durchsichtiges Bild ergibt keinen Sinn: Alpha wurde nicht benutzt
+    if (!sichtbar) for (let i = 3; i < roh.length; i += 4) roh[i] = 255
   }
   const obenNachUnten = (beschreibung & 0x20) !== 0
   if (obenNachUnten) return { breite, hoehe, rgba: roh }

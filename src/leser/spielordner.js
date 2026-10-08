@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 1
+export const LESER_VERSION = 2
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -289,24 +289,42 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     throw new SpielordnerFehler(`Die Karte (map/provinces.bmp) konnte nicht gelesen werden: ${e.message}`)
   }
 
-  // Bilder
+  // Flaggen: TAG.tga oder Ideologie-Varianten (TAG_fascism.tga …), auch .dds und andere Schreibweise
   fortschritt(0.75, 'Flaggen werden gelesen …')
   const bilder = new Map()
   const flaggenGroessen = []
-  for (const pfad of direktImOrdner('gfx/flags/', '.tga')) {
-    const datei = pfad.slice('gfx/flags/'.length, -4)
-    const tag = datei.slice(0, 3)
+  const flaggenBericht = { dateien: 0, gelesen: 0, ohneFlagge: [], fehler: [] }
+  const flaggenDateien = new Map()
+  for (const pfad of [...direktImOrdner('gfx/flags/', '.tga'), ...direktImOrdner('gfx/flags/', '.dds')]) {
+    flaggenBericht.dateien++
+    const datei = pfad.slice('gfx/flags/'.length).replace(/\.(tga|dds)$/i, '')
+    const tag = datei.slice(0, 3).toUpperCase()
     const land = laender[tag]
     if (!land || (datei.length > 3 && datei[3] !== '_')) continue
-    land.flaggen.push(datei)
-    if (datei !== tag) continue
-    try {
-      const bild = leseTga(await quelle.bytes(pfad))
-      flaggenGroessen.push([bild.breite, bild.hoehe])
-      bilder.set(`flagge:${tag}`, await kodiere(bild.rgba, bild.breite, bild.hoehe))
-    } catch (e) {
-      warnungen.push(`${pfad}: ${e.message}`)
+    if (!land.flaggen.includes(datei)) land.flaggen.push(datei)
+    flaggenDateien.set(datei.toUpperCase(), pfad)
+  }
+  for (const land of Object.values(laender)) {
+    const kandidaten = [`${land.tag}_${land.regierung}`, land.tag, ...land.flaggen].map(k => k.toUpperCase())
+    let gelesen = false
+    for (const k of [...new Set(kandidaten)]) {
+      const pfad = flaggenDateien.get(k)
+      if (!pfad) continue
+      try {
+        const bytes = await quelle.bytes(pfad)
+        const bild = /\.dds$/i.test(pfad) ? leseDds(bytes) : leseTga(bytes)
+        if (!bild) throw new Error('DDS-Format wird nicht unterstuetzt')
+        flaggenGroessen.push([bild.breite, bild.hoehe])
+        bilder.set(`flagge:${land.tag}`, await kodiere(bild.rgba, bild.breite, bild.hoehe))
+        gelesen = true
+        break
+      } catch (e) {
+        flaggenBericht.fehler.push({ datei: pfad, grund: e.message })
+        warnungen.push(`${pfad}: ${e.message}`)
+      }
     }
+    if (gelesen) flaggenBericht.gelesen++
+    else flaggenBericht.ohneFlagge.push(land.tag)
   }
 
   fortschritt(0.85, 'Bilder für nationale Geister werden gelesen …')
@@ -353,6 +371,15 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       portraet: haeufigsteGroesse(portraetGroessen, [156, 210]),
     },
     originaltexte,
+    bericht: {
+      laender: Object.keys(laender).length,
+      staaten: Object.keys(staaten).length,
+      flaggen: flaggenBericht,
+      ideenBilder: ideenBilder.length,
+      portraets: portraets.length,
+      warnungen: warnungen.slice(0, 200),
+      warnungenGesamt: warnungen.length,
+    },
   }
   fortschritt(1, 'Fertig')
   return { spieldaten, karte, bilder, warnungen }

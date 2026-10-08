@@ -76,3 +76,21 @@ test('skaliereRgba vergroessert', () => {
   const q = Uint8ClampedArray.from([100, 100, 100, 255])
   expect([...skaliereRgba(q, 1, 1, 3, 2)]).toEqual(new Array(6).fill([100, 100, 100, 255]).flat())
 })
+
+function tga32(rgbaUntenZuerst, breite, hoehe, beschreibung) {
+  const kopf = new Uint8Array(18)
+  kopf[2] = 2; kopf[12] = breite; kopf[14] = hoehe; kopf[16] = 32; kopf[17] = beschreibung
+  const daten = []
+  for (let i = 0; i < rgbaUntenZuerst.length; i += 4) daten.push(rgbaUntenZuerst[i + 2], rgbaUntenZuerst[i + 1], rgbaUntenZuerst[i], rgbaUntenZuerst[i + 3])
+  return Uint8Array.from([...kopf, ...daten])
+}
+
+test('TGA ohne Alpha-Bits im Kopf ist undurchsichtig (Flaggen des Spiels)', () => {
+  const b = tga32([10, 20, 30, 0, 40, 50, 60, 0], 2, 1, 0)
+  expect([...leseTga(b).rgba]).toEqual([10, 20, 30, 255, 40, 50, 60, 255])
+})
+
+test('TGA mit lauter Alpha 0 gilt als undurchsichtig, gemischtes Alpha bleibt', () => {
+  expect([...leseTga(tga32([10, 20, 30, 0, 40, 50, 60, 0], 2, 1, 8)).rgba]).toEqual([10, 20, 30, 255, 40, 50, 60, 255])
+  expect([...leseTga(tga32([10, 20, 30, 0, 40, 50, 60, 255], 2, 1, 8)).rgba]).toEqual([10, 20, 30, 0, 40, 50, 60, 255])
+})

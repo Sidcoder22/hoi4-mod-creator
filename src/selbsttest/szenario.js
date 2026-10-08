@@ -27,6 +27,15 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Einlese-Bericht',
+    async lauf(h) {
+      await h.klicke('spielordner-neu')
+      await h.warte(async () => (await h.text('spielordner-bericht')).includes('3 von 3 Ländern'), 3000, 'Bericht mit Flaggen')
+      await h.klicke('spielordner-weiter')
+      await h.element('seitenleiste')
+    },
+  },
+  {
     name: 'Einstellungen',
     async lauf(h) {
       await h.klicke('nav-einstellungen')

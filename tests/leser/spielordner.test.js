@@ -71,3 +71,33 @@ test('gfx-Schluessel und Texturpfade ohne Ruecksicht auf Gross-/Kleinschreibung 
   expect(spieldaten.ideenBilder).toEqual(['GFX_idea_generic_army', 'GFX_idea_generic_industry'])
   expect(spieldaten.charaktere.GER_adolf_hitler.portraet).toBe('gfx/leaders/GER/Portrait_Germany_Adolf_Hitler.dds')
 })
+
+test('Flaggen: Ideologie-Variante, Kleinschreibung, DDS und Bericht', async () => {
+  const { schreibeDds, schreibeTga } = await import('../../src/erzeuger/bilder.js')
+  const einfarbig = (b, h, [r, g, bl]) => { const x = new Uint8ClampedArray(b * h * 4); for (let i = 0; i < b * h; i++) x.set([r, g, bl, 255], i * 4); return x }
+  const o = erstelleMiniSpielordner()
+  delete o['gfx/flags/FRA.tga']
+  o['gfx/flags/FRA_democratic.dds'] = schreibeDds(einfarbig(82, 52, [1, 2, 3]), 82, 52)
+  delete o['gfx/flags/SWI.tga']
+  o['gfx/flags/swi.tga'] = schreibeTga(einfarbig(82, 52, [200, 30, 30]), 82, 52)
+  o['common/country_tags/00_countries.txt'] += 'ITA = "countries/Italy.txt"\n'
+  o['common/countries/Italy.txt'] = 'color = { 0 128 0 }\n'
+  const { spieldaten: sd, bilder } = await leseSpielordner(dateiquelleAusObjekt(o))
+  // Deutschland wird faschistisch regiert: Vorschau aus GER_fascism (20,20,20)
+  expect([...bilder.get('flagge:GER').rgba.slice(0, 3)]).toEqual([20, 20, 20])
+  expect([...bilder.get('flagge:FRA').rgba.slice(0, 3)]).toEqual([1, 2, 3])
+  expect(bilder.get('flagge:SWI')).toBeTruthy()
+  expect(sd.laender.FRA.flaggen).toEqual(['FRA_democratic'])
+  expect(sd.laender.SWI.flaggen).toEqual(['swi'])
+  expect(sd.bericht.flaggen).toMatchObject({ dateien: 4, gelesen: 3, ohneFlagge: ['ITA'], fehler: [] })
+  expect(sd.bericht).toMatchObject({ laender: 4, staaten: 6 })
+  expect(sd.bericht.warnungen.length).toBeGreaterThan(0)
+})
+
+test('Flaggen-Bericht nennt unlesbare Dateien mit Grund', async () => {
+  const o = erstelleMiniSpielordner()
+  o['gfx/flags/FRA.tga'] = Uint8Array.from([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 8, 0, 0])
+  const { spieldaten: sd } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(sd.bericht.flaggen.fehler).toEqual([{ datei: 'gfx/flags/FRA.tga', grund: 'TGA-Typ 1 wird nicht unterstuetzt' }])
+  expect(sd.bericht.flaggen.ohneFlagge).toEqual(['FRA'])
+})
