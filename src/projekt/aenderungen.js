@@ -1,6 +1,7 @@
 // Reine Aenderungsfunktionen: Sie geben immer ein neues Projekt zurueck.
 
-import { neueId, tagVorschlag, modidAusName } from './modell.js'
+import { neueId, tagVorschlag, modidAusName, leereDiplomatie } from './modell.js'
+import { bonusAusSpiel } from './boni.js'
 import { belegteTags, verlaufsWerte } from './abgeleitet.js'
 import { zuBase64 } from './base64.js'
 
@@ -57,9 +58,9 @@ export function fuegeLandHinzu(p, sd, art, tag) {
         parteien: Object.fromEntries(ids.map((g, i) => [g, { name: '', langname: '', beliebtheit: anteile[i] }])),
       },
       anfuehrer: { name: '', unterideologie: ersteUnterideologie(sd, ids.includes('neutrality') ? 'neutrality' : ids[0]),
-        bild: { art: 'spiel', pfad: sd.portraets?.[0] ?? null } },
-      startwerte: { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 3 },
-      technikWie: null, armee: { divisionen: 6 }, ideen: [],
+        bild: { art: 'spiel', pfad: sd.portraets?.[0] ?? null }, eigenschaften: [], modus: 'neu' },
+      startwerte: { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 3, rekruten: 0, bevoelkerung: 0 },
+      technikWie: null, armee: { divisionen: 6 }, ideen: [], spielIdeen: [], diplomatie: leereDiplomatie(),
     }
   } else {
     const spiel = sd.laender[tag]
@@ -79,10 +80,11 @@ export function fuegeLandHinzu(p, sd, art, tag) {
         parteien: Object.fromEntries(ids.map(g => [g, { name: '', langname: '', beliebtheit: werte.beliebtheiten[g] ?? 0 }])),
       },
       anfuehrer: { name: leiter?.name ?? '', unterideologie: unter,
-        bild: { art: 'spiel', pfad: leiter?.portraet ?? sd.portraets?.[0] ?? null } },
-      startwerte: { stabilitaet: werte.stabilitaet, kriegsunterstuetzung: werte.kriegsunterstuetzung, forschungsplaetze: werte.forschungsplaetze },
-      technikWie: null, armee: { divisionen: 0 }, ideen: [],
-      aendern: { name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false },
+        bild: { art: 'spiel', pfad: leiter?.portraet ?? sd.portraets?.[0] ?? null }, eigenschaften: [], modus: 'neu' },
+      startwerte: { stabilitaet: werte.stabilitaet, kriegsunterstuetzung: werte.kriegsunterstuetzung, forschungsplaetze: werte.forschungsplaetze, rekruten: 0, bevoelkerung: 0 },
+      technikWie: null, armee: { divisionen: 0 }, ideen: [], spielIdeen: [],
+      diplomatie: leereDiplomatie(structuredClone(spiel.marionetten ?? [])),
+      aendern: { name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false },
     }
   }
   return [{ ...p, laender: [...p.laender, land] }, id]
@@ -178,4 +180,17 @@ export function setzeModFeld(p, feld, wert) {
 /** Markiert das Projekt als unter seiner modid gespeichert (vor dem Erzeugen, damit es auch in der Projektdatei steht). */
 export function alsGespeichert(p, sd) {
   return { ...p, mod: { ...p.mod, gespeichertAls: p.mod.modid, spielversion: sd?.version ?? p.mod.spielversion } }
+}
+
+/** Kopiert einen Geist des Spiels als eigenen Geist (Vorlage zum Veraendern). */
+export function kopiereSpielGeist(p, sd, ideeId) {
+  const vorlage = sd.spielGeister?.find(g => g.id === ideeId)
+  if (!vorlage) return [p, null]
+  const [q, id] = fuegeGeistHinzu(p, sd)
+  return [aendereGeist(q, id, {
+    name: `Kopie von ${vorlage.name}`,
+    beschreibung: vorlage.beschreibung,
+    bild: { art: 'spiel', sprite: vorlage.sprite },
+    boni: vorlage.boni.map(b => bonusAusSpiel(b.modifier, b.wert)),
+  }), id]
 }

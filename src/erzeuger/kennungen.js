@@ -42,3 +42,7 @@ export function merkerKennung(p, text) {
 export function fraktionKennung(p, bausteinId) {
   return `${p.mod.modid}_fraktion_${bausteinId}`
 }
+
+export function eigenschaftKennung(p, eigenschaft) {
+  return `${p.mod.modid}_eigenschaft_${eigenschaft.nummer}`
+}

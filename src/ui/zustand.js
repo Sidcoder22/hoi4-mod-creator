@@ -1,7 +1,7 @@
 // Zentraler Zustand der Oberflaeche und alle Aktionen, die ihn veraendern.
 
 import { useEffect, useRef, useState } from 'preact/hooks'
-import { neuesProjekt as leeresProjekt, kopiereProjekt, ladeProjektAusJson } from '../projekt/modell.js'
+import { neuesProjekt as leeresProjekt, kopiereProjekt, ladeProjektAusJson, ergaenzeProjekt } from '../projekt/modell.js'
 import { erstelleVerlauf } from '../projekt/verlauf.js'
 import { leseSpielordner, LESER_VERSION } from '../leser/spielordner.js'
 import * as db from '../speicher/indexeddb.js'
@@ -119,7 +119,7 @@ export const aktionen = {
   async oeffneProjekt(id) {
     const d = speicher.lies().db
     const p = d ? await db.ladeProjekt(d, id) : null
-    if (p) setzeProjekt(p)
+    if (p) setzeProjekt(ergaenzeProjekt(p, speicher.lies().spieldaten))
   },
 
   async dupliziereProjekt(id) {

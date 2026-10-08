@@ -9,7 +9,7 @@ export class ProjektFehler extends Error {
 
 export const FORMAT_VERSION = 1
 
-const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0 }
+const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0 }
 
 export const GRAFIKSTILE = [
   { id: 'western_european', name: 'Westeuropa', beschreibung: 'Soldaten und Fahrzeuge im westeuropäischen Stil' },
@@ -84,6 +84,7 @@ export function neuesProjekt(name) {
     laender: [],
     ideen: [],
     fokusbaeume: [],
+    eigenschaften: [],
     bilder: {},
     zaehler: { ...STANDARD_ZAEHLER },
   }
@@ -112,13 +113,32 @@ export function ladeProjektAusJson(text) {
   if (obj.formatVersion > FORMAT_VERSION) {
     throw new ProjektFehler('Diese Projektdatei stammt aus einer neueren Version des HOI4 Mod Creators.')
   }
-  // Aeltere Projekte kennen manche Felder noch nicht
+  return ergaenzeProjekt({ ...obj, id: neueId() })
+}
+
+export function leereDiplomatie(marionetten = []) {
+  return { marionetten, meinungen: [], vertraege: [], fraktion: null, kriegsziele: [] }
+}
+
+/**
+ * Ergaenzt Felder, die aeltere Projekte noch nicht kennen.
+ * Ohne Spieldaten bleiben die Marionetten geaenderter Laender «wie im Spiel» (null).
+ */
+export function ergaenzeProjekt(p, sd) {
   return {
-    ...obj,
-    id: neueId(),
-    ideen: obj.ideen ?? [],
-    fokusbaeume: obj.fokusbaeume ?? [],
-    bilder: obj.bilder ?? {},
-    zaehler: { ...STANDARD_ZAEHLER, ...(obj.zaehler ?? {}) },
+    ...p,
+    ideen: p.ideen ?? [],
+    fokusbaeume: p.fokusbaeume ?? [],
+    eigenschaften: p.eigenschaften ?? [],
+    bilder: p.bilder ?? {},
+    zaehler: { ...STANDARD_ZAEHLER, ...(p.zaehler ?? {}) },
+    laender: (p.laender ?? []).map(l => ({
+      ...l,
+      spielIdeen: l.spielIdeen ?? [],
+      startwerte: { rekruten: 0, bevoelkerung: 0, ...l.startwerte },
+      anfuehrer: { eigenschaften: [], modus: 'neu', ...l.anfuehrer },
+      diplomatie: l.diplomatie ?? leereDiplomatie(l.art === 'neu' ? [] : (sd?.laender?.[l.tag]?.marionetten ? structuredClone(sd.laender[l.tag].marionetten) : null)),
+      ...(l.art === 'geaendert' ? { aendern: { diplomatie: false, ...l.aendern } } : {}),
+    })),
   }
 }

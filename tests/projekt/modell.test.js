@@ -56,7 +56,8 @@ test('base64', () => {
 
 test('Boni', () => {
   expect(BONI.map(b => b.art)).toEqual(['politische_macht', 'stabilitaet', 'kriegsunterstuetzung', 'forschung', 'fabrikleistung',
-    'baugeschwindigkeit', 'rekruten', 'bevoelkerung', 'angriff', 'verteidigung', 'organisation', 'fabrikeffizienz'])
+    'baugeschwindigkeit', 'rekruten', 'bevoelkerung', 'angriff', 'verteidigung', 'organisation', 'konsumgueter', 'ausbildungszeit',
+    'bau_zivilfabrik', 'bau_militaerfabrik', 'rohstoffe', 'politische_macht_prozent', 'rekruten_prozent', 'fabrikeffizienz'])
   expect(BONI.find(b => b.art === 'rekruten')).toMatchObject({ modifier: 'conscription', min: -5, max: 10, schritt: 0.5 })
   expect(bonusWertImSpiel({ art: 'stabilitaet', wert: 5 })).toBe(0.05)
   expect(bonusWertImSpiel({ art: 'politische_macht', wert: 0.1 })).toBe(0.1)
