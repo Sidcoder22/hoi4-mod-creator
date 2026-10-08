@@ -135,6 +135,7 @@ set_popularities = {
 	neutrality = 15
 }
 recruit_character = GER_adolf_hitler
+create_faction = axis_faction
 1939.1.1 = {
 	set_technology = { infantry_weapons2 = 1 }
 }
@@ -175,6 +176,13 @@ set_popularities = {
 	fascism = 10
 	communism = 20
 	neutrality = 10
+}
+set_autonomy = {
+	target = SWI
+	autonomous_state = autonomy_dominion
+}
+1939.1.1 = {
+	puppet = GER
 }
 `
   o['history/states/1-Brandenburg.txt'] = `state = {
@@ -294,6 +302,49 @@ set_popularities = {
   o['gfx/interface/goals/goal_kaputt.dds'] = ddsDx10()
   o['common/technology_tags/00_technology.txt'] = 'technology_categories = {\n\tindustry\n\telectronics\n\tland_doctrine\n}\n'
   o['localisation/german/technology_l_german.yml'] = schreibeYml('german', [['industry', 'Industrie'], ['electronics', 'Elektronik'], ['land_doctrine', 'Heeresdoktrin']])
+
+  // Etappe 2b: Geister, Eigenschaften und Autonomiestufen des Spiels
+  o['common/ideas/00_ideen.txt'] = `ideas = {
+	country = {
+		schweizer_neutralitaet = {
+			picture = generic_army
+			allowed = { original_tag = SWI }
+			modifier = {
+				consumer_goods_factor = -0.05
+				stability_factor = 0.1
+			}
+			research_bonus = { industry = 0.1 }
+		}
+		deutsche_industrie = {
+			modifier = { industrial_capacity_factory = 0.1 }
+		}
+	}
+	economy = {
+		civilian_economy = {
+			modifier = { consumer_goods_factor = 0.35 }
+		}
+	}
+}
+`
+  o['common/country_leader/00_traits.txt'] = `leader_traits = {
+	popular_figurehead = {
+		random = no
+		stability_factor = 0.15
+		political_power_factor = -0.1
+	}
+	war_monger = {
+		random = no
+		war_support_factor = 0.1
+	}
+}
+`
+  o['common/autonomous_states/01_dominion.txt'] = 'autonomy_state = {\n\tid = autonomy_dominion\n\tmin_freedom_level = 0.6\n}\n'
+  o['common/autonomous_states/02_puppet.txt'] = 'autonomy_state = {\n\tid = autonomy_puppet\n\tmin_freedom_level = 0.2\n}\n'
+  o['localisation/german/etappe2b_l_german.yml'] = schreibeYml('german', [
+    ['schweizer_neutralitaet', 'Schweizer Neutralität'], ['schweizer_neutralitaet_desc', 'Wir bleiben draussen.'],
+    ['deutsche_industrie', 'Deutsche Industrie'], ['MODIFIER_CONSUMER_GOODS_FACTOR', 'Konsumgüter'], ['stability_factor', 'Stabilität'],
+    ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
+  ])
 
   o['gfx/flags/GER.tga'] = schreibeTga(einfarbig(82, 52, [75, 75, 75]), 82, 52)
   o['gfx/flags/GER_fascism.tga'] = schreibeTga(einfarbig(82, 52, [20, 20, 20]), 82, 52)

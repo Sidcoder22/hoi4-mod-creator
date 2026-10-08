@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 3
+export const LESER_VERSION = 4
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -24,6 +24,23 @@ const STANDARD_KATEGORIEN = [
   ['armor', 'Panzer'], ['land_doctrine', 'Heeresdoktrin'], ['naval_doctrine', 'Marinedoktrin'], ['air_doctrine', 'Luftwaffendoktrin'],
   ['naval_equipment', 'Marineausrüstung'], ['air_equipment', 'Luftwaffenausrüstung'],
 ]
+
+const STANDARD_AUTONOMIE = [
+  ['autonomy_dominion', 'Dominion'], ['autonomy_colony', 'Kolonie'], ['autonomy_puppet', 'Marionette'], ['autonomy_integrated_puppet', 'Integrierte Marionette'],
+]
+const NICHT_UEBERNOMMEN = ['research_bonus', 'equipment_bonus', 'targeted_modifier', 'on_add', 'on_remove', 'rule']
+const KEINE_EIGENSCHAFTS_BONI = new Set(['random', 'ai_will_do', 'cost', 'sprite'])
+
+/** Zahlenwerte eines Blocks als Boni [{ modifier, wert }]. */
+function zahlenBoni(inhalt, ohne = new Set()) {
+  const boni = []
+  for (const x of inhalt ?? []) {
+    if (!x.schluessel || x.wert.typ === 'block' || ohne.has(x.schluessel.toLowerCase())) continue
+    const wert = Number(x.wert.text)
+    if (Number.isFinite(wert) && x.wert.text.trim() !== '') boni.push({ modifier: x.schluessel, wert })
+  }
+  return boni
+}
 
 const FALSCHER_ORDNER = 'Das ist nicht der Hearts-of-Iron-IV-Spielordner. Bitte wähle den Ordner «Hearts of Iron IV» ' +
   '(in Steam: Rechtsklick auf das Spiel → Verwalten → Lokale Dateien durchsuchen).'
@@ -171,7 +188,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
         tag, name: name(tag), nameDef: text(`${tag}_DEF`) ?? name(tag), adjektiv: text(`${tag}_ADJ`) ?? name(tag),
         farbe: [128, 128, 128], grafikstil: 'western_european_gfx', grafikstil2d: 'western_european_2d',
         landDatei: 'common/' + x.wert.text.replace(/\\/g, '/'), verlaufDatei: null, hauptstadt: null, regierung: null,
-        anfuehrer: null, flaggen: [], namensVarianten: [],
+        anfuehrer: null, flaggen: [], namensVarianten: [], marionetten: [], fraktion: null,
       }
     }
   }
@@ -246,6 +263,23 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     land.hauptstadt = Number.isInteger(hauptstadt) && hauptstadt > 0 ? hauptstadt : null
     const politik = finde(e, 'set_politics')
     land.regierung = politik && politik.wert.typ === 'block' ? wertText(finde(politik.wert.inhalt, 'ruling_party')?.wert) || null : null
+    for (const x of e) {
+      if (!x.schluessel) continue
+      const k = x.schluessel.toLowerCase()
+      if (k === 'puppet' && x.wert.typ !== 'block') {
+        land.marionetten = land.marionetten.filter(m => m.tag !== x.wert.text)
+        land.marionetten.push({ tag: x.wert.text, autonomie: 'autonomy_puppet' })
+      } else if (k === 'set_autonomy' && x.wert.typ === 'block') {
+        const ziel = wertText(finde(x.wert.inhalt, 'target')?.wert)
+        const stufe = wertText(finde(x.wert.inhalt, 'autonomous_state')?.wert) || wertText(finde(x.wert.inhalt, 'autonomy_state')?.wert)
+        if (ziel && stufe) {
+          land.marionetten = land.marionetten.filter(m => m.tag !== ziel)
+          land.marionetten.push({ tag: ziel, autonomie: stufe })
+        }
+      } else if (k === 'create_faction' && x.wert.typ !== 'block') {
+        land.fraktion = x.wert.text
+      }
+    }
     for (const r of findeAlle(e, 'recruit_character')) {
       const c = charaktere[wertText(r.wert)]
       if (c && c.ideologie && gruppeVon.get(c.ideologie) === land.regierung) {
@@ -390,6 +424,64 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   const technologieKategorien = (kategorien.length ? kategorien : STANDARD_KATEGORIEN.map(([id]) => id))
     .map(id => ({ id, name: text(id) ?? standardNamen.get(id) ?? id }))
 
+  // Etappe 2b: Geister und Anfuehrer-Eigenschaften des Spiels, alle Modifikatoren, Autonomiestufen
+  fortschritt(0.9, 'Geister und Eigenschaften werden gelesen …')
+  const modWerte = new Map()
+  const merkeBoni = (boni) => { for (const b of boni) { if (!modWerte.has(b.modifier)) modWerte.set(b.modifier, []); modWerte.get(b.modifier).push(b.wert) } }
+  const spielGeister = []
+  for (const pfad of imOrdner('common/ideas/', '.txt')) {
+    const e = await leseSkript(pfad)
+    const block = finde(e, 'ideas')
+    if (!block || block.wert.typ !== 'block') continue
+    for (const kategorie of block.wert.inhalt) {
+      if (!kategorie.schluessel || kategorie.wert.typ !== 'block') continue
+      for (const idee of kategorie.wert.inhalt) {
+        if (!idee.schluessel || idee.wert.typ !== 'block') continue
+        const inhalt = idee.wert.inhalt
+        const boni = zahlenBoni(finde(inhalt, 'modifier')?.wert?.inhalt)
+        merkeBoni(boni)
+        if (kategorie.schluessel.toLowerCase() !== 'country') continue
+        const bild = wertText(finde(inhalt, 'picture')?.wert)
+        const erlaubt = finde(inhalt, 'allowed')?.wert?.inhalt
+        const land = wertText(finde(erlaubt, 'original_tag')?.wert) || wertText(finde(erlaubt, 'tag')?.wert) || null
+        spielGeister.push({
+          id: idee.schluessel, name: name(idee.schluessel), beschreibung: text(`${idee.schluessel}_desc`) ?? '',
+          sprite: `GFX_idea_${bild || idee.schluessel}`, boni,
+          nichtUebernommen: NICHT_UEBERNOMMEN.filter(k => finde(inhalt, k)), land,
+        })
+      }
+    }
+  }
+  spielGeister.sort((a, b) => a.name.localeCompare(b.name, 'de') || a.id.localeCompare(b.id))
+  const anfuehrerEigenschaften = []
+  for (const pfad of imOrdner('common/country_leader/', '.txt')) {
+    const e = await leseSkript(pfad)
+    for (const block of findeAlle(e, 'leader_traits')) {
+      if (block.wert.typ !== 'block') continue
+      for (const t of block.wert.inhalt) {
+        if (!t.schluessel || t.wert.typ !== 'block') continue
+        const boni = zahlenBoni(t.wert.inhalt, KEINE_EIGENSCHAFTS_BONI)
+        merkeBoni(boni)
+        anfuehrerEigenschaften.push({ id: t.schluessel, name: name(t.schluessel), boni })
+      }
+    }
+  }
+  anfuehrerEigenschaften.sort((a, b) => a.name.localeCompare(b.name, 'de') || a.id.localeCompare(b.id))
+  const modifikatoren = [...modWerte].map(([id, werte]) => ({
+    id,
+    name: text(id) ?? text(`MODIFIER_${id.toUpperCase()}`) ?? text(`modifier_${id}`) ?? id,
+    prozent: id.endsWith('_factor') || werte.every(w => !Number.isInteger(w) && Math.abs(w) < 1),
+  })).sort((a, b) => a.name.localeCompare(b.name, 'de') || a.id.localeCompare(b.id))
+  const autonomieStufen = []
+  for (const pfad of imOrdner('common/autonomous_states/', '.txt')) {
+    const e = await leseSkript(pfad)
+    for (const block of findeAlle(e, 'autonomy_state')) {
+      const id = wertText(finde(block.wert.inhalt ?? [], 'id')?.wert)
+      if (id && !autonomieStufen.some(a => a.id === id)) autonomieStufen.push({ id, name: name(id) })
+    }
+  }
+  if (!autonomieStufen.length) for (const [id, n] of STANDARD_AUTONOMIE) autonomieStufen.push({ id, name: text(id) ?? n })
+
   fortschritt(0.93, 'Porträts werden gelesen …')
   const portraets = []
   const portraetGroessen = []
@@ -408,6 +500,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   const spieldaten = {
     leserVersion: LESER_VERSION, version, supportedVersion,
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
+    modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
@@ -423,6 +516,8 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       portraets: portraets.length,
       fokusSymbole: fokusSymbole.length,
       fokusSymboleGelesen,
+      spielGeister: spielGeister.length,
+      eigenschaften: anfuehrerEigenschaften.length,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

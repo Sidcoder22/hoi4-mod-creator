@@ -103,7 +103,7 @@ test('Flaggen-Bericht nennt unlesbare Dateien mit Grund', async () => {
 })
 
 test('Fokus-Symbole und Technologie-Kategorien (Etappe 2)', () => {
-  expect(LESER_VERSION).toBe(3)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(3)
   expect(sd.fokusSymbole).toEqual(['GFX_goal_generic_army_doctrines', 'GFX_goal_generic_construct_civ_factory', 'GFX_goal_kaputt'])
   expect(ergebnis.bilder.get('fokus:GFX_goal_generic_construct_civ_factory')).toMatchObject({ breite: 94, hoehe: 86 })
   expect(ergebnis.bilder.has('fokus:GFX_goal_kaputt')).toBe(false)
@@ -129,4 +129,31 @@ test('Fokus-Symbole aus allen goals-Dateien, ohne Rahmen-Sprites (Review I1)', a
   expect(spieldaten.fokusSymbole).toContain('GFX_focus_swi_alpen')
   expect(spieldaten.fokusSymbole).not.toContain('GFX_focus_frame')
   expect(spieldaten.fokusSymbole.some(n => n.endsWith('_shine'))).toBe(false)
+})
+
+test('Etappe 2b: Modifikatoren, Spielgeister, Eigenschaften, Autonomie, Marionetten, Fraktion', () => {
+  expect(LESER_VERSION).toBe(4)
+  expect(sd.modifikatoren.find(m => m.id === 'consumer_goods_factor')).toEqual({ id: 'consumer_goods_factor', name: 'Konsumgüter', prozent: true })
+  expect(sd.modifikatoren.find(m => m.id === 'industrial_capacity_factory')).toMatchObject({ prozent: true, name: 'industrial_capacity_factory' })
+  expect(sd.modifikatoren.find(m => m.id === 'stability_factor').name).toBe('Stabilität')
+  expect(sd.spielGeister.map(g => g.id)).toEqual(['deutsche_industrie', 'schweizer_neutralitaet'])
+  expect(sd.spielGeister.find(g => g.id === 'schweizer_neutralitaet')).toEqual({ id: 'schweizer_neutralitaet', name: 'Schweizer Neutralität',
+    beschreibung: 'Wir bleiben draussen.', sprite: 'GFX_idea_generic_army', land: 'SWI',
+    boni: [{ modifier: 'consumer_goods_factor', wert: -0.05 }, { modifier: 'stability_factor', wert: 0.1 }], nichtUebernommen: ['research_bonus'] })
+  expect(sd.spielGeister.find(g => g.id === 'deutsche_industrie')).toMatchObject({ sprite: 'GFX_idea_deutsche_industrie', land: null, beschreibung: '' })
+  expect(sd.anfuehrerEigenschaften.find(e => e.id === 'popular_figurehead')).toEqual({ id: 'popular_figurehead', name: 'Volksheld',
+    boni: [{ modifier: 'stability_factor', wert: 0.15 }, { modifier: 'political_power_factor', wert: -0.1 }] })
+  expect(sd.anfuehrerEigenschaften.map(e => e.id).sort()).toEqual(['popular_figurehead', 'war_monger'])
+  expect(sd.autonomieStufen).toEqual([{ id: 'autonomy_dominion', name: 'Dominion' }, { id: 'autonomy_puppet', name: 'Marionette' }])
+  expect(sd.laender.FRA.marionetten).toEqual([{ tag: 'SWI', autonomie: 'autonomy_dominion' }])
+  expect(sd.laender.GER).toMatchObject({ marionetten: [], fraktion: 'axis_faction' })
+  expect(sd.laender.SWI.fraktion).toBeNull()
+  expect(sd.bericht).toMatchObject({ spielGeister: 2, eigenschaften: 2 })
+})
+
+test('Autonomiestufen: Rueckfall ohne Dateien', async () => {
+  const o = erstelleMiniSpielordner()
+  for (const k of Object.keys(o)) if (k.startsWith('common/autonomous_states/')) delete o[k]
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.autonomieStufen.map(a => a.id)).toEqual(['autonomy_dominion', 'autonomy_colony', 'autonomy_puppet', 'autonomy_integrated_puppet'])
 })
