@@ -1,16 +1,12 @@
 // Reine Aenderungsfunktionen fuer Fokusbaeume und Fokusse.
 
 import { neueId } from './modell.js'
+import { zaehle } from './zaehler.js'
 
 const STANDARD_SYMBOL = 'GFX_goal_generic_construct_civ_factory'
 
 function mitBaum(p, baumId, fn) {
   return { ...p, fokusbaeume: p.fokusbaeume.map(b => (b.id === baumId ? fn(structuredClone(b)) : b)) }
-}
-
-function zaehle(p, art) {
-  const nummer = (p.zaehler?.[art] ?? 0) + 1
-  return [{ ...p, zaehler: { ...p.zaehler, [art]: nummer } }, nummer]
 }
 
 export function fuegeBaumHinzu(p, land, name) {

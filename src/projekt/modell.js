@@ -9,7 +9,7 @@ export class ProjektFehler extends Error {
 
 export const FORMAT_VERSION = 1
 
-const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0 }
+const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0, event: 0, entscheidung: 0, kategorie: 0 }
 
 export const GRAFIKSTILE = [
   { id: 'western_european', name: 'Westeuropa', beschreibung: 'Soldaten und Fahrzeuge im westeuropäischen Stil' },
@@ -85,6 +85,9 @@ export function neuesProjekt(name) {
     ideen: [],
     fokusbaeume: [],
     eigenschaften: [],
+    events: [],
+    entscheidungen: [],
+    kategorien: [],
     bilder: {},
     zaehler: { ...STANDARD_ZAEHLER },
   }
@@ -130,6 +133,9 @@ export function ergaenzeProjekt(p, sd) {
     ideen: p.ideen ?? [],
     fokusbaeume: p.fokusbaeume ?? [],
     eigenschaften: p.eigenschaften ?? [],
+    events: p.events ?? [],
+    entscheidungen: p.entscheidungen ?? [],
+    kategorien: p.kategorien ?? [],
     bilder: p.bilder ?? {},
     zaehler: { ...STANDARD_ZAEHLER, ...(p.zaehler ?? {}) },
     laender: (p.laender ?? []).map(l => ({

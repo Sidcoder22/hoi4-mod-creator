@@ -18,7 +18,7 @@ function aufbau() {
 test('neues Projekt hat Fokusbaeume und Zaehler', () => {
   const p = neuesProjekt('M')
   expect(p.fokusbaeume).toEqual([])
-  expect(p.zaehler).toEqual({ geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0 })
+  expect(p.zaehler).toEqual({ geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0, event: 0, entscheidung: 0, kategorie: 0 })
 })
 
 test('Baum und Fokusse anlegen', () => {
@@ -61,7 +61,7 @@ test('alte Projektdatei bekommt die neuen Felder', () => {
   const alt = { ...neuesProjekt('A'), zaehler: { geist: 2 } }
   delete alt.fokusbaeume
   const p = ladeProjektAusJson(JSON.stringify(alt))
-  expect(p.zaehler).toEqual({ geist: 2, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0 })
+  expect(p.zaehler).toEqual({ geist: 2, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0, event: 0, entscheidung: 0, kategorie: 0 })
   expect(p.fokusbaeume).toEqual([])
 })
 
