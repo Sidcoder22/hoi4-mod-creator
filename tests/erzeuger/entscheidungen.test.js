@@ -112,3 +112,13 @@ test('ohne Entscheidungen keine Dateien; unbekanntes Symbol wird gemeldet', () =
   let { p, d1 } = aufbau()
   expect(erzeugeMod(aendereEntscheidung(p, d1, { symbol: { art: 'spiel', sprite: 'GFX_decision_gibtsnicht' } }), sd).fehler.some(f => f.includes('GFX_decision_gibtsnicht'))).toBe(true)
 })
+
+test('Bonus waehrend der Laufzeit; Review Focus 4: ohne Dauer kein modifier', () => {
+  let { p, d1 } = aufbau()
+  p = aendereEntscheidung(p, d1, { boniLaufzeit: [{ art: 'stabilitaet', wert: 5 }] })
+  const entscheidung = (q) => finde(finde(lies(erzeugeMod(q, sd).dateien, ENTSCHEIDUNGEN), 'mein_reich_kategorie_1').wert.inhalt, 'mein_reich_entscheidung_1').wert.inhalt
+  const d = entscheidung(p)
+  expect(wert(finde(d, 'modifier').wert.inhalt, 'stability_factor')).toBe('0.05')
+  expect(d.map(x => x.schluessel).indexOf('modifier')).toBe(d.map(x => x.schluessel).indexOf('days_remove') + 1)
+  expect(finde(entscheidung(aendereEntscheidung(p, d1, { dauer: 0 })), 'modifier')).toBeUndefined()
+})

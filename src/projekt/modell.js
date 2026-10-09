@@ -134,7 +134,7 @@ export function ergaenzeProjekt(p, sd) {
     fokusbaeume: p.fokusbaeume ?? [],
     eigenschaften: p.eigenschaften ?? [],
     events: p.events ?? [],
-    entscheidungen: p.entscheidungen ?? [],
+    entscheidungen: (p.entscheidungen ?? []).map(d => ({ ...d, boniLaufzeit: d.boniLaufzeit ?? [] })),
     kategorien: p.kategorien ?? [],
     bilder: p.bilder ?? {},
     zaehler: { ...STANDARD_ZAEHLER, ...(p.zaehler ?? {}) },

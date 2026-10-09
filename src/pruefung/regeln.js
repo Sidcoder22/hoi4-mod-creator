@@ -326,7 +326,8 @@ export function pruefeProjekt(p, sd) {
     const mitEnde = Number(d.dauer) > 0
     const teile = [[d.sichtbar, 'sichtbar wenn'], [d.verfuegbar, 'verfügbar wenn'], [d.wirkungen, 'Wirkung'], ...(mitEnde ? [[d.wirkungenEnde, 'Wirkung am Ende']] : [])]
     for (const [teil, wo] of teile) for (const m of pruefeBausteine(teil, kontext, `${dname} (${wo})`)) fehler('baustein', m.text, ziel)
-    if (!d.wirkungen?.length && !(mitEnde && d.wirkungenEnde?.length)) hinweis('entscheidung-ohne-wirkung', `${dname} bewirkt nichts.`, ziel)
+    if (mitEnde) pruefeBoni(d.boniLaufzeit, `${dname} (Bonus während der Laufzeit)`, ziel)
+    if (!d.wirkungen?.length && !(mitEnde && (d.wirkungenEnde?.length || d.boniLaufzeit?.length))) hinweis('entscheidung-ohne-wirkung', `${dname} bewirkt nichts.`, ziel)
     if (String(d.name || '').trim() && !String(d.beschreibung || '').trim()) hinweis('entscheidung-beschreibung', `${dname} hat keine Beschreibung.`, ziel)
   }
 

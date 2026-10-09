@@ -46,7 +46,7 @@ export function fuegeEntscheidungHinzu(p, sd, kategorie) {
     symbol: { art: 'spiel', sprite: symbole.includes(STANDARD_SYMBOL) ? STANDARD_SYMBOL : (symbole[0] ?? STANDARD_SYMBOL) },
     kosten: 50, nurEinmal: true, wartezeit: 30, dauer: 0, laender: [],
     sichtbar: { modus: 'alle', liste: [] }, verfuegbar: { modus: 'alle', liste: [] },
-    wirkungen: [], wirkungenEnde: [], kiGewicht: 1,
+    wirkungen: [], wirkungenEnde: [], boniLaufzeit: [], kiGewicht: 1,
   }
   return [{ ...q, entscheidungen: [...(q.entscheidungen ?? []), entscheidung] }, id]
 }

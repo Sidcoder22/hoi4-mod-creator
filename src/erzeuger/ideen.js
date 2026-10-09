@@ -10,7 +10,8 @@ const text = (t) => ({ typ: 'text', text: String(t) })
 const block = (inhalt) => ({ typ: 'block', inhalt })
 const eintrag = (schluessel, wert) => ({ schluessel, op: '=', wert })
 
-function modifierBlock(boni) {
+/** modifier-Block aus Boni (auch fuer Entscheidungen mit Laufzeit). */
+export function modifierBlock(boni) {
   const modifier = []
   for (const bonus of boni || []) {
     const name = bonusModifier(bonus)

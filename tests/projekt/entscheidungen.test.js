@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest'
 import { miniSpieldaten } from '../hilfe.js'
-import { neuesProjekt } from '../../src/projekt/modell.js'
+import { neuesProjekt, ergaenzeProjekt } from '../../src/projekt/modell.js'
 import { fuegeKategorieHinzu, aendereKategorie, entferneKategorie, fuegeEntscheidungHinzu, aendereEntscheidung, entferneEntscheidung,
   entscheidungenIn } from '../../src/projekt/entscheidungen.js'
 
@@ -37,4 +37,12 @@ test('Kategorie loeschen laesst Entscheidungen stehen', () => {
   expect(entscheidungenIn(ohne, { art: 'spiel', id: kat })).toEqual([])
   expect(aendereEntscheidung(p, ent, { name: 'Armee reformieren', kosten: 75 }).entscheidungen[0]).toMatchObject({ name: 'Armee reformieren', kosten: 75 })
   expect(entferneEntscheidung(p, ent).entscheidungen).toEqual([])
+})
+
+test('Etappe 3b: boniLaufzeit mit Vorgabe und Ergaenzung alter Projekte (Review Focus 5)', () => {
+  const [p] = fuegeEntscheidungHinzu(neuesProjekt('M'), sd)
+  expect(p.entscheidungen[0].boniLaufzeit).toEqual([])
+  const alt = { ...p, entscheidungen: [{ ...p.entscheidungen[0], boniLaufzeit: undefined }] }
+  delete alt.entscheidungen[0].boniLaufzeit
+  expect(ergaenzeProjekt(alt, sd).entscheidungen[0].boniLaufzeit).toEqual([])
 })

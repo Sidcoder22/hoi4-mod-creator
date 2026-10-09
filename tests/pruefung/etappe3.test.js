@@ -132,3 +132,12 @@ test('Event-Datum zaehlt nur beim Ausloeser «An einem Datum»', () => {
   expect(regeln(event({ ausloeser: 'zufall', land: 'MRE', datum: '..' }))).not.toContain('event-datum')
   expect(meldungen(event({ ausloeser: 'datum', land: 'MRE', datum: '1937.13.1' })).find(x => x.regel === 'event-datum')).toMatchObject({ schwere: 'fehler' })
 })
+
+test('Etappe 3b: Laufzeit-Boni werden nur mit Dauer geprueft und zaehlen als Wirkung', () => {
+  const falsch = aendereEntscheidung(g, ent, { dauer: 10, boniLaufzeit: [{ art: 'stabilitaet', wert: 99 }] })
+  expect(meldungen(falsch).find(x => x.regel === 'bonus-wert')).toMatchObject({ schwere: 'fehler', ziel: { bereich: 'entscheidung', id: ent } })
+  expect(regeln(aendereEntscheidung(falsch, ent, { dauer: 0 }))).not.toContain('bonus-wert')
+  const nurBonus = aendereEntscheidung(g, ent, { wirkungen: [], dauer: 10, boniLaufzeit: [{ art: 'stabilitaet', wert: 5 }] })
+  expect(regeln(nurBonus)).not.toContain('entscheidung-ohne-wirkung')
+  expect(regeln(aendereEntscheidung(nurBonus, ent, { dauer: 0 }))).toContain('entscheidung-ohne-wirkung')
+})

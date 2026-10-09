@@ -5,6 +5,7 @@ import { erzeugeWirkungen, erzeugeBedingungen } from '../bausteine/erzeugen.js'
 import { e, wort, text as _t, block, zahlWort } from '../bausteine/hilfen.js'
 import { schreibeDds, skaliereRgba } from './bilder.js'
 import { bausteinKontext } from './baustein-kontext.js'
+import { modifierBlock } from './ideen.js'
 import { entscheidungKennung, kategorieKennung, modPfad } from './kennungen.js'
 
 /** allowed-Block fuer eine Laenderliste; ohne Laender kein Block. */
@@ -77,6 +78,7 @@ export function erzeugeEntscheidungen(k) {
     const dauer = Math.round(Number(d.dauer) || 0)
     if (dauer > 0) {
       teile.push(e('days_remove', zahlWort(dauer)))
+      if (d.boniLaufzeit?.length) teile.push(modifierBlock(d.boniLaufzeit))
       teile.push(e('remove_effect', block(erzeugeWirkungen(d.wirkungenEnde, bk))))
     }
     teile.push(e('ai_will_do', block([e('factor', zahlWort(d.kiGewicht ?? 1))])))
