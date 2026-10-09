@@ -28,7 +28,15 @@ Etappe 2b bringt dazu:
 - **Diplomatie zum Spielstart:** Marionetten mit Autonomiestatus, Meinung (−100 bis +100), Garantien,
   Nichtangriffspakte, Militärzugang, Fraktion gründen oder beitreten, Kriegsziele.
 
-Geplant sind Events und Entscheidungen (Etappe 3). Mit ihnen kommt auch der Baustein «Event auslösen».
+Etappe 3 bringt dazu:
+
+- **Events:** Titel, Text, Bild aus dem Spiel oder ein eigenes, und 1–4 Antworten mit eigenen Wirkungen.
+  Bei jeder Antwort stellst du ein, wie oft die KI sie wählt. Rechts siehst du eine Vorschau im Spiel-Look.
+  Ein Event kommt an einem Datum, zufällig (wenn Bedingungen erfüllt sind) oder wenn es ausgelöst wird.
+- **Entscheidungen:** Name, Symbol, Kosten in politischer Macht, «nur einmal» oder mit Wartezeit, auf Wunsch mit Dauer und «Wirkung am Ende».
+  Dazu «Sichtbar wenn» und «Verfügbar wenn». Entscheidungen liegen in eigenen Kategorien oder in einer Kategorie aus dem Spiel.
+- **Baustein «Event auslösen»:** Fokusse, Entscheidungen und Event-Antworten lösen damit ein Event aus, auch mit Verzögerung.
+- **Verknüpfen über Merker:** Ein Fokus setzt zum Beispiel den Merker «Armee Reform», und eine Entscheidung ist erst sichtbar, wenn dieser Merker gesetzt ist.
 
 ## Benutzen (Windows-PC)
 
@@ -61,7 +69,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Bauplan Etappe 1: `docs/superpowers/plans/2026-10-07-etappe-1-laender.md`
+- Baupläne: `docs/superpowers/plans/` (Etappe 1, 2, 2b und 3 `2026-10-09-etappe-3-events-entscheidungen.md`)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)
@@ -81,6 +89,7 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Gibt ein Land Staaten ab, bleiben seine Startdivisionen dort stehen, wo das Spiel sie vorsieht.
 - Kopierte Spieldateien (Staaten, Verlauf, Farben) gehören zur eingelesenen Spielversion.
   Nach einem Spiel-Update liest du den Spielordner neu ein und speicherst die Mod noch einmal.
+- Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.
 - Zeigt der Launcher die Mod nicht an, trägst du unter *Mod-Einstellungen → Erweitert* den vollständigen Pfad deines Ordners
   «Hearts of Iron IV» ein, zum Beispiel `C:\Users\Name\OneDrive\Dokumente\Paradox Interactive\Hearts of Iron IV`.

@@ -544,6 +544,26 @@ export const SCHRITTE = [
       await h.warte(() => h.el('ampel')?.dataset.zustand === 'gelb', 3000, 'Ampel gelb')
       const ger = zustand().projekt.laender.find(l => l.tag === 'GER')
       h.pruefe(ger && ger.hauptstadt === 2 && ger.aendern.gebiet, 'Deutschland hat keine neue Hauptstadt')
+      // Die Entscheidung loest «Volksfest» aus, «Grenzstreit» kommt an einem Datum
+      h.pruefe(!h.el('meldung-event-nie-0'), 'Hinweis «wird nie ausgelöst» trotz Entscheidung')
+    },
+  },
+  {
+    name: 'Sprung zum Event',
+    async lauf(h) {
+      const volksfest = zustand().projekt.events[0]
+      await h.klicke('nav-events')
+      await h.klicke('event-' + volksfest.id)
+      await h.tippe('antwort-1-text', '')
+      await h.klicke('nav-pruefung')
+      await h.warte(() => h.el('ampel')?.dataset.zustand === 'rot', 3000, 'Ampel rot ohne Antworttext')
+      const meldung = await h.element('meldung-antwort-text-0')
+      meldung.querySelector('.text').click()
+      await h.element('event-editor')
+      h.pruefe(zustand().ansicht.bereich === 'event' && zustand().ansicht.id === volksfest.id, 'Sprung führt nicht zum Event')
+      await h.tippe('antwort-1-text', 'Absagen')
+      await h.klicke('nav-pruefung')
+      await h.warte(() => h.el('ampel')?.dataset.zustand === 'gelb', 3000, 'Ampel wieder gelb')
     },
   },
   {
@@ -588,6 +608,17 @@ export const SCHRITTE = [
       const eig = dateien['mod/selbsttest_reich/common/country_leader/selbsttest_reich_eigenschaften.txt']
       h.pruefe(eig, 'Eigenschaften-Datei fehlt')
       parseParadox(new TextDecoder().decode(eig), { streng: true })
+      const lies = (pfad) => {
+        h.pruefe(dateien[pfad], `Datei fehlt: ${pfad}`)
+        const t = new TextDecoder().decode(dateien[pfad])
+        parseParadox(t, { streng: true })
+        return t
+      }
+      const events = lies('mod/selbsttest_reich/events/selbsttest_reich_events.txt')
+      for (const teil of ['add_namespace = selbsttest_reich', 'is_triggered_only = yes', 'date > 1937.1.1']) h.pruefe(events.includes(teil), `Events ohne «${teil}»`)
+      const entscheidungen = lies('mod/selbsttest_reich/common/decisions/selbsttest_reich_decisions.txt')
+      for (const teil of ['days_remove = 30', 'country_event', 'cost = 75']) h.pruefe(entscheidungen.includes(teil), `Entscheidungen ohne «${teil}»`)
+      lies('mod/selbsttest_reich/common/decisions/categories/selbsttest_reich_categories.txt')
       h.pruefe(zustand().projekt.mod.gespeichertAls === 'selbsttest_reich', 'gespeichertAls nicht gesetzt')
     },
   },
