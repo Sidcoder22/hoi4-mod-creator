@@ -5,6 +5,7 @@ import { effektiveBesitzer, landName, verlaufsWerte } from '../projekt/abgeleite
 import { fuegeLandHinzu, aendereLand } from '../projekt/aenderungen.js'
 import { fokusZyklus } from '../projekt/fokus.js'
 import { pruefeBausteine } from '../bausteine/erzeugen.js'
+import { pruefeFeld } from '../bausteine/felder.js'
 import { BONI } from '../projekt/boni.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
@@ -298,6 +299,10 @@ export function pruefeProjekt(p, sd) {
     const selbstPruefend = ev.ausloeser === 'datum' || ev.ausloeser === 'zufall'
     if (selbstPruefend && !ev.land) fehler('event-land', `${ename}: Bei «${ev.ausloeser === 'datum' ? 'An einem Datum' : 'Zufällig'}» musst du ein bestimmtes Land wählen.`, ziel)
     else if (ev.land && !tags.has(ev.land)) fehler('event-land', `${ename} gehört zu einem Land, das es nicht mehr gibt.`, ziel)
+    if (ev.ausloeser === 'datum') {
+      const f = pruefeFeld({ typ: 'datum', label: 'Datum' }, ev.datum, kontext)
+      if (f) fehler('event-datum', `${ename}: ${f}. Gib Tag, Monat und Jahr ein.`, ziel)
+    }
     if (symbolFehlt(ev.bild)) fehler('event-bild', `Das Bild von ${ename} fehlt. Bitte wähle ein anderes.`, ziel)
     if (selbstPruefend) for (const m of pruefeBausteine(ev.bedingungen, kontext, ename)) fehler('baustein', m.text, ziel)
     if (!selbstPruefend && !ausgeloest.has(ev.id)) {

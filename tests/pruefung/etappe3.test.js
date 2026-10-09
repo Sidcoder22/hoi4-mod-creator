@@ -41,6 +41,8 @@ const FAELLE = [
   ['antwort-text', () => aendereAntwort(g, ev, antwortId, { text: '' }), { bereich: 'event', id: ev }],
   ['event-land', () => event({ ausloeser: 'datum', land: '' }), { bereich: 'event', id: ev }],
   ['event-land', () => event({ ausloeser: 'zufall', land: 'XYZ' }), { bereich: 'event', id: ev }],
+  ['event-datum', () => event({ ausloeser: 'datum', land: 'MRE', datum: '1937..1' }), { bereich: 'event', id: ev }],
+  ['event-datum', () => event({ ausloeser: 'datum', land: 'MRE', datum: '..' }), { bereich: 'event', id: ev }],
   ['event-bild', () => event({ bild: { art: 'spiel', sprite: 'GFX_report_event_gibtsnicht' } }), { bereich: 'event', id: ev }],
   ['event-bild', () => event({ bild: { art: 'eigen', bildId: 'weg' } }), { bereich: 'event', id: ev }],
   ['baustein', () => aendereAntwort(g, ev, antwortId, { wirkungen: [mit(neueWirkung('staat_bekommen'), { staat: 999 })] }), { bereich: 'event', id: ev }],
@@ -123,4 +125,10 @@ test('Event mit vier Antworten ist gueltig', () => {
   let p = fuegeAntwortHinzu(fuegeAntwortHinzu(fuegeAntwortHinzu(g, ev), ev), ev)
   for (const a of p.events[0].antworten) p = aendereAntwort(p, ev, a.id, { text: a.text || 'Ja' })
   expect(regeln(p)).toEqual([])
+})
+
+test('Event-Datum zaehlt nur beim Ausloeser «An einem Datum»', () => {
+  expect(regeln(event({ ausloeser: 'datum', land: 'MRE', datum: '1937.1.1' }))).not.toContain('event-datum')
+  expect(regeln(event({ ausloeser: 'zufall', land: 'MRE', datum: '..' }))).not.toContain('event-datum')
+  expect(meldungen(event({ ausloeser: 'datum', land: 'MRE', datum: '1937.13.1' })).find(x => x.regel === 'event-datum')).toMatchObject({ schwere: 'fehler' })
 })

@@ -11,6 +11,9 @@ import { WirkungenEditor } from '../bausteine/wirkungen.jsx'
 import { BedingungenEditor } from '../bausteine/bedingungen.jsx'
 import { BausteinFeld } from '../bausteine/felder.jsx'
 import { EventVorschau } from './event-vorschau.jsx'
+import { pruefeFeld } from '../../bausteine/felder.js'
+
+const DATUM = { name: 'datum', typ: 'datum', label: 'Datum' }
 
 const AUSLOESER = [
   { wert: 'ausgeloest', text: 'Wird ausgelöst (durch Fokus, Entscheidung oder anderes Event)' },
@@ -66,7 +69,10 @@ export function EventEditor({ z }) {
               hilfe={pflichtLand ? 'Bei Datum und Zufall prüft das Spiel das Event für genau ein Land.' : '«wer es auslöst»: Das Event geht an das Land, das die Wirkung ausführt.'}
               onAendere={(v) => setze({ land: v })} />
             {ev.ausloeser === 'datum' && (
-              <BausteinFeld feld={{ name: 'datum', typ: 'datum', label: 'Datum' }} wert={ev.datum} kontext={kontext} test="event-datum" onAendere={(v) => setze({ datum: v }, 'datum')} />
+              <>
+                <BausteinFeld feld={DATUM} wert={ev.datum} kontext={kontext} test="event-datum" onAendere={(v) => setze({ datum: v }, 'datum')} />
+                {pruefeFeld(DATUM, ev.datum, kontext) && <p class="baustein-fehler" data-test="event-datum-fehler">{pruefeFeld(DATUM, ev.datum, kontext)}</p>}
+              </>
             )}
             {ev.ausloeser === 'zufall' && (
               <>
