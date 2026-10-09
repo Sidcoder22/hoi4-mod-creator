@@ -11,18 +11,19 @@ export function FokusSymbol({ fokus, projekt, klasse = 'fokus-symbol' }) {
   return <SpielBild schluessel={`fokus:${fokus.symbol?.sprite}`} klasse={klasse} alt="" />
 }
 
-/** Galerie aller Fokus-Symbole des Spiels mit Suche. */
-export function SymbolGalerie({ symbole, gewaehlt, onWaehle }) {
+/** Galerie der Spielsymbole einer Art (Fokus, Event, Entscheidung, Kategorie) mit Suche. */
+export function SymbolGalerie({ symbole, gewaehlt, onWaehle, bildArt = 'fokus', test = 'fokussymbol', praefix = 'GFX_goal_', klasse = 'fokus-galerie',
+  platzhalter = 'Symbole durchsuchen, z. B. «factory», «army», «navy» …' }) {
   const [suche, setSuche] = useState('')
   const s = suche.trim().toLowerCase()
   const treffer = symbole.filter(n => !s || n.toLowerCase().includes(s)).slice(0, 300)
   return (
     <div>
-      <input type="text" placeholder="Symbole durchsuchen, z. B. «factory», «army», «navy» …" value={suche} data-test="fokussymbol-suche" onInput={(e) => setSuche(e.currentTarget.value)} />
-      <div class="galerie fokus-galerie" style={{ marginTop: '0.5rem' }}>
+      <input type="text" placeholder={platzhalter} value={suche} data-test={`${test}-suche`} onInput={(e) => setSuche(e.currentTarget.value)} />
+      <div class={`galerie ${klasse}`} style={{ marginTop: '0.5rem' }}>
         {treffer.map(n => (
-          <button key={n} data-test={`fokussymbol-${n}`} title={n.replace(/^GFX_goal_/, '')} class={n === gewaehlt ? 'aktiv' : ''} onClick={() => onWaehle(n)}>
-            <SpielBild schluessel={`fokus:${n}`} alt={n} />
+          <button key={n} data-test={`${test}-${n}`} title={n.slice(n.startsWith(praefix) ? praefix.length : 0)} class={n === gewaehlt ? 'aktiv' : ''} onClick={() => onWaehle(n)}>
+            <SpielBild schluessel={`${bildArt}:${n}`} alt={n} />
           </button>
         ))}
       </div>

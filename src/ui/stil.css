@@ -315,3 +315,30 @@ textarea.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size
 .diplomatie .bonus { grid-template-columns: 1fr 1fr auto; }
 .mitglieder { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.2rem 1rem; margin-top: 0.6rem; }
 .eigenschaft-editor { margin-top: 0.8rem; border-color: var(--messing-dunkel); }
+
+/* Etappe 3: Events */
+.event-editor { max-width: none; }
+.event-arbeitsflaeche { display: flex; gap: 1.2rem; align-items: flex-start; }
+.event-felder { flex: 1; min-width: 0; max-width: 760px; display: flex; flex-direction: column; gap: 0.8rem; }
+.event-vorschau-spalte { width: 440px; flex-shrink: 0; position: sticky; top: 1rem; }
+.karte.antwort { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
+.antwort-kopf { display: flex; justify-content: space-between; align-items: center; }
+.event-galerie { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); max-height: 300px; }
+.event-galerie img, .event-galerie .bild-platzhalter { aspect-ratio: 210 / 176; object-fit: cover; }
+.event-kachel-bild { width: 64px; height: 54px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+.event-vorschau { padding: 0.9rem 1rem 1rem; color: #e9dfc4; border: 2px solid #6b5a2e; border-radius: 4px; box-shadow: var(--schatten), inset 0 0 0 1px #2a2416;
+  background: linear-gradient(180deg, #2f2c22 0%, #1f1d17 100%); }
+.event-vorschau-titel { font-family: Georgia, serif; font-size: 1.15rem; text-align: center; color: #f3e3b4; padding-bottom: 0.5rem; margin-bottom: 0.7rem;
+  border-bottom: 1px solid #6b5a2e; }
+.event-vorschau-koerper { display: flex; gap: 0.8rem; align-items: flex-start; }
+.event-vorschau-koerper .event-bild { width: 210px; height: 176px; object-fit: cover; flex-shrink: 0; border: 1px solid #5a4b27; }
+.event-vorschau-text { margin: 0; font-size: 0.88rem; white-space: pre-wrap; }
+.event-vorschau-antworten { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.9rem; }
+.event-vorschau-antwort { display: flex; flex-direction: column; gap: 0.15rem; }
+.event-vorschau-knopf { display: block; padding: 0.35rem 0.6rem; text-align: center; font-size: 0.88rem; color: #f0e6cc; border: 1px solid #8a6d2c; border-radius: 3px;
+  background: linear-gradient(180deg, #4a4130 0%, #2c271c 100%); }
+.event-vorschau-wirkung { font-size: 0.78rem; color: var(--gruen); padding-left: 0.4rem; }
+@media (max-width: 1100px) {
+  .event-arbeitsflaeche { flex-direction: column-reverse; }
+  .event-vorschau-spalte { position: static; width: 100%; max-width: 440px; }
+}

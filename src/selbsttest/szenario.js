@@ -415,6 +415,62 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Event anlegen',
+    async lauf(h) {
+      await h.klicke('nav-events')
+      await h.klicke('neues-event')
+      await h.element('event-editor')
+      await h.tippe('event-titel', 'Volksfest')
+      await h.tippe('event-text', 'Das Volk feiert.')
+      await h.klicke('eventbild-GFX_report_event_soldiers_marching')
+      const ev = zustand().projekt.events[0]
+      h.pruefe(ev.titel === 'Volksfest' && ev.bild.sprite === 'GFX_report_event_soldiers_marching', 'Titel oder Bild nicht gesetzt')
+      await h.warte(async () => (await h.text('event-vorschau')).includes('Volksfest'), 3000, 'Vorschau mit Titel')
+    },
+  },
+  {
+    name: 'Event-Antworten',
+    async lauf(h) {
+      await h.tippe('antwort-0-text', 'Feiern')
+      await h.klicke('antwort-0-wirkung-neu')
+      await h.waehle('antwort-0-wirkung-art-0', 'politische_macht')
+      await h.tippe('antwort-0-wirkung-0-menge', '25')
+      await h.klicke('antwort-neu')
+      await h.tippe('antwort-1-text', 'Absagen')
+      const ev = zustand().projekt.events[0]
+      h.pruefe(ev.antworten.length === 2 && ev.antworten[1].text === 'Absagen', 'Zweite Antwort fehlt')
+      h.pruefe(ev.antworten[0].wirkungen[0]?.werte.menge === 25, 'Wirkung der Antwort fehlt')
+      await h.warte(async () => (await h.text('vorschau-antwort-0')).includes('25 politische Macht erhalten'), 3000, 'Vorschau Antwort 1')
+      h.pruefe((await h.text('vorschau-antwort-1')).includes('Absagen'), 'Vorschau Antwort 2')
+      await h.klicke('antwort-neu')
+      await h.klicke('antwort-neu')
+      h.pruefe(h.el('antwort-neu').disabled, 'Mehr als vier Antworten möglich')
+      await h.klicke('antwort-3-entfernen')
+      await h.klicke('antwort-2-entfernen')
+      h.pruefe(zustand().projekt.events[0].antworten.length === 2, 'Antworten nicht entfernt')
+    },
+  },
+  {
+    name: 'Event an Datum',
+    async lauf(h) {
+      await h.klicke('nav-events')
+      await h.element('event-' + zustand().projekt.events[0].id)
+      await h.klicke('neues-event')
+      await h.tippe('event-titel', 'Grenzstreit')
+      await h.tippe('event-text', 'Es gibt Ärger an der Grenze.')
+      const werEsAusloest = () => [...h.el('event-land').options].some(o => o.textContent === 'wer es auslöst')
+      h.pruefe(werEsAusloest(), 'Auswahl «wer es auslöst» fehlt')
+      await h.waehle('event-ausloeser', 'datum')
+      await h.waehle('event-land', 'MRE')
+      await h.tippe('event-datum-tag', '1')
+      await h.tippe('event-datum-monat', '1')
+      await h.tippe('event-datum-jahr', '1937')
+      const ev = zustand().projekt.events[1]
+      h.pruefe(ev.ausloeser === 'datum' && ev.land === 'MRE' && ev.datum === '1937.1.1', 'Datum-Event falsch: ' + JSON.stringify([ev.ausloeser, ev.land, ev.datum]))
+      h.pruefe(!werEsAusloest(), '«wer es auslöst» trotz Datum')
+    },
+  },
+  {
     name: 'Prüfung',
     async lauf(h) {
       await h.klicke('nav-pruefung')
