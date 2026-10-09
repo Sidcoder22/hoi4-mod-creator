@@ -1,21 +1,11 @@
 // Bonus-Auswahl fuer Geister und Eigenschaften: feste Liste plus alle Boni aus dem Spiel.
 
 import { useState } from 'preact/hooks'
-import { BONI } from '../projekt/boni.js'
+import { BONI, bonusText } from '../projekt/boni.js'
 
 const runde = (x) => Math.round(x * 100000) / 100000
 
-/** Anzeige eines Bonus wie «Konsumgüter −5 %». */
-export function bonusText(b, sd) {
-  if (b.art === 'frei') {
-    const m = sd?.modifikatoren?.find(x => x.id === b.modifier)
-    const wert = m?.prozent ? `${runde(b.wert * 100)} %` : String(b.wert)
-    return `${m?.name ?? b.modifier} ${b.wert > 0 ? '+' : ''}${wert}`
-  }
-  const info = BONI.find(x => x.art === b.art)
-  if (!info) return ''
-  return `${info.name} ${b.wert > 0 ? '+' : ''}${b.wert}${info.einheit === 'prozent' ? ' %' : ' pro Tag'}`
-}
+export { bonusText }
 
 function FreierBonus({ bonus, sd, test, onAendere }) {
   const [suche, setSuche] = useState('')

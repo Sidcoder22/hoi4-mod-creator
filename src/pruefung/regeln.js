@@ -6,7 +6,7 @@ import { fuegeLandHinzu, aendereLand } from '../projekt/aenderungen.js'
 import { fokusZyklus } from '../projekt/fokus.js'
 import { pruefeBausteine } from '../bausteine/erzeugen.js'
 import { pruefeFeld } from '../bausteine/felder.js'
-import { BONI } from '../projekt/boni.js'
+import { pruefeBonus } from '../projekt/boni.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
 
@@ -172,14 +172,9 @@ export function pruefeProjekt(p, sd) {
   const bekannteModifikatoren = new Set((sd.modifikatoren ?? []).map(m => m.id))
   const pruefeBoni = (boni, wer, ziel) => {
     for (const b of boni ?? []) {
-      if (b.art === 'frei') {
-        if (!/^[a-z0-9_]+$/.test(b.modifier ?? '')) fehler('bonus-name', `${wer}: Der Bonus «${b.modifier ?? ''}» hat einen ungültigen Namen. Erlaubt sind nur Kleinbuchstaben, Ziffern und _.`, ziel)
-        else if (!bekannteModifikatoren.has(b.modifier)) hinweis('bonus-unbekannt', `${wer}: Den Bonus «${b.modifier}» kennt das eingelesene Spiel nicht. Prüfe die Schreibweise.`, ziel)
-        continue
-      }
-      const info = BONI.find(x => x.art === b.art)
-      const w = Number(b.wert)
-      if (info && (!Number.isFinite(w) || w < info.min || w > info.max)) fehler('bonus-wert', `${wer}: «${info.name}» muss zwischen ${info.min} und ${info.max} liegen.`, ziel)
+      const f = pruefeBonus(b)
+      if (f) fehler(b.art === 'frei' ? 'bonus-name' : 'bonus-wert', `${wer}: ${f}`, ziel)
+      else if (b.art === 'frei' && !bekannteModifikatoren.has(b.modifier)) hinweis('bonus-unbekannt', `${wer}: Den Bonus «${b.modifier}» kennt das eingelesene Spiel nicht. Prüfe die Schreibweise.`, ziel)
     }
   }
   for (const geist of p.ideen) pruefeBoni(geist.boni, `Nationaler Geist «${geist.name || 'ohne Namen'}»`, { bereich: 'geist', id: geist.id })

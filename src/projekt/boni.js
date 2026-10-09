@@ -48,3 +48,29 @@ export function bonusWertImSpiel(bonus) {
   const wert = Number(bonus.wert) || 0
   return info && info.einheit === 'prozent' ? Math.round(wert * 1000) / 100000 : wert
 }
+
+const runde = (x) => Math.round(x * 100000) / 100000
+
+/** Anzeige eines Bonus wie «Konsumgüter -5 %». */
+export function bonusText(b, sd) {
+  if (b.art === 'frei') {
+    const m = sd?.modifikatoren?.find(x => x.id === b.modifier)
+    const wert = m?.prozent ? `${runde(b.wert * 100)} %` : String(b.wert)
+    return `${m?.name ?? b.modifier} ${b.wert > 0 ? '+' : ''}${wert}`
+  }
+  const info = BONI.find(x => x.art === b.art)
+  if (!info) return ''
+  return `${info.name} ${b.wert > 0 ? '+' : ''}${b.wert}${info.einheit === 'prozent' ? ' %' : ' pro Tag'}`
+}
+
+/** Fehlertext fuer einen Bonus oder null (unbekannte freie Boni sind nur ein Hinweis und werden hier nicht gemeldet). */
+export function pruefeBonus(b) {
+  if (b.art === 'frei') {
+    return /^[a-z0-9_]+$/.test(b.modifier ?? '') ? null : `Der Bonus «${b.modifier ?? ''}» hat einen ungültigen Namen. Erlaubt sind nur Kleinbuchstaben, Ziffern und _.`
+  }
+  const info = bonusInfo(b.art)
+  if (!info) return `Unbekannter Bonus «${b.art}».`
+  const w = Number(b.wert)
+  if (!Number.isFinite(w) || w < info.min || w > info.max) return `«${info.name}» muss zwischen ${info.min} und ${info.max} liegen.`
+  return null
+}
