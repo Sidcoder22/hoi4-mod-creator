@@ -342,3 +342,23 @@ textarea.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size
   .event-arbeitsflaeche { flex-direction: column-reverse; }
   .event-vorschau-spalte { position: static; width: 100%; max-width: 440px; }
 }
+
+/* Etappe 3: Entscheidungen */
+.laender-wahl { display: flex; flex-direction: column; gap: 0.4rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; min-height: 1.8rem; }
+.chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1rem 0.2rem 0.1rem 0.6rem; background: var(--flaeche3); border: 1px solid var(--rand); border-radius: 999px; font-size: 0.85rem; }
+.chip .knopf { padding: 0 0.35rem; }
+.entscheidung-symbol { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+.entscheidung-symbol.gross { width: 48px; height: 48px; }
+.entscheidung-galerie { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); max-height: 240px; }
+.entscheidung-gruppe h3 { color: var(--messing-hell); }
+.entscheidung-vorschau { padding: 0.7rem 0.8rem; color: #e9dfc4; border: 2px solid #6b5a2e; border-radius: 4px; box-shadow: var(--schatten);
+  background: linear-gradient(180deg, #2f2c22 0%, #1f1d17 100%); }
+.entscheidung-vorschau-kategorie { font-family: Georgia, serif; color: #f3e3b4; padding-bottom: 0.4rem; margin-bottom: 0.5rem; border-bottom: 1px solid #6b5a2e; }
+.entscheidung-vorschau-zeile { display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0.5rem; border: 1px solid #5a4b27; border-radius: 3px;
+  background: linear-gradient(180deg, #3e3727 0%, #29251b 100%); }
+.entscheidung-vorschau-name { flex: 1; font-size: 0.9rem; }
+.entscheidung-vorschau-dauer { font-size: 0.78rem; color: var(--leise); }
+.entscheidung-vorschau-kosten { font-weight: 600; color: var(--messing-hell); }
+.entscheidung-vorschau-text { margin: 0.5rem 0 0; font-size: 0.82rem; color: #cfc4a6; white-space: pre-wrap; }
+h2.mit-abstand { margin-top: 1.6rem; }

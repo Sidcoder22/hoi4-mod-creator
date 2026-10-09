@@ -471,6 +471,70 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Kategorie',
+    async lauf(h) {
+      await h.klicke('nav-entscheidungen')
+      await h.klicke('neue-kategorie')
+      await h.element('kategorie-editor')
+      await h.tippe('kategorie-name', 'Reformen')
+      await h.tippe('kategorie-beschreibung', 'Grosse Pläne für das Reich.')
+      await h.waehle('kategorie-land-neu', 'MRE')
+      await h.element('kategorie-land-weg-MRE')
+      const kat = zustand().projekt.kategorien[0]
+      h.pruefe(kat.name === 'Reformen' && kat.laender.join() === 'MRE', 'Kategorie falsch: ' + JSON.stringify(kat))
+    },
+  },
+  {
+    name: 'Entscheidung',
+    async lauf(h) {
+      await h.klicke('nav-entscheidungen')
+      await h.klicke('neue-entscheidung')
+      await h.element('entscheidung-editor')
+      const kat = zustand().projekt.kategorien[0]
+      h.pruefe(h.el('entscheidung-kategorie').value === 'eigen:' + kat.id, 'Kategorie ist nicht «Reformen»')
+      await h.tippe('entscheidung-name', 'Armee reformieren')
+      await h.tippe('entscheidung-beschreibung', 'Eine neue Ordnung für das Heer.')
+      await h.tippe('entscheidung-kosten', '75')
+      h.pruefe(!h.el('entscheidung-ende-neu'), 'Wirkung am Ende ohne Dauer sichtbar')
+      await h.tippe('entscheidung-dauer', '30')
+      await h.element('entscheidung-ende-neu')
+      const d = zustand().projekt.entscheidungen[0]
+      h.pruefe(d.kosten === 75 && d.dauer === 30, 'Kosten oder Dauer falsch')
+      await h.warte(async () => (await h.text('entscheidung-vorschau')).includes('75'), 3000, 'Vorschau mit Kosten')
+      h.pruefe((await h.text('entscheidung-vorschau')).includes('Armee reformieren'), 'Vorschau ohne Namen')
+    },
+  },
+  {
+    name: 'Event auslösen',
+    async lauf(h) {
+      const volksfest = zustand().projekt.events[0]
+      await h.klicke('entscheidung-wirkung-neu')
+      await h.waehle('entscheidung-wirkung-art-0', 'event')
+      await h.waehle('entscheidung-wirkung-0-event', volksfest.id)
+      await h.tippe('entscheidung-wirkung-0-tage', '5')
+      await h.warte(async () => (await h.text('entscheidung-wirkung-satz-0')) === 'Event «Volksfest» auslösen – nach 5 Tagen', 3000, 'Klartext Event auslösen')
+      await h.klicke('entscheidung-ende-neu')
+      await h.waehle('entscheidung-ende-art-0', 'merker_setzen')
+      await h.tippe('entscheidung-ende-0-merker', 'Armee Reform')
+      const d = zustand().projekt.entscheidungen[0]
+      h.pruefe(d.wirkungen[0]?.werte.event === volksfest.id && d.wirkungen[0].werte.tage === 5, 'Wirkung Event auslösen falsch')
+      h.pruefe(d.wirkungenEnde[0]?.werte.merker === 'Armee Reform', 'Wirkung am Ende falsch')
+    },
+  },
+  {
+    name: 'Spielkategorie',
+    async lauf(h) {
+      const kat = zustand().projekt.kategorien[0]
+      await h.waehle('entscheidung-kategorie', 'spiel:political_actions')
+      h.pruefe(JSON.stringify(zustand().projekt.entscheidungen[0].kategorie) === JSON.stringify({ art: 'spiel', id: 'political_actions' }), 'Spielkategorie nicht gesetzt')
+      await h.waehle('entscheidung-kategorie', 'eigen:' + kat.id)
+      h.pruefe(zustand().projekt.entscheidungen[0].kategorie.id === kat.id, 'Eigene Kategorie nicht zurückgesetzt')
+      await h.klicke('nav-entscheidungen')
+      await h.element('entscheidung-' + zustand().projekt.entscheidungen[0].id)
+      h.pruefe((await h.text('kategorie-gruppe-eigen-' + kat.id)).includes('Armee reformieren'), 'Entscheidung nicht unter Reformen gelistet')
+    },
+  },
+  {
     name: 'Prüfung',
     async lauf(h) {
       await h.klicke('nav-pruefung')

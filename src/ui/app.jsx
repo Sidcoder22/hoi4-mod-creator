@@ -11,6 +11,9 @@ import { Baeume } from './fokus/baeume.jsx'
 import { BaumEditor } from './fokus/baum-editor.jsx'
 import { EventsListe } from './events/events-liste.jsx'
 import { EventEditor } from './events/event-editor.jsx'
+import { EntscheidungenListe } from './entscheidungen/entscheidungen-liste.jsx'
+import { EntscheidungEditor } from './entscheidungen/entscheidung-editor.jsx'
+import { KategorieEditor } from './entscheidungen/kategorie-editor.jsx'
 import { Pruefung, ampelZustand } from './pruefung.jsx'
 import { Speichern } from './speichern.jsx'
 import { Spielfehler } from './spielfehler.jsx'
@@ -23,6 +26,7 @@ export const BEREICHE = [
   { id: 'geister', text: 'Nationale Geister', ansicht: GeisterListe },
   { id: 'fokusbaeume', text: 'Fokusbäume', ansicht: Baeume },
   { id: 'events', text: 'Events', ansicht: EventsListe },
+  { id: 'entscheidungen', text: 'Entscheidungen', ansicht: EntscheidungenListe },
   { id: 'pruefung', text: 'Prüfung', ansicht: Pruefung },
   { id: 'speichern', text: 'Mod speichern', ansicht: Speichern },
   { id: 'spielfehler', text: 'Spielfehler', ansicht: Spielfehler },
@@ -71,10 +75,10 @@ function Seitenleiste({ z }) {
 }
 
 /** Ansichten ohne eigenen Eintrag in der Seitenleiste. */
-const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor, fokus: BaumEditor, event: EventEditor }
+const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor, fokus: BaumEditor, event: EventEditor, entscheidung: EntscheidungEditor, kategorie: KategorieEditor }
 
 /** Unteransicht → Eintrag der Seitenleiste, der dabei hervorgehoben ist. */
-const OBERBEREICH = { land: 'laender', geist: 'geister', fokus: 'fokusbaeume', event: 'events' }
+const OBERBEREICH = { land: 'laender', geist: 'geister', fokus: 'fokusbaeume', event: 'events', entscheidung: 'entscheidungen', kategorie: 'entscheidungen' }
 
 function Arbeitsbereich({ z }) {
   const bereich = UNTERANSICHTEN[z.ansicht.bereich]
