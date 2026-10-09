@@ -47,3 +47,15 @@ export function fraktionKennung(p, bausteinId) {
 export function eigenschaftKennung(p, eigenschaft) {
   return `${p.mod.modid}_eigenschaft_${eigenschaft.nummer}`
 }
+
+export function eventKennung(p, ev) {
+  return `${p.mod.modid}.${ev.nummer}`
+}
+
+export function entscheidungKennung(p, x) {
+  return `${p.mod.modid}_entscheidung_${x.nummer}`
+}
+
+export function kategorieKennung(p, x) {
+  return `${p.mod.modid}_kategorie_${x.nummer}`
+}

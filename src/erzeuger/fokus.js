@@ -4,23 +4,8 @@ import { schreibeParadox } from '../leser/paradox.js'
 import { erzeugeWirkungen, erzeugeBedingungen } from '../bausteine/erzeugen.js'
 import { e, wort, text as _t, block } from '../bausteine/hilfen.js'
 import { schreibeDds, skaliereRgba } from './bilder.js'
-import { baumKennung, fokusKennung, geistKennung, merkerKennung, fraktionKennung, modPfad, zahl } from './kennungen.js'
-
-/** Kontext fuer die Bausteine: wandelt Projekt-IDs in Spielkennungen um. */
-export function bausteinKontext(k, quelle) {
-  const { projekt } = k
-  const alleFokusse = (projekt.fokusbaeume ?? []).flatMap(b => b.fokusse)
-  return {
-    sprache: k.sprache,
-    quelle,
-    kennung: {
-      geist: (id) => { const g = projekt.ideen.find(x => x.id === id); return g ? geistKennung(projekt, g) : 'unbekannt' },
-      fokus: (id) => { const f = alleFokusse.find(x => x.id === id); return f ? fokusKennung(projekt, f) : 'unbekannt' },
-      merker: (t) => merkerKennung(projekt, t),
-      fraktion: (id) => fraktionKennung(projekt, id),
-    },
-  }
-}
+import { baumKennung, fokusKennung, modPfad, zahl } from './kennungen.js'
+import { bausteinKontext } from './baustein-kontext.js'
 
 function schimmer(sprite, textur) {
   const animation = (drehung) => `\t\tanimation = {

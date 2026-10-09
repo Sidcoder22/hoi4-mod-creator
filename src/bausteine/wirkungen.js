@@ -119,6 +119,17 @@ export const WIRKUNGEN = [
     felder: [MERKER], erzeuge: (w, k) => [e('set_country_flag', wort(k.kennung.merker(w.merker)))] },
   { art: 'merker_weg', gruppe: 'Merker und Profis', name: 'Merker entfernen', satz: 'Merker «{merker}» entfernen',
     felder: [MERKER], erzeuge: (w, k) => [e('clr_country_flag', wort(k.kennung.merker(w.merker)))] },
+  { art: 'event', gruppe: 'Merker und Profis', name: 'Event auslösen',
+    satz: (t, w) => `Event «${t('event')}» auslösen${Number(w.tage) > 0 ? ` – nach ${t('tage')} Tagen` : ''}`,
+    felder: [{ name: 'event', typ: 'event', label: 'Event', standard: '' }, { name: 'tage', typ: 'zahl', label: 'Verzögerung in Tagen', standard: 0, min: 0, max: 365 }],
+    erzeuge: (w, k) => {
+      const innen = [e('id', wort(k.kennung.event(w.event)))]
+      if (Number(w.tage) > 0) innen.push(e('days', zahlWort(w.tage)))
+      const ausloesen = e('country_event', block(innen))
+      // Ein Event fuer ein bestimmtes Land geht immer an dieses Land, sonst an den, der die Wirkung ausfuehrt
+      const land = k.kennung.eventLand(w.event)
+      return [land ? e(land, block([ausloesen])) : ausloesen]
+    } },
   { art: 'bei_land', gruppe: 'Merker und Profis', name: 'Bei einem anderen Land ausführen', satz: 'Bei {land} ausführen:',
     felder: [LAND], erzeuge: () => [] },
   { art: 'code', gruppe: 'Merker und Profis', name: 'Eigener Code (für Profis)', satz: 'Eigener Code',

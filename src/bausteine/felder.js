@@ -57,6 +57,9 @@ export function pruefeFeld(feld, wert, kontext) {
     case 'fokus':
       if (leer) return 'Fokus fehlt'
       return alleFokusse(kontext.projekt ?? {}).some(x => x.fokus.id === wert) ? null : 'Der Fokus wurde gelöscht'
+    case 'event':
+      if (leer) return 'Event fehlt'
+      return kontext.projekt?.events?.some(ev => ev.id === wert) ? null : 'Das Event wurde gelöscht'
     case 'ideologie':
       if (leer) return 'Ideologie fehlt'
       return !sd?.ideologien?.length || sd.ideologien.some(g => g.id === wert) ? null : `Unbekannte Ideologie «${wert}»`
@@ -91,6 +94,7 @@ export function feldAnzeige(feld, wert, kontext) {
     case 'geist': return kontext.projekt?.ideen?.find(g => g.id === wert)?.name || '(ohne Namen)'
     case 'spielgeist': return sd?.spielGeister?.find(g => g.id === wert)?.name ?? wert
     case 'fokus': return alleFokusse(kontext.projekt ?? {}).find(x => x.fokus.id === wert)?.fokus.name || '(ohne Namen)'
+    case 'event': return kontext.projekt?.events?.find(ev => ev.id === wert)?.titel || '(ohne Titel)'
     case 'ideologie': return sd?.ideologien?.find(g => g.id === wert)?.name ?? wert
     case 'kategorie': return sd?.technologieKategorien?.find(k => k.id === wert)?.name ?? wert
     case 'auswahl': return feld.optionen.find(o => o.wert === wert)?.text ?? wert

@@ -3,6 +3,7 @@
 import { Staatsuche } from '../staatsuche.jsx'
 import { alleFokusse } from '../../projekt/fokus.js'
 import { landOptionen } from '../fokus/gemeinsam.js'
+import { landName } from '../../projekt/abgeleitet.js'
 
 export function BausteinFeld({ feld, wert, onAendere, kontext, test }) {
   const { projekt, spieldaten: sd } = kontext
@@ -44,6 +45,12 @@ export function BausteinFeld({ feld, wert, onAendere, kontext, test }) {
     case 'fokus':
       eingabe = auswahl(alleFokusse(projekt).map(({ baum, fokus }) => ({ wert: fokus.id, text: `${fokus.name || '(ohne Namen)'} · ${baum.name}` })), '– Fokus wählen –')
       break
+    case 'event': {
+      const fuer = (ev) => (ev.land ? landName(ev.land, projekt, sd) : 'wer es auslöst')
+      eingabe = auswahl((projekt.events ?? []).map(ev => ({ wert: ev.id, text: `«${ev.titel || '(ohne Titel)'}» · ${fuer(ev)}` })),
+        projekt.events?.length ? '– Event wählen –' : '– zuerst ein Event anlegen –')
+      break
+    }
     case 'ideologie':
       eingabe = auswahl((sd.ideologien ?? []).map(g => ({ wert: g.id, text: g.name })))
       break
