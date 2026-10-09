@@ -19,9 +19,11 @@ function standardWerte(def) {
   return Object.fromEntries(def.felder.map(f => [f.name, structuredClone(f.standard)]))
 }
 
-export function neueWirkung(art) {
+/** Neue Wirkung mit Vorgaben; mit Spieldaten bekommt «Bonus erhalten» ein Bild, das es im Spiel gibt. */
+export function neueWirkung(art, sd) {
   const def = wirkungsDef(art)
   const b = { id: neueId(), art, werte: standardWerte(def) }
+  if (art === 'bonus' && sd && !sd.sprites?.[b.werte.bild] && sd.ideenBilder?.length) b.werte.bild = sd.ideenBilder[0]
   if (art === 'bei_land') b.wirkungen = []
   return b
 }

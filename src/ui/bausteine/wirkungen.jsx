@@ -40,7 +40,7 @@ export function WirkungenEditor({ liste, onAendere, kontext, test, tiefe = 0 }) 
           <div class="baustein" key={b.id} data-test={`${test}-${i}`}>
             <div class="baustein-kopf">
               <ArtAuswahl katalog={WIRKUNGEN} wert={b.art} test={`${test}-art-${i}`}
-                onAendere={(art) => setze(i, { ...neueWirkung(art), id: b.id })} />
+                onAendere={(art) => setze(i, { ...neueWirkung(art, kontext.spieldaten), id: b.id })} />
               <button class="knopf klein leise" title="Entfernen" data-test={`${test}-entfernen-${i}`} onClick={() => onAendere(liste.filter((_, k) => k !== i))}>✕</button>
             </div>
             {def && <BausteinFelder def={def} baustein={b} kontext={kontext} test={`${test}-${i}`} onWerte={(werte) => setze(i, { ...b, werte })} />}
@@ -55,7 +55,7 @@ export function WirkungenEditor({ liste, onAendere, kontext, test, tiefe = 0 }) 
           </div>
         )
       })}
-      <button class="knopf klein" data-test={`${test}-neu`} onClick={() => onAendere([...liste, neueWirkung('politische_macht')])}>＋ Hinzufügen</button>
+      <button class="knopf klein" data-test={`${test}-neu`} onClick={() => onAendere([...liste, neueWirkung('politische_macht', kontext.spieldaten)])}>＋ Hinzufügen</button>
     </div>
   )
 }

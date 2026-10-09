@@ -141,3 +141,20 @@ test('Etappe 3b: Laufzeit-Boni werden nur mit Dauer geprueft und zaehlen als Wir
   expect(regeln(nurBonus)).not.toContain('entscheidung-ohne-wirkung')
   expect(regeln(aendereEntscheidung(nurBonus, ent, { dauer: 0 }))).toContain('entscheidung-ohne-wirkung')
 })
+
+test('Etappe 3b: unbekannter freier Bonus im Baustein ergibt den Hinweis bonus-unbekannt', () => {
+  const w = neueWirkung('bonus')
+  const unbekannt = { ...w, werte: { ...w.werte, name: 'Fest', boni: [{ art: 'frei', modifier: 'consumer_good_factorx', wert: 0.1 }] } }
+  const inAntwort = aendereAntwort(g, ev, antwortId, { wirkungen: [unbekannt] })
+  expect(meldungen(inAntwort).find(x => x.regel === 'bonus-unbekannt')).toMatchObject({ schwere: 'hinweis', ziel: { bereich: 'event', id: ev } })
+  const verschachtelt = aendereEntscheidung(g, ent, { wirkungen: [{ ...mit(neueWirkung('bei_land'), { land: 'GER' }), wirkungen: [unbekannt] }] })
+  expect(meldungen(verschachtelt).find(x => x.regel === 'bonus-unbekannt')).toMatchObject({ ziel: { bereich: 'entscheidung', id: ent } })
+  let p = g
+  let baum, f
+  ;[p, baum] = fuegeBaumHinzu(p, 'MRE', 'Baum')
+  ;[p, f] = fuegeFokusHinzu(p, sd, baum, 0, 0)
+  p = aendereFokus(p, baum, f, { name: 'A', beschreibung: 'b', belohnung: [unbekannt] })
+  expect(meldungen(p).find(x => x.regel === 'bonus-unbekannt')).toMatchObject({ ziel: { bereich: 'fokus', id: baum, fokus: f } })
+  const bekannt = { ...unbekannt, werte: { ...unbekannt.werte, boni: [{ art: 'frei', modifier: 'consumer_goods_factor', wert: 0.1 }] } }
+  expect(regeln(aendereAntwort(g, ev, antwortId, { wirkungen: [bekannt] }))).not.toContain('bonus-unbekannt')
+})

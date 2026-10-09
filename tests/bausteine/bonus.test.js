@@ -42,3 +42,10 @@ test('Pruefung', () => {
   // Review Focus 3
   expect(pruefeBausteine([mitWerten({ boni: [{ art: 'frei', modifier: 'Consumer Goods', wert: 0.1 }] })], kontext, 'A')[0].text).toMatch(/ungültigen Namen/)
 })
+
+test('Review: Standardbild faellt auf das erste Geister-Bild des Spiels zurueck', () => {
+  expect(neueWirkung('bonus', sd).werte.bild).toBe('GFX_idea_generic_army')
+  const ohneArmee = { ...sd, sprites: { GFX_idea_x: 'a.dds' }, ideenBilder: ['GFX_idea_x'] }
+  expect(neueWirkung('bonus', ohneArmee).werte.bild).toBe('GFX_idea_x')
+  expect(neueWirkung('politische_macht', ohneArmee).werte).toEqual({ menge: 50 })
+})

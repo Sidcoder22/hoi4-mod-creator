@@ -331,6 +331,30 @@ export function pruefeProjekt(p, sd) {
     if (String(d.name || '').trim() && !String(d.beschreibung || '').trim()) hinweis('entscheidung-beschreibung', `${dname} hat keine Beschreibung.`, ziel)
   }
 
+  // Etappe 3b: freie Boni in Bausteinen «Bonus erhalten», die das Spiel nicht kennt (Fehler meldet schon die Regel baustein)
+  const unbekannteBoni = (liste, wer, ziel) => {
+    for (const w of liste ?? []) {
+      if (w.art === 'bei_land') unbekannteBoni(w.wirkungen, wer, ziel)
+      if (w.art !== 'bonus') continue
+      for (const b of w.werte?.boni ?? []) {
+        if (b.art === 'frei' && !pruefeBonus(b) && !bekannteModifikatoren.has(b.modifier)) {
+          hinweis('bonus-unbekannt', `${wer}: Den Bonus «${b.modifier}» im Baustein «${w.werte.name || 'Bonus'}» kennt das eingelesene Spiel nicht. Prüfe die Schreibweise.`, ziel)
+        }
+      }
+    }
+  }
+  for (const baum of p.fokusbaeume ?? []) {
+    for (const f of baum.fokusse) unbekannteBoni(f.belohnung, `Fokus «${f.name || 'ohne Namen'}»`, { bereich: 'fokus', id: baum.id, fokus: f.id })
+  }
+  for (const ev of p.events ?? []) {
+    for (const a of ev.antworten ?? []) unbekannteBoni(a.wirkungen, `Event «${ev.titel || 'ohne Titel'}»`, { bereich: 'event', id: ev.id })
+  }
+  for (const d of p.entscheidungen ?? []) {
+    const ziel = { bereich: 'entscheidung', id: d.id }
+    unbekannteBoni(d.wirkungen, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
+    if (Number(d.dauer) > 0) unbekannteBoni(d.wirkungenEnde, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
+  }
+
   if (p.mod.spielversion && sd.version && p.mod.spielversion !== sd.version) {
     hinweis('spielversion', `Die Mod wurde zuletzt mit Spielversion ${p.mod.spielversion} gespeichert, eingelesen ist ${sd.version}. Kopierte Spieldateien werden beim Speichern erneuert.`, einstellungen)
   }
