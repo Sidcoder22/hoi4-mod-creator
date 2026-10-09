@@ -282,6 +282,54 @@ export function pruefeProjekt(p, sd) {
   }
 
   // Hinweise zur Mod
+  // Etappe 3: Events, Kategorien, Entscheidungen
+  const kontext = { projekt: p, spieldaten: sd }
+  const symbolFehlt = (sym) => (sym?.art === 'eigen' ? !p.bilder?.[sym.bildId] : !sd.sprites?.[sym?.sprite])
+  const ausgeloest = ausgeloesteEvents(p)
+  for (const ev of p.events ?? []) {
+    const ziel = { bereich: 'event', id: ev.id }
+    const ename = `Event «${ev.titel || 'ohne Titel'}»`
+    if (!String(ev.titel || '').trim()) fehler('event-titel', 'Ein Event braucht einen Titel.', ziel)
+    if (!ev.antworten?.length) fehler('event-ohne-antwort', `${ename} braucht mindestens eine Antwort.`, ziel)
+    ev.antworten?.forEach((a, i) => {
+      if (!String(a.text || '').trim()) fehler('antwort-text', `Antwort ${i + 1} von ${ename} braucht einen Text.`, ziel)
+      for (const m of pruefeBausteine(a.wirkungen, kontext, `${ename}, Antwort ${i + 1}`)) fehler('baustein', m.text, ziel)
+    })
+    const selbstPruefend = ev.ausloeser === 'datum' || ev.ausloeser === 'zufall'
+    if (selbstPruefend && !ev.land) fehler('event-land', `${ename}: Bei «${ev.ausloeser === 'datum' ? 'An einem Datum' : 'Zufällig'}» musst du ein bestimmtes Land wählen.`, ziel)
+    else if (ev.land && !tags.has(ev.land)) fehler('event-land', `${ename} gehört zu einem Land, das es nicht mehr gibt.`, ziel)
+    if (symbolFehlt(ev.bild)) fehler('event-bild', `Das Bild von ${ename} fehlt. Bitte wähle ein anderes.`, ziel)
+    if (selbstPruefend) for (const m of pruefeBausteine(ev.bedingungen, kontext, ename)) fehler('baustein', m.text, ziel)
+    if (!selbstPruefend && !ausgeloest.has(ev.id)) {
+      hinweis('event-nie', `${ename} wird nie ausgelöst. Füge irgendwo die Wirkung «Event auslösen» hinzu oder wähle einen anderen Auslöser.`, ziel)
+    }
+    if (String(ev.titel || '').trim() && !String(ev.text || '').trim()) hinweis('event-text', `${ename} hat keinen Text.`, ziel)
+  }
+  const eigeneKategorien = new Set((p.kategorien ?? []).map(k => k.id))
+  const spielKategorien = new Set((sd.entscheidungsKategorien ?? []).map(k => k.id))
+  for (const kat of p.kategorien ?? []) {
+    const ziel = { bereich: 'kategorie', id: kat.id }
+    const kname = `Kategorie «${kat.name || 'ohne Namen'}»`
+    if (!String(kat.name || '').trim()) fehler('kategorie-name', 'Eine Kategorie für Entscheidungen braucht einen Namen.', ziel)
+    if (symbolFehlt(kat.symbol)) fehler('kategorie-symbol', `Das Symbol der ${kname} fehlt. Bitte wähle ein anderes.`, ziel)
+    for (const t of kat.laender ?? []) if (!tags.has(t)) fehler('kategorie-land', `${kname} ist für das Land «${t}», das es nicht mehr gibt.`, ziel)
+    if (!(p.entscheidungen ?? []).some(d => d.kategorie?.art === 'eigen' && d.kategorie.id === kat.id)) hinweis('kategorie-leer', `${kname} enthält noch keine Entscheidung.`, ziel)
+  }
+  for (const d of p.entscheidungen ?? []) {
+    const ziel = { bereich: 'entscheidung', id: d.id }
+    const dname = `Entscheidung «${d.name || 'ohne Namen'}»`
+    if (!String(d.name || '').trim()) fehler('entscheidung-name', 'Eine Entscheidung braucht einen Namen.', ziel)
+    const katDa = d.kategorie?.art === 'eigen' ? eigeneKategorien.has(d.kategorie.id) : spielKategorien.has(d.kategorie?.id)
+    if (!katDa) fehler('entscheidung-kategorie', `${dname} gehört zu keiner Kategorie mehr. Wähle eine Kategorie aus.`, ziel)
+    if (symbolFehlt(d.symbol)) fehler('entscheidung-symbol', `Das Symbol von ${dname} fehlt. Bitte wähle ein anderes.`, ziel)
+    for (const t of d.laender ?? []) if (!tags.has(t)) fehler('entscheidung-land', `${dname} ist für das Land «${t}», das es nicht mehr gibt.`, ziel)
+    const mitEnde = Number(d.dauer) > 0
+    const teile = [[d.sichtbar, 'sichtbar wenn'], [d.verfuegbar, 'verfügbar wenn'], [d.wirkungen, 'Wirkung'], ...(mitEnde ? [[d.wirkungenEnde, 'Wirkung am Ende']] : [])]
+    for (const [teil, wo] of teile) for (const m of pruefeBausteine(teil, kontext, `${dname} (${wo})`)) fehler('baustein', m.text, ziel)
+    if (!d.wirkungen?.length && !(mitEnde && d.wirkungenEnde?.length)) hinweis('entscheidung-ohne-wirkung', `${dname} bewirkt nichts.`, ziel)
+    if (String(d.name || '').trim() && !String(d.beschreibung || '').trim()) hinweis('entscheidung-beschreibung', `${dname} hat keine Beschreibung.`, ziel)
+  }
+
   if (p.mod.spielversion && sd.version && p.mod.spielversion !== sd.version) {
     hinweis('spielversion', `Die Mod wurde zuletzt mit Spielversion ${p.mod.spielversion} gespeichert, eingelesen ist ${sd.version}. Kopierte Spieldateien werden beim Speichern erneuert.`, einstellungen)
   }
@@ -292,4 +340,22 @@ export function pruefeProjekt(p, sd) {
     hinweis('start-1939', 'Änderungen an bestehenden Ländern gelten für den Start 1936. Beim Start 1939 kann das Spiel einzelne Werte überschreiben.', { bereich: 'land' })
   }
   return meldungen
+}
+
+/** Alle Events, die irgendwo «Event auslösen» trifft (Fokusse, Antworten anderer Events, Entscheidungen; auch verschachtelt). */
+export function ausgeloesteEvents(p) {
+  const gefunden = new Set()
+  const sammle = (liste, ausser) => {
+    for (const w of liste ?? []) {
+      if (w.art === 'event' && w.werte?.event && w.werte.event !== ausser) gefunden.add(w.werte.event)
+      if (w.art === 'bei_land') sammle(w.wirkungen, ausser)
+    }
+  }
+  for (const b of p.fokusbaeume ?? []) for (const f of b.fokusse) sammle(f.belohnung)
+  for (const ev of p.events ?? []) for (const a of ev.antworten ?? []) sammle(a.wirkungen, ev.id)
+  for (const d of p.entscheidungen ?? []) {
+    sammle(d.wirkungen)
+    if (Number(d.dauer) > 0) sammle(d.wirkungenEnde)
+  }
+  return gefunden
 }

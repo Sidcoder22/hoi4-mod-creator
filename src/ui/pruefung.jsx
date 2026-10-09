@@ -12,6 +12,8 @@ export function zielAnsicht(ziel) {
   if (ziel.bereich === 'land') return ziel.id ? { bereich: 'land', id: ziel.id, reiter: ziel.reiter || 'name' } : { bereich: 'laender' }
   if (ziel.bereich === 'geist') return ziel.id ? { bereich: 'geist', id: ziel.id } : { bereich: 'geister' }
   if (ziel.bereich === 'fokus') return ziel.id ? { bereich: 'fokus', id: ziel.id, ...(ziel.fokus ? { fokus: ziel.fokus } : {}) } : { bereich: 'fokusbaeume' }
+  if (ziel.bereich === 'event') return ziel.id ? { bereich: 'event', id: ziel.id } : { bereich: 'events' }
+  if (ziel.bereich === 'entscheidung' || ziel.bereich === 'kategorie') return ziel.id ? { bereich: ziel.bereich, id: ziel.id } : { bereich: 'entscheidungen' }
   return { bereich: 'einstellungen' }
 }
 
