@@ -10,9 +10,27 @@ const text = (t) => ({ typ: 'text', text: String(t) })
 const block = (inhalt) => ({ typ: 'block', inhalt })
 const eintrag = (schluessel, wert) => ({ schluessel, op: '=', wert })
 
+function modifierBlock(boni) {
+  const modifier = []
+  for (const bonus of boni || []) {
+    const name = bonusModifier(bonus)
+    if (name) modifier.push(eintrag(name, wort(zahl(bonusWertImSpiel(bonus), 6))))
+  }
+  return eintrag('modifier', block(modifier))
+}
+
+const geistBlock = (bild, boni) => block([
+  eintrag('picture', wort(bild)),
+  eintrag('allowed', block([eintrag('always', wort('no'))])),
+  eintrag('removal_cost', wort(-1)),
+  modifierBlock(boni),
+])
+
+/** Eigene Geister und die Geister der Bausteine «Bonus erhalten» (k.bonusGeister). */
 export function erzeugeIdeen(k) {
   const { projekt, spieldaten, modid } = k
-  if (!projekt.ideen.length) return
+  const bonusGeister = k.bonusGeister ?? new Map()
+  if (!projekt.ideen.length && !bonusGeister.size) return
   const ideen = []
   const sprites = []
   for (const geist of projekt.ideen) {
@@ -34,19 +52,17 @@ export function erzeugeIdeen(k) {
       k.braucheGfx(sprite)
       bild = sprite.replace(/^GFX_idea_/, '')
     }
-    const modifier = []
-    for (const bonus of geist.boni || []) {
-      const name = bonusModifier(bonus)
-      if (name) modifier.push(eintrag(name, wort(zahl(bonusWertImSpiel(bonus), 6))))
-    }
-    ideen.push(eintrag(kennung, block([
-      eintrag('picture', wort(bild)),
-      eintrag('allowed', block([eintrag('always', wort('no'))])),
-      eintrag('removal_cost', wort(-1)),
-      eintrag('modifier', block(modifier)),
-    ])))
+    ideen.push(eintrag(kennung, geistBlock(bild, geist.boni)))
     k.sprache.setze(kennung, geist.name)
     k.sprache.setze(`${kennung}_desc`, geist.beschreibung || '')
+    k.braucheSprache(kennung)
+  }
+  for (const [kennung, { name, bild, boni }] of bonusGeister) {
+    const sprite = bild || 'GFX_idea_generic_army'
+    k.braucheGfx(sprite)
+    ideen.push(eintrag(kennung, geistBlock(sprite.replace(/^GFX_idea_/, ''), boni)))
+    k.sprache.setze(kennung, name)
+    k.sprache.setze(`${kennung}_desc`, '')
     k.braucheSprache(kennung)
   }
   k.schreibe(modPfad(modid, `common/ideas/${modid}_ideas.txt`), schreibeParadox([eintrag('ideas', block([eintrag('country', block(ideen))]))]))

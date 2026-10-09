@@ -3,6 +3,7 @@
 import { parseParadox } from '../leser/paradox.js'
 import { landName } from '../projekt/abgeleitet.js'
 import { alleFokusse } from '../projekt/fokus.js'
+import { pruefeBonus, bonusText } from '../projekt/boni.js'
 
 export const VERGLEICH = [{ wert: '>', text: 'über' }, { wert: '<', text: 'unter' }]
 export const VERGLEICH_DATUM = [{ wert: '>', text: 'nach dem' }, { wert: '<', text: 'vor dem' }]
@@ -60,6 +61,11 @@ export function pruefeFeld(feld, wert, kontext) {
     case 'event':
       if (leer) return 'Event fehlt'
       return kontext.projekt?.events?.some(ev => ev.id === wert) ? null : 'Das Event wurde gelöscht'
+    case 'boni':
+      if (!Array.isArray(wert) || !wert.length) return 'Mindestens ein Bonus fehlt'
+      return wert.map(b => pruefeBonus(b)).find(Boolean) ?? null
+    case 'ideenbild':
+      return sd?.sprites?.[wert] ? null : 'Bild fehlt'
     case 'ideologie':
       if (leer) return 'Ideologie fehlt'
       return !sd?.ideologien?.length || sd.ideologien.some(g => g.id === wert) ? null : `Unbekannte Ideologie «${wert}»`
@@ -95,6 +101,8 @@ export function feldAnzeige(feld, wert, kontext) {
     case 'spielgeist': return sd?.spielGeister?.find(g => g.id === wert)?.name ?? wert
     case 'fokus': return alleFokusse(kontext.projekt ?? {}).find(x => x.fokus.id === wert)?.fokus.name || '(ohne Namen)'
     case 'event': return kontext.projekt?.events?.find(ev => ev.id === wert)?.titel || '(ohne Titel)'
+    case 'boni': return Array.isArray(wert) && wert.length ? wert.map(b => bonusText(b, sd)).filter(Boolean).join(', ') : '…'
+    case 'ideenbild': return String(wert).replace(/^GFX_idea_/, '')
     case 'ideologie': return sd?.ideologien?.find(g => g.id === wert)?.name ?? wert
     case 'kategorie': return sd?.technologieKategorien?.find(k => k.id === wert)?.name ?? wert
     case 'auswahl': return feld.optionen.find(o => o.wert === wert)?.text ?? wert

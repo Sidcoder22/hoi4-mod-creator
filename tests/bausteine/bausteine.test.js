@@ -62,10 +62,11 @@ const WIRKUNGS_FAELLE = [
   ['code', { code: 'add_command_power = 10' }, 'add_command_power = 10\n'],
 ]
 
-test('jede Wirkung hat einen Fall (event in tests/bausteine/event.test.js)', () => {
+test('jede Wirkung hat einen Fall (event und bonus in eigenen Testdateien)', () => {
   const arten = new Set(WIRKUNGS_FAELLE.map(f => f[0]))
   arten.add('bei_land')
   arten.add('event')
+  arten.add('bonus')
   expect(WIRKUNGEN.map(d => d.art).filter(a => !arten.has(a))).toEqual([])
   expect(WIRKUNGEN.some(d => d.art === 'event')).toBe(true)
 })

@@ -17,7 +17,8 @@ import { erzeugeEvents } from './events.js'
 import { erzeugeEntscheidungen } from './entscheidungen.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = [erzeugeIdeen, erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen]
+// Die Geister kommen zuletzt: Bausteine «Bonus erhalten» der anderen Erzeuger melden ihnen noch Geister.
+export const ERZEUGER = [erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen, erzeugeIdeen]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
@@ -57,6 +58,7 @@ export function erzeugeMod(projekt, spieldaten) {
   const neueVerlaeufe = new Map()
   const neueZeilen = new Map()
   const entfernen = new Map()
+  const bonusGeister = new Map()
   const neueTags = new Set(projekt.laender.filter(l => l.art === 'neu').map(l => l.tag))
 
   const kontext = {
@@ -78,6 +80,9 @@ export function erzeugeMod(projekt, spieldaten) {
       anhaenge.get(tag).push(...zeilen)
     },
     neueFarbe: (tag, rgb) => farben.set(tag, rgb),
+    /** Geist fuer den Baustein «Bonus erhalten»; dieselbe Kennung zaehlt nur einmal. */
+    bonusGeist: (kennung, daten) => { if (!bonusGeister.has(kennung)) bonusGeister.set(kennung, daten) },
+    bonusGeister,
     /** Verlaufsdatei eines neuen Landes; wird am Schluss mit allen Startzeilen geschrieben. */
     neuerVerlauf: (tag, pfad, text) => neueVerlaeufe.set(tag, { pfad, text }),
     /** Zeilen fuer den Spielstart: bei neuen Laendern in ihre Datei, sonst als Anhang an die Spieldatei. */

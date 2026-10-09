@@ -59,3 +59,7 @@ export function entscheidungKennung(p, x) {
 export function kategorieKennung(p, x) {
   return `${p.mod.modid}_kategorie_${x.nummer}`
 }
+
+export function bonusKennung(p, bausteinId) {
+  return `${p.mod.modid}_bonus_${bausteinId}`
+}

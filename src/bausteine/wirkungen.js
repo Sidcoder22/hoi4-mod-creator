@@ -51,6 +51,21 @@ export const WIRKUNGEN = [
     felder: [{ name: 'spielgeist', typ: 'spielgeist', label: 'Geist aus dem Spiel', standard: '' }], erzeuge: (w) => [e('add_ideas', wort(w.spielgeist))] },
   { art: 'spielgeist_weg', gruppe: 'Politik', name: 'Geist aus dem Spiel entfernen', satz: 'Geist «{spielgeist}» aus dem Spiel entfernen',
     felder: [{ name: 'spielgeist', typ: 'spielgeist', label: 'Geist aus dem Spiel', standard: '' }], erzeuge: (w) => [e('remove_ideas', wort(w.spielgeist))] },
+  { art: 'bonus', gruppe: 'Politik', name: 'Bonus erhalten (wie bei Geistern)',
+    satz: (t, w) => `Bonus «${t('name')}»: ${t('boni')} – ${Number(w.tage) > 0 ? `für ${t('tage')} Tage` : 'dauerhaft'}`,
+    felder: [
+      { name: 'name', typ: 'text', label: 'Name', standard: '' },
+      { name: 'bild', typ: 'ideenbild', label: 'Bild', standard: 'GFX_idea_generic_army' },
+      { name: 'boni', typ: 'boni', label: 'Boni', standard: [{ art: 'konsumgueter', wert: -10 }] },
+      { name: 'tage', typ: 'zahl', label: 'Dauer in Tagen (0 = dauerhaft)', standard: 0, min: 0, max: 3650 },
+    ],
+    erzeuge: (w, k, b) => {
+      // Das Spiel vergibt Boni nur ueber Geister: der Creator legt dafuer einen eigenen Geist an
+      const kennung = k.kennung.bonus(b.id)
+      k.bonusGeist(kennung, { name: w.name, bild: w.bild, boni: w.boni })
+      if (Number(w.tage) > 0) return [e('add_timed_idea', block([e('idea', wort(kennung)), e('days', zahlWort(w.tage))]))]
+      return [e('add_ideas', wort(kennung))]
+    } },
 
   { art: 'rekruten', gruppe: 'Wirtschaft und Forschung', name: 'Rekruten', satz: '{menge} Rekruten erhalten',
     felder: [mengeFeld(10000, 0, 10000000)], erzeuge: (w) => [e('add_manpower', zahlWort(w.menge))] },

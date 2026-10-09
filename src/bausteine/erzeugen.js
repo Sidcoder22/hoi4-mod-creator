@@ -16,7 +16,7 @@ function mitStandard(def, werte) {
 }
 
 function standardWerte(def) {
-  return Object.fromEntries(def.felder.map(f => [f.name, f.standard]))
+  return Object.fromEntries(def.felder.map(f => [f.name, structuredClone(f.standard)]))
 }
 
 export function neueWirkung(art) {
