@@ -14,9 +14,10 @@ import { erzeugeFokusbaeume } from './fokus.js'
 import { erzeugeEigenschaften } from './eigenschaften.js'
 import { erzeugeDiplomatie } from './diplomatie.js'
 import { erzeugeEvents } from './events.js'
+import { erzeugeEntscheidungen } from './entscheidungen.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
-export const ERZEUGER = [erzeugeIdeen, erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents]
+export const ERZEUGER = [erzeugeIdeen, erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
