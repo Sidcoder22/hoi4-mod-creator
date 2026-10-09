@@ -36,6 +36,8 @@ Etappe 3 bringt dazu:
 - **Entscheidungen:** Name, Symbol, Kosten in politischer Macht, «nur einmal» oder mit Wartezeit, auf Wunsch mit Dauer und «Wirkung am Ende».
   Dazu «Sichtbar wenn» und «Verfügbar wenn». Entscheidungen liegen in eigenen Kategorien oder in einer Kategorie aus dem Spiel.
 - **Baustein «Event auslösen»:** Fokusse, Entscheidungen und Event-Antworten lösen damit ein Event aus, auch mit Verzögerung.
+- **Boni wie bei den Geistern:** Mit dem Baustein «Bonus erhalten» bekommt ein Land in Fokussen, Event-Antworten und Entscheidungen Boni wie Konsumgüter, dauerhaft oder für eine bestimmte Zahl von Tagen.
+  Der Creator legt dafür selbst einen Geist mit Name und Bild an. Entscheidungen mit Dauer haben zusätzlich «Bonus während der Laufzeit».
 - **Verknüpfen über Merker:** Ein Fokus setzt zum Beispiel den Merker «Armee Reform», und eine Entscheidung ist erst sichtbar, wenn dieser Merker gesetzt ist.
 
 ## Benutzen (Windows-PC)
@@ -69,7 +71,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Baupläne: `docs/superpowers/plans/` (Etappe 1, 2, 2b und 3 `2026-10-09-etappe-3-events-entscheidungen.md`)
+- Baupläne: `docs/superpowers/plans/` (Etappe 1, 2, 2b, 3 und 3b)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)

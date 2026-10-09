@@ -362,3 +362,7 @@ textarea.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size
 .entscheidung-vorschau-kosten { font-weight: 600; color: var(--messing-hell); }
 .entscheidung-vorschau-text { margin: 0.5rem 0 0; font-size: 0.82rem; color: #cfc4a6; white-space: pre-wrap; }
 h2.mit-abstand { margin-top: 1.6rem; }
+
+/* Etappe 3b: Bonus-Baustein */
+.ideen-galerie { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); max-height: 180px; }
+.baustein-feld .boni .bonus { grid-template-columns: 1fr auto auto; }

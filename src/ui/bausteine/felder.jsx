@@ -4,6 +4,8 @@ import { Staatsuche } from '../staatsuche.jsx'
 import { alleFokusse } from '../../projekt/fokus.js'
 import { landOptionen } from '../fokus/gemeinsam.js'
 import { landName } from '../../projekt/abgeleitet.js'
+import { BonusEditor } from '../bonus-editor.jsx'
+import { SymbolGalerie } from '../fokus/symbole.jsx'
 
 export function BausteinFeld({ feld, wert, onAendere, kontext, test }) {
   const { projekt, spieldaten: sd } = kontext
@@ -51,6 +53,15 @@ export function BausteinFeld({ feld, wert, onAendere, kontext, test }) {
         projekt.events?.length ? '– Event wählen –' : '– zuerst ein Event anlegen –')
       break
     }
+    case 'boni':
+      eingabe = <BonusEditor boni={Array.isArray(wert) ? wert : []} spieldaten={sd} test={test} onAendere={onAendere} />
+      break
+    case 'ideenbild':
+      eingabe = (
+        <SymbolGalerie symbole={sd.ideenBilder ?? []} gewaehlt={wert} bildArt="idee" test={test} praefix="GFX_idea_" klasse="ideen-galerie"
+          platzhalter="Bilder durchsuchen, z. B. «army», «industry» …" onWaehle={onAendere} />
+      )
+      break
     case 'ideologie':
       eingabe = auswahl((sd.ideologien ?? []).map(g => ({ wert: g.id, text: g.name })))
       break
@@ -78,10 +89,12 @@ export function BausteinFeld({ feld, wert, onAendere, kontext, test }) {
     default:
       eingabe = <input type="text" value={wert ?? ''} data-test={test} onInput={(e) => onAendere(e.currentTarget.value)} />
   }
+  // Felder mit mehreren Knoepfen nicht in ein <label> packen, sonst loest ein Klick auf den Titel den ersten Knopf aus
+  const Huelle = feld.typ === 'boni' || feld.typ === 'ideenbild' ? 'div' : 'label'
   return (
-    <label class="baustein-feld">
+    <Huelle class="baustein-feld">
       <span class="feld-titel">{feld.label}</span>
       {eingabe}
-    </label>
+    </Huelle>
   )
 }

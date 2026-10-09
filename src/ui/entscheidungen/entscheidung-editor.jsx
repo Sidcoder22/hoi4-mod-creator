@@ -11,6 +11,7 @@ import { WirkungenEditor } from '../bausteine/wirkungen.jsx'
 import { BedingungenEditor } from '../bausteine/bedingungen.jsx'
 import { EntscheidungVorschau, EntscheidungsSymbol } from './entscheidung-vorschau.jsx'
 import { kategorieName } from './entscheidungen-liste.jsx'
+import { BonusEditor } from '../bonus-editor.jsx'
 
 export function EntscheidungEditor({ z }) {
   const d = (z.projekt.entscheidungen ?? []).find(x => x.id === z.ansicht.id)
@@ -80,6 +81,13 @@ export function EntscheidungEditor({ z }) {
             <summary>{mitDauer ? 'Wirkung beim Start' : 'Wirkung'}</summary>
             <WirkungenEditor liste={d.wirkungen} kontext={kontext} test="entscheidung-wirkung" onAendere={(v) => setze({ wirkungen: v }, 'wirkungen')} />
           </details>
+          {mitDauer && (
+            <details class="abschnitt" open>
+              <summary>Bonus während der Laufzeit</summary>
+              <p class="leise">Gilt nur, solange die Entscheidung läuft.</p>
+              <BonusEditor boni={d.boniLaufzeit ?? []} spieldaten={sd} test="entscheidung-laufzeit" onAendere={(v) => setze({ boniLaufzeit: v }, 'laufzeit')} />
+            </details>
+          )}
           {mitDauer && (
             <details class="abschnitt" open>
               <summary>Wirkung am Ende</summary>

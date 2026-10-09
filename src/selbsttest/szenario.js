@@ -435,6 +435,16 @@ export const SCHRITTE = [
       await h.klicke('antwort-0-wirkung-neu')
       await h.waehle('antwort-0-wirkung-art-0', 'politische_macht')
       await h.tippe('antwort-0-wirkung-0-menge', '25')
+      // Etappe 3b: Bonus wie bei Geistern
+      await h.klicke('antwort-0-wirkung-neu')
+      await h.waehle('antwort-0-wirkung-art-1', 'bonus')
+      await h.tippe('antwort-0-wirkung-1-name', 'Festlaune')
+      await h.tippe('antwort-0-wirkung-1-tage', '180')
+      await h.klicke('antwort-0-wirkung-1-bild-GFX_idea_generic_industry')
+      await h.element('antwort-0-wirkung-1-boni-wert-0')
+      await h.warte(async () => (await h.text('antwort-0-wirkung-satz-1')) === 'Bonus «Festlaune»: Konsumgüter -10 % – für 180 Tage', 3000, 'Klartext Bonus')
+      h.pruefe(zustand().projekt.events[0].antworten[0].wirkungen[1].werte.bild === 'GFX_idea_generic_industry', 'Bild des Bonus nicht gesetzt')
+      h.pruefe((await h.text('vorschau-antwort-0')).includes('Festlaune'), 'Vorschau ohne Bonus')
       await h.klicke('antwort-neu')
       await h.tippe('antwort-1-text', 'Absagen')
       const ev = zustand().projekt.events[0]
@@ -498,6 +508,8 @@ export const SCHRITTE = [
       h.pruefe(!h.el('entscheidung-ende-neu'), 'Wirkung am Ende ohne Dauer sichtbar')
       await h.tippe('entscheidung-dauer', '30')
       await h.element('entscheidung-ende-neu')
+      await h.klicke('entscheidung-laufzeit-neu')
+      h.pruefe(zustand().projekt.entscheidungen[0].boniLaufzeit.length === 1, 'Laufzeit-Bonus fehlt')
       const d = zustand().projekt.entscheidungen[0]
       h.pruefe(d.kosten === 75 && d.dauer === 30, 'Kosten oder Dauer falsch')
       await h.warte(async () => (await h.text('entscheidung-vorschau')).includes('75'), 3000, 'Vorschau mit Kosten')
@@ -617,7 +629,9 @@ export const SCHRITTE = [
       const events = lies('mod/selbsttest_reich/events/selbsttest_reich_events.txt')
       for (const teil of ['add_namespace = selbsttest_reich', 'is_triggered_only = yes', 'date > 1937.1.1']) h.pruefe(events.includes(teil), `Events ohne «${teil}»`)
       const entscheidungen = lies('mod/selbsttest_reich/common/decisions/selbsttest_reich_decisions.txt')
-      for (const teil of ['days_remove = 30', 'country_event', 'cost = 75']) h.pruefe(entscheidungen.includes(teil), `Entscheidungen ohne «${teil}»`)
+      for (const teil of ['days_remove = 30', 'country_event', 'cost = 75', 'modifier = {']) h.pruefe(entscheidungen.includes(teil), `Entscheidungen ohne «${teil}»`)
+      h.pruefe(events.includes('add_timed_idea'), 'Events ohne «add_timed_idea»')
+      h.pruefe(lies('mod/selbsttest_reich/common/ideas/selbsttest_reich_ideas.txt').includes('consumer_goods_factor = -0.1'), 'Bonus-Geist fehlt')
       lies('mod/selbsttest_reich/common/decisions/categories/selbsttest_reich_categories.txt')
       h.pruefe(zustand().projekt.mod.gespeichertAls === 'selbsttest_reich', 'gespeichertAls nicht gesetzt')
     },
