@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 4
+export const LESER_VERSION = 5
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -406,21 +406,45 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   const fokusSymbole = Object.keys(sprites)
     .filter(n => !/_shine$/i.test(n) && (/goals/i.test(spriteDatei[n].split('/').pop()) || n.startsWith('GFX_goal_')))
     .sort()
-  const fokusGroessen = []
-  let fokusSymboleGelesen = 0
-  for (const sprite of fokusSymbole) {
-    const pfad = sprites[sprite]
-    if (!quelle.hat(pfad)) continue
-    try {
-      const bild = dekodiereBild(pfad, await quelle.bytes(pfad))
-      if (!bild) continue
-      fokusGroessen.push([bild.breite, bild.hoehe])
-      bilder.set(`fokus:${sprite}`, await kodiere(bild.rgba, bild.breite, bild.hoehe))
-      fokusSymboleGelesen++
-    } catch (e) {
-      warnungen.push(`${pfad}: ${e.message}`)
+  /** Liest die Bilder zu Sprites; nicht lesbare bleiben ohne Bild in der Liste. */
+  async function leseSymbole(namen, praefix) {
+    const groessen = []
+    for (const sprite of namen) {
+      const pfad = sprites[sprite]
+      if (!quelle.hat(pfad)) continue
+      try {
+        const bild = dekodiereBild(pfad, await quelle.bytes(pfad))
+        if (!bild) continue
+        groessen.push([bild.breite, bild.hoehe])
+        bilder.set(`${praefix}:${sprite}`, await kodiere(bild.rgba, bild.breite, bild.hoehe))
+      } catch (e) {
+        warnungen.push(`${pfad}: ${e.message}`)
+      }
+    }
+    return groessen
+  }
+  const fokusGroessen = await leseSymbole(fokusSymbole, 'fokus')
+  const fokusSymboleGelesen = fokusGroessen.length
+
+  // Etappe 3: Eventbilder, Symbole fuer Entscheidungen und Kategorien, Kategorien des Spiels
+  fortschritt(0.89, 'Eventbilder und Entscheidungen werden gelesen …')
+  const mitPraefix = (p) => Object.keys(sprites).filter(n => n.toLowerCase().startsWith(p.toLowerCase())).sort()
+  const eventBilder = mitPraefix('GFX_report_event_')
+  const kategorieSymbole = mitPraefix('GFX_decision_category_')
+  const entscheidungsSymbole = mitPraefix('GFX_decision_').filter(n => !/^GFX_decision_(category|cat_picture)_/i.test(n))
+  const eventGroessen = await leseSymbole(eventBilder, 'event')
+  const entscheidungsGroessen = await leseSymbole(entscheidungsSymbole, 'entscheidung')
+  const kategorieGroessen = await leseSymbole(kategorieSymbole, 'kategorie')
+  const entscheidungsKategorien = []
+  for (const pfad of imOrdner('common/decisions/categories/', '.txt')) {
+    const e = await leseSkript(pfad)
+    for (const k of e ?? []) {
+      if (!k.schluessel || k.wert.typ !== 'block' || entscheidungsKategorien.some(x => x.id === k.schluessel)) continue
+      const icon = wertText(finde(k.wert.inhalt, 'icon')?.wert)
+      entscheidungsKategorien.push({ id: k.schluessel, name: name(k.schluessel), sprite: icon ? (/^GFX_/i.test(icon) ? icon : `GFX_decision_category_${icon}`) : null })
     }
   }
+  entscheidungsKategorien.sort((a, b) => a.name.localeCompare(b.name, 'de') || a.id.localeCompare(b.id))
 
   // Technologie-Kategorien fuer Forschungsboni
   const kategorien = []
@@ -511,11 +535,15 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     leserVersion: LESER_VERSION, version, supportedVersion,
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
+    eventBilder, entscheidungsSymbole, kategorieSymbole, entscheidungsKategorien,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
       portraet: haeufigsteGroesse(portraetGroessen, [156, 210]),
       fokus: haeufigsteGroesse(fokusGroessen, [94, 86]),
+      event: haeufigsteGroesse(eventGroessen, [210, 176]),
+      entscheidung: haeufigsteGroesse(entscheidungsGroessen, [32, 32]),
+      kategorie: haeufigsteGroesse(kategorieGroessen, [32, 32]),
     },
     originaltexte,
     bericht: {
@@ -528,6 +556,9 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       fokusSymboleGelesen,
       spielGeister: spielGeister.length,
       eigenschaften: anfuehrerEigenschaften.length,
+      eventBilder: eventBilder.length,
+      entscheidungsSymbole: entscheidungsSymbole.length,
+      entscheidungsKategorien: entscheidungsKategorien.length,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

@@ -346,6 +346,43 @@ set_autonomy = {
     ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
   ])
 
+  // Etappe 3: Eventbilder, Entscheidungssymbole und Kategorien
+  o['interface/eventpictures.gfx'] = `spriteTypes = {
+	spriteType = {
+		name = "GFX_report_event_generic_rally"
+		texturefile = "gfx/event_pictures/report_event_generic_rally.dds"
+	}
+	spriteType = {
+		name = "GFX_report_event_soldiers_marching"
+		texturefile = "gfx/event_pictures/report_event_soldiers_marching.dds"
+	}
+}
+`
+  o['interface/decisions.gfx'] = `spriteTypes = {
+	SpriteType = {
+		name = "GFX_decision_generic_industry"
+		texturefile = "gfx/interface/decisions/decision_generic_industry.dds"
+	}
+	SpriteType = {
+		name = "GFX_decision_category_generic_political_actions"
+		texturefile = "gfx/interface/decisions/decision_category_generic_political_actions.dds"
+	}
+}
+`
+  o['gfx/event_pictures/report_event_generic_rally.dds'] = schreibeDds(einfarbig(210, 176, [150, 120, 70]), 210, 176)
+  o['gfx/event_pictures/report_event_soldiers_marching.dds'] = schreibeDds(einfarbig(210, 176, [90, 100, 80]), 210, 176)
+  o['gfx/interface/decisions/decision_generic_industry.dds'] = schreibeDds(einfarbig(32, 32, [200, 160, 40]), 32, 32)
+  o['gfx/interface/decisions/decision_category_generic_political_actions.dds'] = schreibeDds(einfarbig(32, 32, [60, 90, 160]), 32, 32)
+  o['common/decisions/categories/00_decision_categories.txt'] = `political_actions = {
+	icon = generic_political_actions
+}
+economy_decisions = {
+	icon = GFX_decision_category_generic_political_actions
+	allowed = { always = yes }
+}
+`
+  o['localisation/german/etappe3_l_german.yml'] = schreibeYml('german', [['political_actions', 'Politische Massnahmen'], ['economy_decisions', 'Wirtschaft']])
+
   o['gfx/flags/GER.tga'] = schreibeTga(einfarbig(82, 52, [75, 75, 75]), 82, 52)
   o['gfx/flags/GER_fascism.tga'] = schreibeTga(einfarbig(82, 52, [20, 20, 20]), 82, 52)
   o['gfx/flags/SWI.tga'] = schreibeTga(einfarbig(82, 52, [200, 30, 30]), 82, 52)

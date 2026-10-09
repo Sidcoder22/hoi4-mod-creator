@@ -41,7 +41,7 @@ test('Provinzen, Bilder und Groessen', () => {
   expect(sd.sprites.GFX_idea_generic_army).toBe('gfx/interface/ideas/idea_generic_army.dds')
   expect(sd.ideenBilder).toEqual(['GFX_idea_generic_army', 'GFX_idea_generic_industry'])
   expect(sd.portraets).toEqual(['gfx/leaders/Europe/portrait_europe_generic_1.dds', 'gfx/leaders/Europe/portrait_europe_generic_2.dds'])
-  expect(sd.bildgroessen).toEqual({ flagge: [82, 52], idee: [64, 64], portraet: [156, 210], fokus: [94, 86] })
+  expect(sd.bildgroessen).toEqual({ flagge: [82, 52], idee: [64, 64], portraet: [156, 210], fokus: [94, 86], event: [210, 176], entscheidung: [32, 32], kategorie: [32, 32] })
   expect(ergebnis.bilder.get('flagge:SWI')).toMatchObject({ breite: 82, hoehe: 52 })
   expect(ergebnis.bilder.get('idee:GFX_idea_generic_army')).toMatchObject({ breite: 64, hoehe: 64 })
   expect(ergebnis.bilder.get('portraet:gfx/leaders/Europe/portrait_europe_generic_1.dds')).toMatchObject({ breite: 156 })
@@ -132,7 +132,7 @@ test('Fokus-Symbole aus allen goals-Dateien, ohne Rahmen-Sprites (Review I1)', a
 })
 
 test('Etappe 2b: Modifikatoren, Spielgeister, Eigenschaften, Autonomie, Marionetten, Fraktion', () => {
-  expect(LESER_VERSION).toBe(4)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(4)
   expect(sd.modifikatoren.find(m => m.id === 'consumer_goods_factor')).toEqual({ id: 'consumer_goods_factor', name: 'Konsumgüter', prozent: true })
   expect(sd.modifikatoren.find(m => m.id === 'industrial_capacity_factory')).toMatchObject({ prozent: true, name: 'industrial_capacity_factory' })
   expect(sd.modifikatoren.find(m => m.id === 'stability_factor').name).toBe('Stabilität')
@@ -165,4 +165,30 @@ test('Marionetten in if/else und in Blockform werden gelesen (Review I4)', async
   const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
   expect(spieldaten.laender.GER.marionetten).toEqual([{ tag: 'FRA', autonomie: 'autonomy_dominion', bedingt: true }])
   expect(spieldaten.laender.SWI.marionetten).toEqual([{ tag: 'GER', autonomie: 'autonomy_puppet' }])
+})
+
+test('Etappe 3: Eventbilder, Entscheidungssymbole, Kategorien', () => {
+  expect(LESER_VERSION).toBe(5)
+  expect(sd.eventBilder).toEqual(['GFX_report_event_generic_rally', 'GFX_report_event_soldiers_marching'])
+  expect(sd.entscheidungsSymbole).toEqual(['GFX_decision_generic_industry'])
+  expect(sd.kategorieSymbole).toEqual(['GFX_decision_category_generic_political_actions'])
+  expect(sd.entscheidungsKategorien).toEqual([
+    { id: 'political_actions', name: 'Politische Massnahmen', sprite: 'GFX_decision_category_generic_political_actions' },
+    { id: 'economy_decisions', name: 'Wirtschaft', sprite: 'GFX_decision_category_generic_political_actions' },
+  ])
+  expect(sd.bildgroessen).toMatchObject({ event: [210, 176], entscheidung: [32, 32], kategorie: [32, 32] })
+  expect(ergebnis.bilder.has('event:GFX_report_event_generic_rally')).toBe(true)
+  expect(ergebnis.bilder.has('entscheidung:GFX_decision_generic_industry')).toBe(true)
+  expect(ergebnis.bilder.has('kategorie:GFX_decision_category_generic_political_actions')).toBe(true)
+  expect(sd.bericht).toMatchObject({ eventBilder: 2, entscheidungsSymbole: 1, entscheidungsKategorien: 2 })
+})
+
+test('Etappe 3: Kategorie ohne icon und Rueckfall-Groessen', async () => {
+  const o = erstelleMiniSpielordner()
+  for (const k of Object.keys(o)) if (k.startsWith('gfx/event_pictures/') || k.startsWith('gfx/interface/decisions/')) delete o[k]
+  o['common/decisions/categories/01_mehr.txt'] = 'ohne_symbol = {\n\tpriority = 5\n}\n'
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.entscheidungsKategorien.find(k => k.id === 'ohne_symbol')).toEqual({ id: 'ohne_symbol', name: 'ohne_symbol', sprite: null })
+  expect(spieldaten.eventBilder).toHaveLength(2)
+  expect(spieldaten.bildgroessen).toMatchObject({ event: [210, 176], entscheidung: [32, 32], kategorie: [32, 32] })
 })
