@@ -57,7 +57,7 @@ export const WIRKUNGEN = [
       { name: 'name', typ: 'text', label: 'Name', standard: '' },
       { name: 'bild', typ: 'ideenbild', label: 'Bild', standard: 'GFX_idea_generic_army' },
       { name: 'boni', typ: 'boni', label: 'Boni', standard: [{ art: 'konsumgueter', wert: -10 }] },
-      { name: 'tage', typ: 'zahl', label: 'Dauer in Tagen (0 = dauerhaft)', standard: 0, min: 0, max: 3650 },
+      { name: 'tage', typ: 'zahl', label: 'Dauer in Tagen (0 = dauerhaft)', standard: 0, min: 0, max: 3650, ganz: true },
     ],
     erzeuge: (w, k, b) => {
       // Das Spiel vergibt Boni nur ueber Geister: der Creator legt dafuer einen eigenen Geist an
@@ -136,7 +136,7 @@ export const WIRKUNGEN = [
     felder: [MERKER], erzeuge: (w, k) => [e('clr_country_flag', wort(k.kennung.merker(w.merker)))] },
   { art: 'event', gruppe: 'Merker und Profis', name: 'Event auslösen',
     satz: (t, w) => `Event «${t('event')}» auslösen${Number(w.tage) > 0 ? ` – nach ${t('tage')} Tagen` : ''}`,
-    felder: [{ name: 'event', typ: 'event', label: 'Event', standard: '' }, { name: 'tage', typ: 'zahl', label: 'Verzögerung in Tagen', standard: 0, min: 0, max: 365 }],
+    felder: [{ name: 'event', typ: 'event', label: 'Event', standard: '' }, { name: 'tage', typ: 'zahl', label: 'Verzögerung in Tagen', standard: 0, min: 0, max: 365, ganz: true }],
     erzeuge: (w, k) => {
       const innen = [e('id', wort(k.kennung.event(w.event)))]
       if (Number(w.tage) > 0) innen.push(e('days', zahlWort(w.tage)))

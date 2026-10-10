@@ -50,3 +50,8 @@ test('Event ausloesen pruefen und anzeigen', () => {
 test('Review Focus 2: geloeschtes Event wirft beim Erzeugen nicht', () => {
   expect(() => erzeugeWirkungen([w('event', { event: 'weg' })], k)).not.toThrow()
 })
+
+test('Etappe 4a: Verzoegerung nur in ganzen Tagen', () => {
+  expect(pruefeBausteine([w('event', { event: e1, tage: 1.5 })], kontext, 'A')[0].text).toMatch(/ganze Zahl/)
+  expect(pruefeBausteine([w('event', { event: e1, tage: 2 })], kontext, 'A')).toEqual([])
+})

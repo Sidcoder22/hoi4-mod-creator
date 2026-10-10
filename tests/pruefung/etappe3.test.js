@@ -158,3 +158,32 @@ test('Etappe 3b: unbekannter freier Bonus im Baustein ergibt den Hinweis bonus-u
   const bekannt = { ...unbekannt, werte: { ...unbekannt.werte, boni: [{ art: 'frei', modifier: 'consumer_goods_factor', wert: 0.1 }] } }
   expect(regeln(aendereAntwort(g, ev, antwortId, { wirkungen: [bekannt] }))).not.toContain('bonus-unbekannt')
 })
+
+test('Etappe 4a: Event loest sich direkt selbst aus', () => {
+  const p = aendereAntwort(g, ev, antwortId, { wirkungen: [ausloesen(ev)] })
+  const m = meldungen(p).find(x => x.regel === 'event-schleife')
+  expect(m).toMatchObject({ schwere: 'hinweis', ziel: { bereich: 'event', id: ev } })
+  expect(m.text).toContain('Volksfest → Volksfest')
+})
+
+test('Etappe 4a: Schleife ueber zwei Events und ueber «Bei Land ausfuehren»', () => {
+  let p = g
+  let ev2
+  ;[p, ev2] = fuegeEventHinzu(p, sd)
+  p = aendereEvent(p, ev2, { titel: 'Grenzstreit', text: 't' })
+  const beiLand = { ...mit(neueWirkung('bei_land'), { land: 'GER' }), wirkungen: [ausloesen(ev)] }
+  p = aendereAntwort(p, ev2, p.events[1].antworten[0].id, { wirkungen: [beiLand] })
+  p = aendereAntwort(p, ev, antwortId, { wirkungen: [ausloesen(ev2)] })
+  const m = meldungen(p).filter(x => x.regel === 'event-schleife')
+  expect(m.map(x => x.ziel.id).sort()).toEqual([ev, ev2].sort())
+  expect(m.find(x => x.ziel.id === ev).text).toContain('Volksfest → Grenzstreit → Volksfest')
+})
+
+test('Etappe 4a: keine Schleife ohne Rueckweg', () => {
+  let p = g
+  let ev2
+  ;[p, ev2] = fuegeEventHinzu(p, sd)
+  p = aendereEvent(p, ev2, { titel: 'Grenzstreit', text: 't' })
+  p = aendereAntwort(p, ev, antwortId, { wirkungen: [ausloesen(ev2)] })
+  expect(regeln(p)).not.toContain('event-schleife')
+})

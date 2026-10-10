@@ -49,3 +49,7 @@ test('Review: Standardbild faellt auf das erste Geister-Bild des Spiels zurueck'
   expect(neueWirkung('bonus', ohneArmee).werte.bild).toBe('GFX_idea_x')
   expect(neueWirkung('politische_macht', ohneArmee).werte).toEqual({ menge: 50 })
 })
+
+test('Etappe 4a: Dauer nur in ganzen Tagen', () => {
+  expect(pruefeBausteine([mitWerten({ tage: 0.5 })], kontext, 'A')[0].text).toMatch(/Dauer in Tagen \(0 = dauerhaft\) muss eine ganze Zahl sein/)
+})

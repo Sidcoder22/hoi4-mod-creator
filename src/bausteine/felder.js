@@ -40,6 +40,7 @@ export function pruefeFeld(feld, wert, kontext) {
     case 'prozent': {
       const z = Number(wert)
       if (leer || !Number.isFinite(z)) return `${feld.label} fehlt`
+      if (feld.ganz && !Number.isInteger(z)) return `${feld.label} muss eine ganze Zahl sein`
       if ((feld.min !== undefined && z < feld.min) || (feld.max !== undefined && z > feld.max)) return `${feld.label} muss zwischen ${feld.min} und ${feld.max} liegen`
       return null
     }

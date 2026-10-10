@@ -91,6 +91,7 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Gibt ein Land Staaten ab, bleiben seine Startdivisionen dort stehen, wo das Spiel sie vorsieht.
 - Kopierte Spieldateien (Staaten, Verlauf, Farben) gehören zur eingelesenen Spielversion.
   Nach einem Spiel-Update liest du den Spielordner neu ein und speicherst die Mod noch einmal.
+- Ein Event «an einem Datum» kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.
 - Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.
 - Zeigt der Launcher die Mod nicht an, trägst du unter *Mod-Einstellungen → Erweitert* den vollständigen Pfad deines Ordners

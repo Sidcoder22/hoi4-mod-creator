@@ -475,6 +475,7 @@ export const SCHRITTE = [
       await h.tippe('event-datum-tag', '1')
       await h.tippe('event-datum-monat', '1')
       await h.tippe('event-datum-jahr', '1937')
+      h.pruefe((await h.text('event-datum-hinweis')).includes('etwa alle 20 Tage'), 'Hinweis zur Verzögerung bei Datums-Events fehlt')
       const ev = zustand().projekt.events[1]
       h.pruefe(ev.ausloeser === 'datum' && ev.land === 'MRE' && ev.datum === '1937.1.1', 'Datum-Event falsch: ' + JSON.stringify([ev.ausloeser, ev.land, ev.datum]))
       h.pruefe(!werEsAusloest(), '«wer es auslöst» trotz Datum')

@@ -72,6 +72,7 @@ export function EventEditor({ z }) {
               <>
                 <BausteinFeld feld={DATUM} wert={ev.datum} kontext={kontext} test="event-datum" onAendere={(v) => setze({ datum: v }, 'datum')} />
                 {pruefeFeld(DATUM, ev.datum, kontext) && <p class="baustein-fehler" data-test="event-datum-fehler">{pruefeFeld(DATUM, ev.datum, kontext)}</p>}
+                <p class="feld-hilfe" data-test="event-datum-hinweis">Das Event kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.</p>
               </>
             )}
             {ev.ausloeser === 'zufall' && (

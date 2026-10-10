@@ -305,6 +305,11 @@ export function pruefeProjekt(p, sd) {
     }
     if (String(ev.titel || '').trim() && !String(ev.text || '').trim()) hinweis('event-text', `${ename} hat keinen Text.`, ziel)
   }
+  for (const [eventId, kette] of eventSchleifen(p)) {
+    const titel = (id) => p.events.find(x => x.id === id)?.titel || 'ohne Titel'
+    hinweis('event-schleife', `Event «${titel(eventId)}» löst sich immer wieder selbst aus (${kette.map(titel).join(' → ')}). Das ist nur gewollt, wenn es zum Beispiel mit Verzögerung regelmässig wiederkommen soll.`,
+      { bereich: 'event', id: eventId })
+  }
   const eigeneKategorien = new Set((p.kategorien ?? []).map(k => k.id))
   const spielKategorien = new Set((sd.entscheidungsKategorien ?? []).map(k => k.id))
   for (const kat of p.kategorien ?? []) {
@@ -383,4 +388,42 @@ export function ausgeloesteEvents(p) {
     if (Number(d.dauer) > 0) sammle(d.wirkungenEnde)
   }
   return gefunden
+}
+
+/** Events, die sich über ihre Antworten (auch über andere Events) selbst auslösen: Map eventId → Kette [A, …, A]. */
+export function eventSchleifen(p) {
+  const ziele = new Map()
+  const sammle = (liste, menge) => {
+    for (const w of liste ?? []) {
+      if (w.art === 'event' && w.werte?.event) menge.add(w.werte.event)
+      if (w.art === 'bei_land') sammle(w.wirkungen, menge)
+    }
+  }
+  for (const ev of p.events ?? []) {
+    const menge = new Set()
+    for (const a of ev.antworten ?? []) sammle(a.wirkungen, menge)
+    ziele.set(ev.id, menge)
+  }
+  const schleifen = new Map()
+  for (const start of ziele.keys()) {
+    // Breitensuche: kürzester Weg zurück zum Start
+    const vorgaenger = new Map()
+    const warteschlange = [start]
+    let gefunden = null
+    while (warteschlange.length && !gefunden) {
+      const jetzt = warteschlange.shift()
+      for (const naechstes of ziele.get(jetzt) ?? []) {
+        if (naechstes === start) { gefunden = jetzt; break }
+        if (!ziele.has(naechstes) || vorgaenger.has(naechstes)) continue
+        vorgaenger.set(naechstes, jetzt)
+        warteschlange.push(naechstes)
+      }
+    }
+    if (!gefunden) continue
+    const kette = [start]
+    for (let x = gefunden; x !== start; x = vorgaenger.get(x)) kette.splice(1, 0, x)
+    kette.push(start)
+    schleifen.set(start, kette)
+  }
+  return schleifen
 }
