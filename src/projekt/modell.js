@@ -88,6 +88,7 @@ export function neuesProjekt(name) {
     events: [],
     entscheidungen: [],
     kategorien: [],
+    staaten: {},
     bilder: {},
     zaehler: { ...STANDARD_ZAEHLER },
   }
@@ -136,6 +137,7 @@ export function ergaenzeProjekt(p, sd) {
     events: p.events ?? [],
     entscheidungen: (p.entscheidungen ?? []).map(d => ({ ...d, boniLaufzeit: d.boniLaufzeit ?? [] })),
     kategorien: p.kategorien ?? [],
+    staaten: p.staaten ?? {},
     bilder: p.bilder ?? {},
     zaehler: { ...STANDARD_ZAEHLER, ...(p.zaehler ?? {}) },
     laender: (p.laender ?? []).map(l => ({
