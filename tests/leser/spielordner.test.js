@@ -168,7 +168,7 @@ test('Marionetten in if/else und in Blockform werden gelesen (Review I4)', async
 })
 
 test('Etappe 3: Eventbilder, Entscheidungssymbole, Kategorien', () => {
-  expect(LESER_VERSION).toBe(5)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(5)
   expect(sd.eventBilder).toEqual(['GFX_report_event_generic_rally', 'GFX_report_event_soldiers_marching'])
   expect(sd.entscheidungsSymbole).toEqual(['GFX_decision_generic_industry'])
   expect(sd.kategorieSymbole).toEqual(['GFX_decision_category_generic_political_actions'])
@@ -191,4 +191,31 @@ test('Etappe 3: Kategorie ohne icon und Rueckfall-Groessen', async () => {
   expect(spieldaten.entscheidungsKategorien.find(k => k.id === 'ohne_symbol')).toEqual({ id: 'ohne_symbol', name: 'ohne_symbol', sprite: null })
   expect(spieldaten.eventBilder).toHaveLength(2)
   expect(spieldaten.bildgroessen).toMatchObject({ event: [210, 176], entscheidung: [32, 32], kategorie: [32, 32] })
+})
+
+test('Etappe 4b: Gebaeude, Ressourcen, Kategorien, Kueste, Werte pro Staat', () => {
+  expect(LESER_VERSION).toBe(6)
+  expect(sd.gebaeudeArten.slice(0, 2).map(g => g.id)).toEqual(['arms_factory', 'industrial_complex'])
+  expect(sd.gebaeudeArten.find(g => g.id === 'naval_base')).toEqual({ id: 'naval_base', name: 'Marinestützpunkt', maxStufe: 10, provinz: true, kueste: true, gemeinsamerPlatz: false })
+  expect(sd.gebaeudeArten.find(g => g.id === 'industrial_complex')).toMatchObject({ name: 'Zivilfabrik', maxStufe: 15, gemeinsamerPlatz: true, provinz: false })
+  expect(sd.ressourcenArten).toEqual([{ id: 'oil', name: 'Öl' }, { id: 'steel', name: 'Stahl' }])
+  expect(sd.staatsKategorien.map(k => [k.id, k.bauplaetze])).toEqual([['town', 4], ['large_town', 5], ['city', 6], ['megalopolis', 12]])
+  expect(sd.staatsKategorien.find(k => k.id === 'city').name).toBe('Stadt')
+  expect(sd.provinzKueste).toEqual({ 4: true, 8: true })
+  expect(sd.staaten[1]).toMatchObject({ nameSchluessel: 'STATE_1', gebaeude: { infrastructure: 4, industrial_complex: 3 },
+    provinzGebaeude: { 1: { bunker: 2 } }, ressourcen: { steel: 12 }, siegpunkte: { 1: 20 } })
+  expect(sd.staaten[3]).toMatchObject({ gebaeude: {}, provinzGebaeude: {}, ressourcen: {}, siegpunkte: {} })
+  expect(sd.siegpunktNamen).toEqual({ 1: 'Berlin' })
+  expect(sd.bericht).toMatchObject({ gebaeudeArten: 5, ressourcenArten: 2, staatsKategorien: 4 })
+})
+
+test('Etappe 4b: Rueckfall-Listen ohne Dateien', async () => {
+  const o = erstelleMiniSpielordner()
+  for (const k of Object.keys(o)) if (/^common\/(buildings|resources|state_category)\//.test(k)) delete o[k]
+  const { spieldaten: ohne } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(ohne.gebaeudeArten.map(g => g.id)).toEqual(expect.arrayContaining(['industrial_complex', 'arms_factory', 'dockyard', 'infrastructure', 'air_base', 'anti_air_building', 'radar_station', 'naval_base', 'bunker', 'coastal_bunker']))
+  expect(ohne.gebaeudeArten.find(g => g.id === 'dockyard')).toMatchObject({ gemeinsamerPlatz: true, maxStufe: 15 })
+  expect(ohne.ressourcenArten.map(r => r.id)).toEqual(['oil', 'aluminium', 'rubber', 'tungsten', 'steel', 'chromium'])
+  expect(ohne.ressourcenArten.find(r => r.id === 'rubber').name).toBe('Gummi')
+  expect(ohne.staatsKategorien.find(k => k.id === 'megalopolis').bauplaetze).toBe(12)
 })

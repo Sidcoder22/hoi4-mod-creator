@@ -11,7 +11,7 @@ const pixel = (ziel, x, y) => [...ziel.slice((y * 64 + x) * 4, (y * 64 + x) * 4 
 
 test('parseDefinition ueberspringt Provinz 0 und kaputte Zeilen', () => {
   const p = parseDefinition('0;0;0;0;land;false;unknown;0\n1;20;0;0;land;false;plains;1\nkaputt\n8;0;0;200;sea;true;ocean;0\r\n')
-  expect(p).toEqual([{ id: 1, r: 20, g: 0, b: 0, art: 'land' }, { id: 8, r: 0, g: 0, b: 200, art: 'sea' }])
+  expect(p).toEqual([{ id: 1, r: 20, g: 0, b: 0, art: 'land', kueste: false }, { id: 8, r: 0, g: 0, b: 200, art: 'sea', kueste: true }])
 })
 
 test('staatAn findet Staaten und Meer', () => {

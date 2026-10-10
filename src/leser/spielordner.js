@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 5
+export const LESER_VERSION = 6
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -32,6 +32,28 @@ const NICHT_UEBERNOMMEN = ['research_bonus', 'equipment_bonus', 'targeted_modifi
 const KEINE_EIGENSCHAFTS_BONI = new Set(['random', 'ai_will_do', 'cost', 'sprite'])
 
 /** Zahlenwerte eines Blocks als Boni [{ modifier, wert }]. */
+// Rueckfall ohne common/buildings: [id, Name, Hoechststufe, Eigenschaften]
+const STANDARD_GEBAEUDE = [
+  ['industrial_complex', 'Zivilfabrik', 15, 'platz'], ['arms_factory', 'Militärfabrik', 15, 'platz'], ['dockyard', 'Werft', 15, 'platz'],
+  ['infrastructure', 'Infrastruktur', 5, ''], ['air_base', 'Luftwaffenstützpunkt', 10, ''], ['anti_air_building', 'Flugabwehr', 5, ''],
+  ['radar_station', 'Radarstation', 6, ''], ['naval_base', 'Marinestützpunkt', 10, 'provinz kueste'], ['bunker', 'Bunker', 10, 'provinz'],
+  ['coastal_bunker', 'Küstenbunker', 10, 'provinz kueste'],
+]
+const STANDARD_RESSOURCEN = [['oil', 'Öl'], ['aluminium', 'Aluminium'], ['rubber', 'Gummi'], ['tungsten', 'Wolfram'], ['steel', 'Stahl'], ['chromium', 'Chrom']]
+const STANDARD_KATEGORIEN_STAAT = [['wasteland', 0], ['enclave', 0], ['tiny_island', 0], ['pastoral', 1], ['small_island', 1], ['rural', 2],
+  ['town', 4], ['large_town', 5], ['city', 6], ['large_city', 8], ['metropolis', 10], ['megalopolis', 12]]
+
+/** Einfache Zahlenwerte eines Blocks als Objekt { schluessel: zahl }. */
+function zahlenWerte(inhalt) {
+  const werte = {}
+  for (const x of inhalt ?? []) {
+    if (!x.schluessel || x.wert.typ === 'block') continue
+    const z = Number(wertText(x.wert))
+    if (Number.isFinite(z)) werte[x.schluessel] = z
+  }
+  return werte
+}
+
 function zahlenBoni(inhalt, ohne = new Set()) {
   const boni = []
   for (const x of inhalt ?? []) {
@@ -321,8 +343,29 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     const hist = finde(inhalt, 'history')
     const histInhalt = hist && hist.wert.typ === 'block' ? hist.wert.inhalt : []
     const nameSchluessel = wertText(finde(inhalt, 'name')?.wert) || `STATE_${id}`
+    // Nur oberste Ebene von history: Datumsbloecke (1939.1.1 = { … }) zaehlen nicht zum Startwert
+    const gebaeude = {}
+    const provinzGebaeude = {}
+    const gebaeudeBlock = finde(histInhalt, 'buildings')
+    for (const x of gebaeudeBlock?.wert?.typ === 'block' ? gebaeudeBlock.wert.inhalt : []) {
+      if (!x.schluessel) continue
+      if (/^\d+$/.test(x.schluessel) && x.wert.typ === 'block') {
+        const stufen = zahlenWerte(x.wert.inhalt)
+        if (Object.keys(stufen).length) provinzGebaeude[Number(x.schluessel)] = stufen
+      } else if (x.wert.typ !== 'block' && Number.isFinite(Number(wertText(x.wert)))) {
+        gebaeude[x.schluessel] = Number(wertText(x.wert))
+      }
+    }
+    const siegpunkte = {}
+    for (const vp of findeAlle(histInhalt, 'victory_points')) {
+      const [provinz, wert] = zahlen(vp.wert)
+      if (Number.isFinite(provinz) && Number.isFinite(wert)) siegpunkte[provinz] = wert
+    }
+    const ressourcenBlock = finde(inhalt, 'resources')
     staaten[id] = {
-      id, name: name(nameSchluessel), provinzen,
+      id, name: name(nameSchluessel), nameSchluessel, provinzen,
+      gebaeude, provinzGebaeude, siegpunkte,
+      ressourcen: ressourcenBlock?.wert?.typ === 'block' ? zahlenWerte(ressourcenBlock.wert.inhalt) : {},
       besitzer: wertText(finde(histInhalt, 'owner')?.wert) || null,
       kerne: findeAlle(histInhalt, 'add_core_of').map(x => wertText(x.wert)),
       kategorie: wertText(finde(inhalt, 'state_category')?.wert) || null,
@@ -335,7 +378,18 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   fortschritt(0.65, 'Karte wird berechnet …')
   const provinzListe = parseDefinition(await quelle.text('map/definition.csv'))
   const provinzArten = {}
-  for (const p of provinzListe) provinzArten[p.id] = p.art
+  const provinzKueste = {}
+  for (const p of provinzListe) {
+    provinzArten[p.id] = p.art
+    if (p.kueste) provinzKueste[p.id] = true
+  }
+  const siegpunktNamen = {}
+  for (const s of Object.values(staaten)) {
+    for (const provinz of Object.keys(s.siegpunkte)) {
+      const n = text(`VICTORY_POINTS_${provinz}`)
+      if (n) siegpunktNamen[provinz] = n
+    }
+  }
   let karte
   try {
     karte = berechneKarte(leseBmp(await quelle.bytes('map/provinces.bmp')), provinzListe, staaten)
@@ -516,6 +570,43 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   }
   if (!autonomieStufen.length) for (const [id, n] of STANDARD_AUTONOMIE) autonomieStufen.push({ id, name: text(id) ?? n })
 
+  // Etappe 4b: Gebaeudearten, Ressourcen, Staatskategorien
+  const ja = (inhalt, schluessel) => String(wertText(finde(inhalt, schluessel)?.wert) ?? '').toLowerCase() === 'yes'
+  let gebaeudeArten = []
+  for (const pfad of imOrdner('common/buildings/', '.txt')) {
+    const e = await leseSkript(pfad)
+    const block = finde(e, 'buildings')
+    if (!block || block.wert.typ !== 'block') continue
+    for (const g of block.wert.inhalt) {
+      if (!g.schluessel || g.wert.typ !== 'block' || gebaeudeArten.some(x => x.id === g.schluessel)) continue
+      gebaeudeArten.push({ id: g.schluessel, name: name(g.schluessel), maxStufe: Number(wertText(finde(g.wert.inhalt, 'max_level')?.wert)) || 1,
+        provinz: ja(g.wert.inhalt, 'provincial'), kueste: ja(g.wert.inhalt, 'only_coastal'), gemeinsamerPlatz: ja(g.wert.inhalt, 'shares_slots') })
+    }
+  }
+  if (!gebaeudeArten.length) gebaeudeArten = STANDARD_GEBAEUDE.map(([id, n, maxStufe, art]) => ({ id, name: text(id) ?? n, maxStufe,
+    provinz: art.includes('provinz'), kueste: art.includes('kueste'), gemeinsamerPlatz: art.includes('platz') }))
+  gebaeudeArten.sort((a, b) => Number(b.gemeinsamerPlatz) - Number(a.gemeinsamerPlatz) || a.name.localeCompare(b.name, 'de'))
+  const ressourcenIds = []
+  for (const pfad of imOrdner('common/resources/', '.txt')) {
+    const block = finde(await leseSkript(pfad), 'resources')
+    if (!block || block.wert.typ !== 'block') continue
+    for (const r of block.wert.inhalt) if (r.schluessel && r.wert.typ === 'block' && !ressourcenIds.includes(r.schluessel)) ressourcenIds.push(r.schluessel)
+  }
+  const standardRessource = new Map(STANDARD_RESSOURCEN)
+  const ressourcenArten = (ressourcenIds.length ? ressourcenIds : STANDARD_RESSOURCEN.map(([id]) => id))
+    .map(id => ({ id, name: text(id) ?? text(`PRODUCTION_MATERIALS_${id.toUpperCase()}`) ?? standardRessource.get(id) ?? id }))
+  let staatsKategorien = []
+  for (const pfad of imOrdner('common/state_category/', '.txt')) {
+    const block = finde(await leseSkript(pfad), 'state_categories')
+    if (!block || block.wert.typ !== 'block') continue
+    for (const k of block.wert.inhalt) {
+      if (!k.schluessel || k.wert.typ !== 'block' || staatsKategorien.some(x => x.id === k.schluessel)) continue
+      staatsKategorien.push({ id: k.schluessel, name: name(k.schluessel), bauplaetze: Number(wertText(finde(k.wert.inhalt, 'local_building_slots')?.wert)) || 0 })
+    }
+  }
+  if (!staatsKategorien.length) staatsKategorien = STANDARD_KATEGORIEN_STAAT.map(([id, bauplaetze]) => ({ id, name: name(id), bauplaetze }))
+  staatsKategorien.sort((a, b) => a.bauplaetze - b.bauplaetze)
+
   fortschritt(0.93, 'Porträts werden gelesen …')
   const portraets = []
   const portraetGroessen = []
@@ -536,6 +627,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
     eventBilder, entscheidungsSymbole, kategorieSymbole, entscheidungsKategorien,
+    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
@@ -559,6 +651,9 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       eventBilder: eventBilder.length,
       entscheidungsSymbole: entscheidungsSymbole.length,
       entscheidungsKategorien: entscheidungsKategorien.length,
+      gebaeudeArten: gebaeudeArten.length,
+      ressourcenArten: ressourcenArten.length,
+      staatsKategorien: staatsKategorien.length,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

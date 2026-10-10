@@ -9,7 +9,7 @@ export function parseDefinition(text) {
     const id = Number(t[0]), r = Number(t[1]), g = Number(t[2]), b = Number(t[3])
     if (!Number.isInteger(id) || id <= 0 || [r, g, b].some(Number.isNaN)) continue
     const art = t[4].trim() === 'sea' ? 'sea' : t[4].trim() === 'lake' ? 'lake' : 'land'
-    provinzen.push({ id, r, g, b, art })
+    provinzen.push({ id, r, g, b, art, kueste: (t[5] ?? '').trim().toLowerCase() === 'true' })
   }
   return provinzen
 }

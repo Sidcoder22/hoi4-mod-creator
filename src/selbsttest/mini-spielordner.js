@@ -197,7 +197,18 @@ set_autonomy = {
 		buildings = {
 			infrastructure = 4
 			industrial_complex = 3
+			1 = {
+				bunker = 2
+			}
 		}
+		1939.1.1 = {
+			buildings = {
+				arms_factory = 2
+			}
+		}
+	}
+	resources = {
+		steel = 12
 	}
 	provinces = { 1 2 }
 }
@@ -227,7 +238,7 @@ set_autonomy = {
   o['history/states/99-Kaputt.txt'] = 'state = {\n\tname = "STATE_99"\n}\n'
 
   o['map/definition.csv'] = ['0;0;0;0;land;false;unknown;0',
-    ...[1, 2, 3, 4, 5, 6, 7].map(n => `${n};${n * 20};0;0;land;false;plains;1`),
+    ...[1, 2, 3, 4, 5, 6, 7].map(n => `${n};${n * 20};0;0;land;${n === 4 ? 'true' : 'false'};plains;1`),
     '8;0;0;200;sea;true;ocean;0', ''].join('\n')
   o['map/provinces.bmp'] = karte()
 
@@ -344,6 +355,37 @@ set_autonomy = {
     ['schweizer_neutralitaet', 'Schweizer Neutralität'], ['schweizer_neutralitaet_desc', 'Wir bleiben draussen.'],
     ['deutsche_industrie', 'Deutsche Industrie'], ['MODIFIER_CONSUMER_GOODS_FACTOR', 'Konsumgüter'], ['stability_factor', 'Stabilität'],
     ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
+  ])
+
+  // Etappe 4b: Gebaeudearten, Ressourcen, Staatskategorien
+  o['common/buildings/00_buildings.txt'] = `buildings = {
+	infrastructure = {
+		max_level = 5
+	}
+	industrial_complex = {
+		max_level = 15
+		shares_slots = yes
+	}
+	arms_factory = {
+		max_level = 15
+		shares_slots = yes
+	}
+	naval_base = {
+		max_level = 10
+		provincial = yes
+		only_coastal = yes
+	}
+	bunker = {
+		max_level = 10
+		provincial = yes
+	}
+}
+`
+  o['common/resources/00_resources.txt'] = 'resources = {\n\toil = {\n\t\tcic = 0.125\n\t}\n\tsteel = {\n\t\tcic = 0.125\n\t}\n}\n'
+  o['common/state_category/00_state_categories.txt'] = 'state_categories = {\n\ttown = { local_building_slots = 4 }\n\tlarge_town = { local_building_slots = 5 }\n\tcity = { local_building_slots = 6 }\n\tmegalopolis = { local_building_slots = 12 }\n}\n'
+  o['localisation/german/etappe4b_l_german.yml'] = schreibeYml('german', [
+    ['industrial_complex', 'Zivilfabrik'], ['arms_factory', 'Militärfabrik'], ['naval_base', 'Marinestützpunkt'],
+    ['oil', 'Öl'], ['city', 'Stadt'], ['town', 'Kleinstadt'], ['VICTORY_POINTS_1', 'Berlin'],
   ])
 
   // Etappe 3: Eventbilder, Entscheidungssymbole und Kategorien
