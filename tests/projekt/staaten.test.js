@@ -45,3 +45,10 @@ test('unbekannter Staat und alte Projekte', () => {
   expect(neuesProjekt('M').staaten).toEqual({})
   expect(ergaenzeProjekt({ ...neuesProjekt('A'), staaten: undefined }, sd).staaten).toEqual({})
 })
+
+test('Review: zusaetzliche Bauplaetze aus dem Spiel sind der Spielwert', () => {
+  const p = neuesProjekt('M')
+  expect(effektiveStaatswerte(p, sd, 6)).toMatchObject({ extraBauplaetze: 1, bauplaetze: 5 })
+  expect(aendereStaat(p, sd, 6, { extraBauplaetze: 1 }).staaten).toEqual({})
+  expect(aendereStaat(p, sd, 6, { extraBauplaetze: 0 }).staaten).toEqual({ 6: { extraBauplaetze: 0 } })
+})

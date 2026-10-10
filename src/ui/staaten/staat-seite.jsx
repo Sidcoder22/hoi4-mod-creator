@@ -1,5 +1,6 @@
 // Seitenleiste fuer einen Staat: Allgemein, Gebaeude, Ressourcen, Provinzen.
 
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { aktionen } from '../zustand.js'
 import { aendereStaat, setzeGebaeude, setzeRessource, setzeProvinz, setzeProvinzGebaeude, verwerfeStaat, effektiveStaatswerte } from '../../projekt/staaten.js'
 
@@ -19,6 +20,19 @@ function Zahl({ wert, test, min = 0, max, onAendere }) {
         if (v === '' || Number.isNaN(Number(v))) return
         onAendere(Math.max(min, Math.round(Number(v))))
       }} />
+  )
+}
+
+/** Textfeld, das beim Leeren nicht sofort auf den Spielwert springt: leer zaehlt erst beim Verlassen. */
+function NamensFeld({ wert, test, onAendere }) {
+  const [text, setText] = useState(wert)
+  const fokus = useRef(false)
+  useEffect(() => { if (!fokus.current) setText(wert) }, [wert])
+  return (
+    <input type="text" value={text} data-test={test}
+      onFocus={() => { fokus.current = true }}
+      onInput={(e) => { const v = e.currentTarget.value; setText(v); if (v.trim()) onAendere(v) }}
+      onBlur={() => { fokus.current = false; if (!text.trim()) { onAendere(''); setText(wert) } }} />
   )
 }
 
@@ -48,7 +62,9 @@ export function StaatSeite({ staatId, z }) {
   }
   const a = z.projekt.staaten?.[staatId] ?? {}
   const arten = sd.gebaeudeArten ?? []
-  const staatsGebaeude = arten.filter(g => !g.provinz)
+  const staatMitKueste = staat.provinzen.some(prov => sd.provinzKueste?.[prov])
+  // Kuestengebaeude wie Werften nur in Staaten am Meer (ausser sie sind schon gesetzt)
+  const staatsGebaeude = arten.filter(g => !g.provinz && (!g.kueste || staatMitKueste || werte.gebaeude[g.id]))
   const provinzArten = arten.filter(g => g.provinz)
   const kategorien = sd.staatsKategorien ?? []
   return (
@@ -62,7 +78,7 @@ export function StaatSeite({ staatId, z }) {
         <summary>Allgemein</summary>
         <div class="staat-zeile">
           <label>Name</label>
-          <input type="text" value={werte.name} data-test="staat-name" onInput={(e) => { const v = e.currentTarget.value; aendere(staatId, (p, s) => aendereStaat(p, s, staatId, { name: v }), 'name') }} />
+          <NamensFeld key={staatId} wert={werte.name} test="staat-name" onAendere={(v) => aendere(staatId, (p, s) => aendereStaat(p, s, staatId, { name: v }), 'name')} />
           <Zurueck an={a.name !== undefined} test="staat-name" onKlick={() => aendere(staatId, (p, s) => aendereStaat(p, s, staatId, { name: '' }), 'name-zurueck')} />
         </div>
         <div class="staat-zeile">

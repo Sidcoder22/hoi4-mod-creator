@@ -32,6 +32,11 @@ const NICHT_UEBERNOMMEN = ['research_bonus', 'equipment_bonus', 'targeted_modifi
 const KEINE_EIGENSCHAFTS_BONI = new Set(['random', 'ai_will_do', 'cost', 'sprite'])
 
 /** Zahlenwerte eines Blocks als Boni [{ modifier, wert }]. */
+// Gebaeude, die der Staaten-Editor anbietet; Sondergebaeude (Eisenbahn, Kanaele, Daemme, Anlagen) sind ortsgebunden
+// oder brauchen eigene Befehle und bleiben draussen
+const BEARBEITBARE_GEBAEUDE = new Set(['industrial_complex', 'arms_factory', 'dockyard', 'infrastructure', 'air_base', 'anti_air_building',
+  'radar_station', 'synthetic_refinery', 'fuel_silo', 'rocket_site', 'nuclear_reactor', 'naval_base', 'bunker', 'coastal_bunker'])
+
 // Rueckfall ohne common/buildings: [id, Name, Hoechststufe, Eigenschaften]
 const STANDARD_GEBAEUDE = [
   ['industrial_complex', 'Zivilfabrik', 15, 'platz'], ['arms_factory', 'Militärfabrik', 15, 'platz'], ['dockyard', 'Werft', 15, 'platz'],
@@ -356,6 +361,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
         gebaeude[x.schluessel] = Number(wertText(x.wert))
       }
     }
+    const extraBauplaetze = Number(wertText(finde(histInhalt, 'add_extra_state_shared_building_slots')?.wert)) || 0
     const siegpunkte = {}
     for (const vp of findeAlle(histInhalt, 'victory_points')) {
       const [provinz, wert] = zahlen(vp.wert)
@@ -364,7 +370,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     const ressourcenBlock = finde(inhalt, 'resources')
     staaten[id] = {
       id, name: name(nameSchluessel), nameSchluessel, provinzen,
-      gebaeude, provinzGebaeude, siegpunkte,
+      gebaeude, provinzGebaeude, siegpunkte, extraBauplaetze,
       ressourcen: ressourcenBlock?.wert?.typ === 'block' ? zahlenWerte(ressourcenBlock.wert.inhalt) : {},
       besitzer: wertText(finde(histInhalt, 'owner')?.wert) || null,
       kerne: findeAlle(histInhalt, 'add_core_of').map(x => wertText(x.wert)),
@@ -579,8 +585,19 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     if (!block || block.wert.typ !== 'block') continue
     for (const g of block.wert.inhalt) {
       if (!g.schluessel || g.wert.typ !== 'block' || gebaeudeArten.some(x => x.id === g.schluessel)) continue
-      gebaeudeArten.push({ id: g.schluessel, name: name(g.schluessel), maxStufe: Number(wertText(finde(g.wert.inhalt, 'max_level')?.wert)) || 1,
-        provinz: ja(g.wert.inhalt, 'provincial'), kueste: ja(g.wert.inhalt, 'only_coastal'), gemeinsamerPlatz: ja(g.wert.inhalt, 'shares_slots') })
+      if (!BEARBEITBARE_GEBAEUDE.has(g.schluessel)) continue
+      // Seit 1.12 stehen die Grenzen in level_cap; die alten Schluessel bleiben als Rueckfall
+      const gi = g.wert.inhalt
+      const lc = finde(gi, 'level_cap')?.wert?.typ === 'block' ? finde(gi, 'level_cap').wert.inhalt : []
+      const zahl = (inhalt, k) => Number(wertText(finde(inhalt, k)?.wert)) || 0
+      const provinzMax = zahl(lc, 'province_max')
+      const provinz = provinzMax > 0 || ja(gi, 'provincial')
+      gebaeudeArten.push({
+        id: g.schluessel, name: name(g.schluessel),
+        maxStufe: (provinz ? provinzMax : zahl(lc, 'state_max')) || zahl(gi, 'max_level') || 15,
+        provinz, kueste: ja(gi, 'only_costal') || ja(gi, 'only_coastal'),
+        gemeinsamerPlatz: ja(lc, 'shares_slots') || ja(gi, 'shares_slots'),
+      })
     }
   }
   if (!gebaeudeArten.length) gebaeudeArten = STANDARD_GEBAEUDE.map(([id, n, maxStufe, art]) => ({ id, name: text(id) ?? n, maxStufe,

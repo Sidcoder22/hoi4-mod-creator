@@ -322,6 +322,16 @@ export const SCHRITTE = [
       await h.klicke('nav-staaten')
       await h.klickeKarte('karte-staaten', 3)
       await h.warte(async () => (await h.text('staat-seite')).includes('Bern'), 3000, 'Seitenleiste für Bern')
+      // Review: Feld leeren (wie mit der Ruecktaste) springt nicht sofort auf den Spielnamen zurueck
+      const feld = h.el('staat-name')
+      feld.focus()
+      feld.value = ''
+      feld.dispatchEvent(new Event('input', { bubbles: true }))
+      await h.pause(50)
+      h.pruefe(h.el('staat-name').value === '', 'Leeres Namensfeld springt zurück auf: ' + h.el('staat-name').value)
+      feld.blur()
+      await h.pause(50)
+      h.pruefe(h.el('staat-name').value === 'Bern' && !zustand().projekt.staaten[3], 'Nach dem Verlassen nicht auf den Spielnamen zurückgesetzt')
       await h.tippe('staat-name', 'Bärn')
       await h.klicke('gebaeude-industrial_complex-plus')
       await h.tippe('ressource-oil', '6')

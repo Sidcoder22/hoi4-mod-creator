@@ -227,6 +227,7 @@ set_autonomy = {
     '\t\towner = FRA',
     '\t\tadd_core_of = FRA',
     '\t\tadd_core_of = GER',
+    '\t\tadd_extra_state_shared_building_slots = 1',
     '\t\t1939.1.1 = {',
     '\t\t\towner = GER',
     '\t\t}',
@@ -358,33 +359,54 @@ set_autonomy = {
   ])
 
   // Etappe 4b: Gebaeudearten, Ressourcen, Staatskategorien
+  // Format seit 1.12: Grenzen in level_cap, Kueste mit dem Tippfehler des Spiels «only_costal»
   o['common/buildings/00_buildings.txt'] = `buildings = {
 	infrastructure = {
-		max_level = 5
+		level_cap = {
+			state_max = 5
+		}
 	}
 	industrial_complex = {
-		max_level = 15
-		shares_slots = yes
+		level_cap = {
+			shares_slots = yes
+			group_by = factory
+		}
 	}
 	arms_factory = {
-		max_level = 15
-		shares_slots = yes
+		level_cap = {
+			shares_slots = yes
+			group_by = factory
+		}
+	}
+	dockyard = {
+		level_cap = {
+			shares_slots = yes
+			group_by = factory
+		}
+		only_costal = yes
 	}
 	naval_base = {
-		max_level = 10
-		provincial = yes
-		only_coastal = yes
+		level_cap = {
+			province_max = 10
+		}
+		only_costal = yes
 	}
 	bunker = {
-		max_level = 10
-		provincial = yes
+		level_cap = {
+			province_max = 10
+		}
+	}
+	rail_way = {
+		level_cap = {
+			province_max = 5
+		}
 	}
 }
 `
   o['common/resources/00_resources.txt'] = 'resources = {\n\toil = {\n\t\tcic = 0.125\n\t}\n\tsteel = {\n\t\tcic = 0.125\n\t}\n}\n'
   o['common/state_category/00_state_categories.txt'] = 'state_categories = {\n\ttown = { local_building_slots = 4 }\n\tlarge_town = { local_building_slots = 5 }\n\tcity = { local_building_slots = 6 }\n\tmegalopolis = { local_building_slots = 12 }\n}\n'
   o['localisation/german/etappe4b_l_german.yml'] = schreibeYml('german', [
-    ['industrial_complex', 'Zivilfabrik'], ['arms_factory', 'Militärfabrik'], ['naval_base', 'Marinestützpunkt'],
+    ['industrial_complex', 'Zivilfabrik'], ['arms_factory', 'Militärfabrik'], ['dockyard', 'Werft'], ['naval_base', 'Marinestützpunkt'],
     ['oil', 'Öl'], ['city', 'Stadt'], ['town', 'Kleinstadt'], ['VICTORY_POINTS_1', 'Berlin'],
   ])
 

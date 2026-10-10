@@ -195,7 +195,7 @@ test('Etappe 3: Kategorie ohne icon und Rueckfall-Groessen', async () => {
 
 test('Etappe 4b: Gebaeude, Ressourcen, Kategorien, Kueste, Werte pro Staat', () => {
   expect(LESER_VERSION).toBe(6)
-  expect(sd.gebaeudeArten.slice(0, 2).map(g => g.id)).toEqual(['arms_factory', 'industrial_complex'])
+  expect(sd.gebaeudeArten.slice(0, 3).map(g => g.id)).toEqual(['arms_factory', 'dockyard', 'industrial_complex'])
   expect(sd.gebaeudeArten.find(g => g.id === 'naval_base')).toEqual({ id: 'naval_base', name: 'Marinestützpunkt', maxStufe: 10, provinz: true, kueste: true, gemeinsamerPlatz: false })
   expect(sd.gebaeudeArten.find(g => g.id === 'industrial_complex')).toMatchObject({ name: 'Zivilfabrik', maxStufe: 15, gemeinsamerPlatz: true, provinz: false })
   expect(sd.ressourcenArten).toEqual([{ id: 'oil', name: 'Öl' }, { id: 'steel', name: 'Stahl' }])
@@ -206,7 +206,16 @@ test('Etappe 4b: Gebaeude, Ressourcen, Kategorien, Kueste, Werte pro Staat', () 
     provinzGebaeude: { 1: { bunker: 2 } }, ressourcen: { steel: 12 }, siegpunkte: { 1: 20 } })
   expect(sd.staaten[3]).toMatchObject({ gebaeude: {}, provinzGebaeude: {}, ressourcen: {}, siegpunkte: {} })
   expect(sd.siegpunktNamen).toEqual({ 1: 'Berlin' })
-  expect(sd.bericht).toMatchObject({ gebaeudeArten: 5, ressourcenArten: 2, staatsKategorien: 4 })
+  expect(sd.bericht).toMatchObject({ gebaeudeArten: 6, ressourcenArten: 2, staatsKategorien: 4 })
+  // Review: Format seit 1.12 mit level_cap und only_costal
+  expect(sd.gebaeudeArten.find(g => g.id === 'infrastructure')).toMatchObject({ maxStufe: 5, provinz: false, gemeinsamerPlatz: false })
+  expect(sd.gebaeudeArten.find(g => g.id === 'dockyard')).toMatchObject({ name: 'Werft', maxStufe: 15, provinz: false, kueste: true, gemeinsamerPlatz: true })
+  expect(sd.gebaeudeArten.find(g => g.id === 'bunker')).toMatchObject({ maxStufe: 10, provinz: true, kueste: false })
+  // Review: Sondergebaeude wie Eisenbahnen kommen nicht in die Liste
+  expect(sd.gebaeudeArten.some(g => g.id === 'rail_way')).toBe(false)
+  // Review: zusaetzliche Bauplaetze aus dem Spiel
+  expect(sd.staaten[6].extraBauplaetze).toBe(1)
+  expect(sd.staaten[3].extraBauplaetze).toBe(0)
 })
 
 test('Etappe 4b: Rueckfall-Listen ohne Dateien', async () => {
@@ -218,4 +227,12 @@ test('Etappe 4b: Rueckfall-Listen ohne Dateien', async () => {
   expect(ohne.ressourcenArten.map(r => r.id)).toEqual(['oil', 'aluminium', 'rubber', 'tungsten', 'steel', 'chromium'])
   expect(ohne.ressourcenArten.find(r => r.id === 'rubber').name).toBe('Gummi')
   expect(ohne.staatsKategorien.find(k => k.id === 'megalopolis').bauplaetze).toBe(12)
+})
+
+test('Review: altes Gebaeude-Format (max_level, provincial, only_coastal) bleibt lesbar', async () => {
+  const o = erstelleMiniSpielordner()
+  o['common/buildings/00_buildings.txt'] = 'buildings = {\n\tnaval_base = {\n\t\tmax_level = 10\n\t\tprovincial = yes\n\t\tonly_coastal = yes\n\t}\n\tarms_factory = {\n\t\tmax_level = 20\n\t\tshares_slots = yes\n\t}\n}\n'
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.gebaeudeArten.find(g => g.id === 'naval_base')).toMatchObject({ maxStufe: 10, provinz: true, kueste: true })
+  expect(spieldaten.gebaeudeArten.find(g => g.id === 'arms_factory')).toMatchObject({ maxStufe: 20, gemeinsamerPlatz: true })
 })

@@ -63,3 +63,9 @@ test('Review Focus 5: unbekannter Staat und unbekannte Kategorie werfen nicht', 
   expect(() => pruefeProjekt(p, sd)).not.toThrow()
   expect(() => erzeugeMod(p, sd)).not.toThrow()
 })
+
+test('Review: Werft braucht einen Staat mit Kueste', () => {
+  const m = meldungen(mitStaat({ gebaeude: { dockyard: 1 } }, 1)).find(x => x.regel === 'staat-kueste')
+  expect(m).toMatchObject({ schwere: 'fehler', ziel: { bereich: 'staat', id: 1 } })
+  expect(regeln(mitStaat({ gebaeude: { dockyard: 1 } }))).not.toContain('staat-kueste')
+})

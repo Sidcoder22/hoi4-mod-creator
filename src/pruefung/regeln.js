@@ -383,7 +383,13 @@ export function pruefeProjekt(p, sd) {
       const info = gebaeudeArt.get(art)
       if (info && Number(n) > info.maxStufe) fehler('staat-stufe', `${sname}: «${info.name}»${wo} hat Stufe ${n}, im Spiel geht es höchstens bis ${info.maxStufe}.`, ziel)
     }
-    for (const [art, n] of Object.entries(a.gebaeude ?? {})) stufe(art, n, '')
+    const staatMitKueste = staat.provinzen.some(prov => sd.provinzKueste?.[prov])
+    for (const [art, n] of Object.entries(a.gebaeude ?? {})) {
+      stufe(art, n, '')
+      if (gebaeudeArt.get(art)?.kueste && Number(n) > 0 && !staatMitKueste) {
+        fehler('staat-kueste', `${sname}: «${gebaeudeArt.get(art).name}» braucht Küste, der Staat liegt aber nicht am Meer.`, ziel)
+      }
+    }
     for (const [provinz, prov] of Object.entries(a.provinzen ?? {})) {
       if (!staat.provinzen.includes(Number(provinz))) {
         fehler('staat-provinz', `${sname}: Die Provinz ${provinz} gehört nicht zu diesem Staat.`, ziel)

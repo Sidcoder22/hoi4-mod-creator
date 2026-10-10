@@ -30,7 +30,7 @@ function setzeOderLoesche(obj, schluessel, wert, spielwert) {
 
 function spielAllgemein(sd, staatId) {
   const s = sd.staaten?.[staatId]
-  return { name: s?.name ?? '', einwohner: s?.manpower ?? 0, kategorie: s?.kategorie ?? null, extraBauplaetze: 0 }
+  return { name: s?.name ?? '', einwohner: s?.manpower ?? 0, kategorie: s?.kategorie ?? null, extraBauplaetze: s?.extraBauplaetze ?? 0 }
 }
 
 /** Name, Einwohner, Kategorie, Extra-Bauplaetze; ein leerer Name gilt als Spielwert. */
@@ -104,7 +104,7 @@ export function effektiveStaatswerte(p, sd, staatId) {
     if (prov.gebaeude) provinzGebaeude[provinz] = { ...provinzGebaeude[provinz], ...prov.gebaeude }
   }
   const kategorie = a.kategorie ?? spiel.kategorie
-  const extraBauplaetze = a.extraBauplaetze ?? 0
+  const extraBauplaetze = a.extraBauplaetze ?? spiel.extraBauplaetze
   const platzArten = new Set((sd.gebaeudeArten ?? []).filter(g => g.gemeinsamerPlatz).map(g => g.id))
   return {
     name: a.name ?? spiel.name,
