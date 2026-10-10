@@ -317,6 +317,47 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Staat bearbeiten',
+    async lauf(h) {
+      await h.klicke('nav-staaten')
+      await h.klickeKarte('karte-staaten', 3)
+      await h.warte(async () => (await h.text('staat-seite')).includes('Bern'), 3000, 'Seitenleiste für Bern')
+      await h.tippe('staat-name', 'Bärn')
+      await h.klicke('gebaeude-industrial_complex-plus')
+      await h.tippe('ressource-oil', '6')
+      await h.tippe('provinz-4-siegpunkte', '10')
+      await h.tippe('provinz-4-name', 'Bärn Stadt')
+      await h.klicke('provinz-4-naval_base-plus')
+      const s = zustand().projekt.staaten[3]
+      h.pruefe(s?.name === 'Bärn' && s.gebaeude?.industrial_complex === 1 && s.ressourcen?.oil === 6, 'Staat nicht geändert: ' + JSON.stringify(s))
+      h.pruefe(s.provinzen?.[4]?.siegpunkte === 10 && s.provinzen[4].siegpunktName === 'Bärn Stadt' && s.provinzen[4].gebaeude?.naval_base === 1, 'Provinz nicht geändert')
+      h.pruefe((await h.text('staat-belegung')).includes('1 von 4'), 'Belegung falsch: ' + await h.text('staat-belegung'))
+      await h.element('geaendert-3')
+    },
+  },
+  {
+    name: 'Bauplätze',
+    async lauf(h) {
+      await h.tippe('gebaeude-arms_factory', '4')
+      await h.klicke('nav-pruefung')
+      await h.element('meldung-staat-bauplaetze-0')
+      await h.klicke('behebung-staat-bauplaetze-0')
+      h.pruefe(zustand().projekt.staaten[3].extraBauplaetze === 1, 'Bauplätze nicht erhöht')
+      h.pruefe(!h.el('meldung-staat-bauplaetze-0'), 'Meldung Bauplätze bleibt')
+    },
+  },
+  {
+    name: 'Spielwert',
+    async lauf(h) {
+      await h.klicke('nav-staaten')
+      await h.klicke('geaendert-3')
+      await h.tippe('staat-einwohner', '1000000')
+      h.pruefe(zustand().projekt.staaten[3].einwohner === 1000000, 'Einwohner nicht gesetzt')
+      await h.klicke('staat-einwohner-zurueck')
+      h.pruefe(zustand().projekt.staaten[3].einwohner === undefined, 'Einwohner nicht zurückgesetzt')
+    },
+  },
+  {
     name: 'Fokusbaum anlegen',
     async lauf(h) {
       await h.klicke('nav-fokusbaeume')

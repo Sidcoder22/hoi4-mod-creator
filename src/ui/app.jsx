@@ -10,6 +10,7 @@ import { GeistEditor } from './geister/geist-editor.jsx'
 import { Baeume } from './fokus/baeume.jsx'
 import { BaumEditor } from './fokus/baum-editor.jsx'
 import { EventsListe } from './events/events-liste.jsx'
+import { StaatenAnsicht } from './staaten/staaten.jsx'
 import { EventEditor } from './events/event-editor.jsx'
 import { EntscheidungenListe } from './entscheidungen/entscheidungen-liste.jsx'
 import { EntscheidungEditor } from './entscheidungen/entscheidung-editor.jsx'
@@ -23,6 +24,7 @@ import { pruefeProjekt } from '../pruefung/regeln.js'
 export const BEREICHE = [
   { id: 'einstellungen', text: 'Mod-Einstellungen', ansicht: Einstellungen },
   { id: 'laender', text: 'Länder', ansicht: Uebersicht },
+  { id: 'staaten', text: 'Staaten', ansicht: StaatenAnsicht },
   { id: 'geister', text: 'Nationale Geister', ansicht: GeisterListe },
   { id: 'fokusbaeume', text: 'Fokusbäume', ansicht: Baeume },
   { id: 'events', text: 'Events', ansicht: EventsListe },
@@ -75,10 +77,10 @@ function Seitenleiste({ z }) {
 }
 
 /** Ansichten ohne eigenen Eintrag in der Seitenleiste. */
-const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor, fokus: BaumEditor, event: EventEditor, entscheidung: EntscheidungEditor, kategorie: KategorieEditor }
+const UNTERANSICHTEN = { land: LandEditor, geist: GeistEditor, fokus: BaumEditor, event: EventEditor, entscheidung: EntscheidungEditor, kategorie: KategorieEditor, staat: StaatenAnsicht }
 
 /** Unteransicht → Eintrag der Seitenleiste, der dabei hervorgehoben ist. */
-const OBERBEREICH = { land: 'laender', geist: 'geister', fokus: 'fokusbaeume', event: 'events', entscheidung: 'entscheidungen', kategorie: 'entscheidungen' }
+const OBERBEREICH = { land: 'laender', geist: 'geister', fokus: 'fokusbaeume', event: 'events', entscheidung: 'entscheidungen', kategorie: 'entscheidungen', staat: 'staaten' }
 
 function Arbeitsbereich({ z }) {
   const bereich = UNTERANSICHTEN[z.ansicht.bereich]

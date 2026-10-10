@@ -366,3 +366,34 @@ h2.mit-abstand { margin-top: 1.6rem; }
 /* Etappe 3b: Bonus-Baustein */
 .ideen-galerie { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); max-height: 180px; }
 .baustein-feld .boni .bonus { grid-template-columns: 1fr auto auto; }
+
+/* Etappe 4b: Staaten */
+.staaten-ansicht { max-width: none; }
+.staaten-arbeitsflaeche { display: flex; gap: 1rem; align-items: flex-start; }
+.staaten-karte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.staaten-karte .liste { max-height: 220px; }
+.staaten-karte .liste > button.zeile { width: 100%; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
+.staaten-karte .liste > button.zeile.aktiv { background: var(--flaeche3); }
+.staat-seite { width: 420px; flex-shrink: 0; max-height: calc(100vh - 200px); overflow: auto; padding: 1rem; background: var(--flaeche); border: 1px solid var(--rand);
+  border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem; }
+.staat-seite.leer { justify-content: center; min-height: 200px; }
+.staat-kopf h2 { margin: 0; }
+.staat-zeile { display: grid; grid-template-columns: 1fr auto auto; gap: 0.4rem; align-items: center; margin: 0.25rem 0; }
+.staat-zeile > label { font-size: 0.88rem; }
+.staat-zeile input[type=text] { min-width: 0; }
+.staat-zahl { width: 6.5rem; }
+.stufe { display: inline-flex; gap: 0.25rem; align-items: center; }
+.stufe .staat-zahl { width: 4rem; text-align: center; }
+.staat-belegung { margin: 0.3rem 0 0; font-size: 0.85rem; color: var(--leise); }
+.staat-belegung.zu-voll { color: #f0a294; }
+.karte.provinz { padding: 0.5rem 0.6rem; margin-bottom: 0.5rem; }
+@media (max-width: 1100px) {
+  .staaten-arbeitsflaeche { flex-direction: column; }
+  .staat-seite { width: 100%; max-height: none; }
+}
+.zurueck-platz { width: 6.6rem; }
+.staat-zeile { grid-template-columns: minmax(0, 1fr) 11rem 6.8rem; }
+.staat-zeile > input, .staat-zeile > select { width: 100%; }
+.staat-zeile > .stufe { justify-self: start; }
+.zurueck-platz { width: auto; }
+.staat-zeile > label { overflow-wrap: anywhere; }
