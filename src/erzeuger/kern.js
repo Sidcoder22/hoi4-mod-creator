@@ -15,21 +15,99 @@ function setze(inhalt, schluessel, wert) {
   else inhalt.push({ schluessel, op: '=', wert })
 }
 
-/** Neuer Besitzer und/oder geaenderte Bevoelkerung fuer einen Staat; Datumsbloecke bleiben unangetastet. */
-export function aendereStaatsdatei(text, { neuerBesitzer, kernAltEntfernen, manpowerFaktor } = {}) {
+const block = (inhalt = []) => ({ typ: 'block', inhalt })
+const istDatum = (schluessel) => /^\d+\.\d+\.\d+$/.test(schluessel ?? '')
+
+/** Fuegt einen Eintrag vor dem ersten Datumsblock ein, damit der Startzustand oben bleibt. */
+function fuegeEin(inhalt, eintrag) {
+  const i = inhalt.findIndex(x => istDatum(x.schluessel))
+  if (i < 0) inhalt.push(eintrag)
+  else inhalt.splice(i, 0, eintrag)
+}
+
+/** Block unter schluessel holen oder anlegen. */
+function blockVon(inhalt, schluessel) {
+  let e = finde(inhalt, schluessel)
+  if (!e || e.wert.typ !== 'block') {
+    e = { schluessel, op: '=', wert: block() }
+    fuegeEin(inhalt, e)
+  }
+  return e
+}
+
+/** Zahlenwerte in einem Block setzen; 0 entfernt den Eintrag. */
+function setzeStufen(inhalt, werte) {
+  for (const [art, n] of Object.entries(werte ?? {})) {
+    const e = finde(inhalt, art)
+    if (Number(n) > 0) {
+      if (e) e.wert = wort(n)
+      else inhalt.push({ schluessel: art, op: '=', wert: wort(n) })
+    } else if (e) {
+      inhalt.splice(inhalt.indexOf(e), 1)
+    }
+  }
+}
+
+function entferneWennLeer(inhalt, eintrag) {
+  if (eintrag.wert.inhalt.length === 0) inhalt.splice(inhalt.indexOf(eintrag), 1)
+}
+
+/** Aenderungen aus dem Staaten-Editor (Etappe 4b) auf den Staatsblock anwenden. */
+function wendeStaatsaenderungAn(inhalt, a, history) {
+  if (a.kategorie) setze(inhalt, 'state_category', wort(a.kategorie))
+  if (a.ressourcen) {
+    const r = blockVon(inhalt, 'resources')
+    setzeStufen(r.wert.inhalt, a.ressourcen)
+    entferneWennLeer(inhalt, r)
+  }
+  const hist = history()
+  const h = hist.wert.inhalt
+  const provinzGebaeude = Object.entries(a.provinzen ?? {}).filter(([, p]) => p.gebaeude)
+  if (a.gebaeude || provinzGebaeude.length) {
+    const b = blockVon(h, 'buildings')
+    setzeStufen(b.wert.inhalt, a.gebaeude)
+    for (const [provinz, p] of provinzGebaeude) {
+      const pb = blockVon(b.wert.inhalt, String(provinz))
+      setzeStufen(pb.wert.inhalt, p.gebaeude)
+      entferneWennLeer(b.wert.inhalt, pb)
+    }
+    entferneWennLeer(h, b)
+  }
+  for (const [provinz, p] of Object.entries(a.provinzen ?? {})) {
+    if (p.siegpunkte === undefined) continue
+    const alt = findeAlle(h, 'victory_points').filter(v => v.wert.typ === 'block' && v.wert.inhalt[0]?.text === String(provinz))
+    for (const v of alt) h.splice(h.indexOf(v), 1)
+    if (Number(p.siegpunkte) > 0) fuegeEin(h, { schluessel: 'victory_points', op: '=', wert: block([wort(provinz), wort(p.siegpunkte)]) })
+  }
+  if (a.extraBauplaetze !== undefined) {
+    const e = finde(h, 'add_extra_state_shared_building_slots')
+    if (e) h.splice(h.indexOf(e), 1)
+    if (Number(a.extraBauplaetze) > 0) fuegeEin(h, { schluessel: 'add_extra_state_shared_building_slots', op: '=', wert: wort(a.extraBauplaetze) })
+  }
+}
+
+/**
+ * Neuer Besitzer, geaenderte Bevoelkerung und Aenderungen aus dem Staaten-Editor fuer einen Staat.
+ * Datumsbloecke bleiben unangetastet; eine feste Einwohnerzahl (staat.einwohner) hat Vorrang vor dem Faktor.
+ */
+export function aendereStaatsdatei(text, { neuerBesitzer, kernAltEntfernen, manpowerFaktor, staat: aenderung } = {}) {
   const { eintraege } = parseParadox(text)
   const staat = finde(eintraege, 'state')
   if (!staat || staat.wert.typ !== 'block') throw new Error('Kein Staat in der Datei')
-  if (manpowerFaktor && manpowerFaktor !== 1) {
-    const mp = finde(staat.wert.inhalt, 'manpower')
-    if (mp && mp.wert.typ !== 'block') mp.wert = wort(Math.max(0, Math.round(Number(mp.wert.text) * manpowerFaktor)))
+  const mp = finde(staat.wert.inhalt, 'manpower')
+  if (aenderung?.einwohner !== undefined) setze(staat.wert.inhalt, 'manpower', wort(Math.max(0, Math.round(Number(aenderung.einwohner) || 0))))
+  else if (manpowerFaktor && manpowerFaktor !== 1 && mp && mp.wert.typ !== 'block') mp.wert = wort(Math.max(0, Math.round(Number(mp.wert.text) * manpowerFaktor)))
+  const history = () => {
+    let hist = finde(staat.wert.inhalt, 'history')
+    if (!hist || hist.wert.typ !== 'block') {
+      hist = { schluessel: 'history', op: '=', wert: block() }
+      staat.wert.inhalt.push(hist)
+    }
+    return hist
   }
+  if (aenderung) wendeStaatsaenderungAn(staat.wert.inhalt, aenderung, history)
   if (!neuerBesitzer) return '# Geaendert durch HOI4 Mod Creator\n' + schreibeParadox(eintraege)
-  let hist = finde(staat.wert.inhalt, 'history')
-  if (!hist || hist.wert.typ !== 'block') {
-    hist = { schluessel: 'history', op: '=', wert: { typ: 'block', inhalt: [] } }
-    staat.wert.inhalt.push(hist)
-  }
+  const hist = history()
   const inhalt = hist.wert.inhalt
   const owner = finde(inhalt, 'owner')
   const alt = owner ? owner.wert.text : null

@@ -15,10 +15,11 @@ import { erzeugeEigenschaften } from './eigenschaften.js'
 import { erzeugeDiplomatie } from './diplomatie.js'
 import { erzeugeEvents } from './events.js'
 import { erzeugeEntscheidungen } from './entscheidungen.js'
+import { erzeugeStaaten } from './staaten.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
 // Die Geister kommen zuletzt: Bausteine «Bonus erhalten» der anderen Erzeuger melden ihnen noch Geister.
-export const ERZEUGER = [erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen, erzeugeIdeen]
+export const ERZEUGER = [erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen, erzeugeStaaten, erzeugeIdeen]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
@@ -59,6 +60,7 @@ export function erzeugeMod(projekt, spieldaten) {
   const neueZeilen = new Map()
   const entfernen = new Map()
   const bonusGeister = new Map()
+  const staatsEditor = new Map()
   const neueTags = new Set(projekt.laender.filter(l => l.art === 'neu').map(l => l.tag))
 
   const kontext = {
@@ -100,6 +102,8 @@ export function erzeugeMod(projekt, spieldaten) {
       entfernen.get(tag).push(pruefe)
     },
     staatManpower: (staatId, faktor) => manpower.set(staatId, faktor),
+    /** Aenderung aus dem Staaten-Editor; wird mit Besitzer und Bevoelkerung in dieselbe Datei geschrieben. */
+    staatAenderung: (staatId, aenderung) => staatsEditor.set(staatId, aenderung),
     staatAnLand(staatId, tag, { kernAltEntfernen = false } = {}) {
       const vorher = staatsAenderungen.get(staatId)
       if (vorher && vorher.tag !== tag) fehler.push(`Staat ${staatId} ist zwei Ländern zugewiesen (${vorher.tag}, ${tag})`)
@@ -119,7 +123,7 @@ export function erzeugeMod(projekt, spieldaten) {
     const extra = neueZeilen.get(tag) ?? []
     kontext.schreibe(pfad, extra.length ? `${text}${extra.join('\n')}\n` : text)
   }
-  for (const staatId of new Set([...staatsAenderungen.keys(), ...manpower.keys()])) {
+  for (const staatId of new Set([...staatsAenderungen.keys(), ...manpower.keys(), ...staatsEditor.keys()])) {
     const staat = spieldaten.staaten[staatId]
     const original = staat && spieldaten.originaltexte[staat.datei]
     if (!original) {
@@ -128,7 +132,7 @@ export function erzeugeMod(projekt, spieldaten) {
     }
     const aenderung = staatsAenderungen.get(staatId)
     kontext.schreibe(modPfad(modid, staat.datei), aendereStaatsdatei(original, {
-      neuerBesitzer: aenderung?.tag, kernAltEntfernen: aenderung?.kernAltEntfernen, manpowerFaktor: manpower.get(staatId),
+      neuerBesitzer: aenderung?.tag, kernAltEntfernen: aenderung?.kernAltEntfernen, manpowerFaktor: manpower.get(staatId), staat: staatsEditor.get(staatId),
     }), { kopie: true })
   }
   for (const tag of new Set([...anhaenge.keys(), ...entfernen.keys()])) {
