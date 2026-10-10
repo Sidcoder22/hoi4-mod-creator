@@ -7,6 +7,7 @@ import { fokusZyklus } from '../projekt/fokus.js'
 import { pruefeBausteine } from '../bausteine/erzeugen.js'
 import { pruefeFeld } from '../bausteine/felder.js'
 import { pruefeBonus } from '../projekt/boni.js'
+import { effektiveStaatswerte, normalisiereStaat, verwerfeStaat, aendereStaat } from '../projekt/staaten.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
 
@@ -17,7 +18,7 @@ export function hatFehler(meldungen) {
 export function pruefeProjekt(p, sd) {
   const meldungen = []
   const fehler = (regel, text, ziel, behebung) => meldungen.push({ regel, schwere: 'fehler', text, ziel, ...(behebung ? { behebung } : {}) })
-  const hinweis = (regel, text, ziel) => meldungen.push({ regel, schwere: 'hinweis', text, ziel })
+  const hinweis = (regel, text, ziel, behebung) => meldungen.push({ regel, schwere: 'hinweis', text, ziel, ...(behebung ? { behebung } : {}) })
   const staatName = (id) => sd.staaten[id]?.name ?? `Staat ${id}`
   const besitzer = effektiveBesitzer(p, sd)
   const einstellungen = { bereich: 'einstellungen' }
@@ -358,6 +359,46 @@ export function pruefeProjekt(p, sd) {
     const ziel = { bereich: 'entscheidung', id: d.id }
     unbekannteBoni(d.wirkungen, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
     if (Number(d.dauer) > 0) unbekannteBoni(d.wirkungenEnde, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
+  }
+
+  // Etappe 4b: Staaten-Editor
+  const gebaeudeArt = new Map((sd.gebaeudeArten ?? []).map(g => [g.id, g]))
+  for (const [schluessel, a] of Object.entries(p.staaten ?? {})) {
+    const id = Number(schluessel)
+    const ziel = { bereich: 'staat', id }
+    const staat = sd.staaten[id]
+    if (!staat) {
+      fehler('staat-unbekannt', `Den Staat ${id} gibt es im eingelesenen Spiel nicht mehr. Verwirf seine Änderungen.`, ziel)
+      continue
+    }
+    const sname = `Staat «${a.name || staat.name}»`
+    if (a.kategorie && !(sd.staatsKategorien ?? []).some(k => k.id === a.kategorie)) fehler('staat-kategorie', `${sname}: Die Kategorie «${a.kategorie}» gibt es im Spiel nicht.`, ziel)
+    const werte = effektiveStaatswerte(p, sd, id)
+    if (werte.belegt > werte.bauplaetze) {
+      const kategoriePlaetze = werte.bauplaetze - werte.extraBauplaetze
+      fehler('staat-bauplaetze', `${sname}: ${werte.belegt} Fabriken und Werften brauchen mehr Bauplätze, als der Staat hat (${werte.bauplaetze}).`, ziel,
+        { text: 'Bauplätze passend erhöhen', anwenden: (q, s) => aendereStaat(q, s, id, { extraBauplaetze: werte.belegt - kategoriePlaetze }) })
+    }
+    const stufe = (art, n, wo) => {
+      const info = gebaeudeArt.get(art)
+      if (info && Number(n) > info.maxStufe) fehler('staat-stufe', `${sname}: «${info.name}»${wo} hat Stufe ${n}, im Spiel geht es höchstens bis ${info.maxStufe}.`, ziel)
+    }
+    for (const [art, n] of Object.entries(a.gebaeude ?? {})) stufe(art, n, '')
+    for (const [provinz, prov] of Object.entries(a.provinzen ?? {})) {
+      if (!staat.provinzen.includes(Number(provinz))) {
+        fehler('staat-provinz', `${sname}: Die Provinz ${provinz} gehört nicht zu diesem Staat.`, ziel)
+        continue
+      }
+      for (const [art, n] of Object.entries(prov.gebaeude ?? {})) {
+        stufe(art, n, ` in Provinz ${provinz}`)
+        if (gebaeudeArt.get(art)?.kueste && Number(n) > 0 && !sd.provinzKueste?.[provinz]) {
+          fehler('staat-kueste', `${sname}: «${gebaeudeArt.get(art).name}» braucht Küste, Provinz ${provinz} liegt aber nicht am Meer.`, ziel)
+        }
+      }
+    }
+    if (!normalisiereStaat(sd, id, a)) {
+      hinweis('staat-unveraendert', `${sname} entspricht wieder ganz dem Spiel.`, ziel, { text: 'aufräumen', anwenden: (q) => verwerfeStaat(q, id) })
+    }
   }
 
   if (p.mod.spielversion && sd.version && p.mod.spielversion !== sd.version) {

@@ -13,3 +13,8 @@ test('Sprungziele fuer Events, Entscheidungen und Kategorien', () => {
   expect(zielAnsicht({ bereich: 'kategorie', id: 'k' })).toEqual({ bereich: 'kategorie', id: 'k' })
   expect(zielAnsicht({ bereich: 'entscheidung' })).toEqual({ bereich: 'entscheidungen' })
 })
+
+test('Sprungziel fuer Staaten', () => {
+  expect(zielAnsicht({ bereich: 'staat', id: 3 })).toEqual({ bereich: 'staat', id: 3 })
+  expect(zielAnsicht({ bereich: 'staat' })).toEqual({ bereich: 'staaten' })
+})

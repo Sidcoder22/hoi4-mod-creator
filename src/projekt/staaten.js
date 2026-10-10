@@ -115,3 +115,17 @@ export function effektiveStaatswerte(p, sd, staatId) {
     gebaeude, ressourcen, siegpunkte, siegpunktNamen, provinzGebaeude,
   }
 }
+
+/** Die Aenderung ohne alles, was dem Spiel entspricht; undefined, wenn nichts mehr abweicht. */
+export function normalisiereStaat(sd, staatId, aenderung) {
+  let q = { staaten: {} }
+  const { gebaeude, ressourcen, provinzen, ...allgemein } = aenderung ?? {}
+  q = aendereStaat(q, sd, staatId, allgemein)
+  for (const [art, n] of Object.entries(gebaeude ?? {})) q = setzeGebaeude(q, sd, staatId, art, n)
+  for (const [art, n] of Object.entries(ressourcen ?? {})) q = setzeRessource(q, sd, staatId, art, n)
+  for (const [provinz, prov] of Object.entries(provinzen ?? {})) {
+    for (const feld of ['siegpunkte', 'siegpunktName']) if (prov[feld] !== undefined) q = setzeProvinz(q, sd, staatId, provinz, feld, prov[feld])
+    for (const [art, n] of Object.entries(prov.gebaeude ?? {})) q = setzeProvinzGebaeude(q, sd, staatId, provinz, art, n)
+  }
+  return q.staaten[staatId]
+}
