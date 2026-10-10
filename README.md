@@ -40,6 +40,19 @@ Etappe 3 bringt dazu:
   Der Creator legt dafür selbst einen Geist mit Name und Bild an. Entscheidungen mit Dauer haben zusätzlich «Bonus während der Laufzeit».
 - **Verknüpfen über Merker:** Ein Fokus setzt zum Beispiel den Merker «Armee Reform», und eine Entscheidung ist erst sichtbar, wenn dieser Merker gesetzt ist.
 
+Etappe 4 bringt dazu:
+
+- **Staaten bearbeiten** (Bereich «Staaten»): Klicke einen beliebigen Staat auf der Karte an und ändere
+  - Name und Einwohner
+  - Kategorie, die die Bauplätze bestimmt, und zusätzliche Bauplätze
+  - Gebäude wie Fabriken, Werften, Infrastruktur und Luftwaffenstützpunkt
+  - Ressourcen wie Öl, Stahl oder Gummi
+  - pro Provinz Siegpunkte mit Namen, Marinestützpunkt, Bunker und Küstenbunker
+
+  Jedes Feld zeigt den Wert aus dem Spiel und lässt sich mit «↺ Spielwert» zurücksetzen. Gespeichert wird nur, was du änderst.
+  Zu viele Fabriken für die Bauplätze meldet die Prüfung und erhöht die Bauplätze auf Knopfdruck.
+- **Kleinere Verbesserungen:** Warnung, wenn ein Event sich immer wieder selbst auslöst; nur ganze Tage bei Verzögerung und Dauer.
+
 ## Benutzen (Windows-PC)
 
 1. Kopiere `dist/hoi4-mod-creator.html` auf den PC, zum Beispiel auf den Desktop.
@@ -71,7 +84,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Baupläne: `docs/superpowers/plans/` (Etappe 1, 2, 2b, 3 und 3b)
+- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4b)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)
@@ -91,6 +104,8 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Gibt ein Land Staaten ab, bleiben seine Startdivisionen dort stehen, wo das Spiel sie vorsieht.
 - Kopierte Spieldateien (Staaten, Verlauf, Farben) gehören zur eingelesenen Spielversion.
   Nach einem Spiel-Update liest du den Spielordner neu ein und speicherst die Mod noch einmal.
+- Änderungen an Staaten gelten für den Start 1936. Datumsblöcke in den Staatsdateien (zum Beispiel für 1939) bleiben unverändert.
+- Ob das Spiel zusätzliche Bauplätze aus dem Startblock eines Staats übernimmt, zeigt erst der Spieltest.
 - Ein Event «an einem Datum» kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.
 - Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.

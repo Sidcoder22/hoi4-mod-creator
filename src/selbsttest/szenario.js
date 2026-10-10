@@ -675,6 +675,10 @@ export const SCHRITTE = [
       h.pruefe(events.includes('add_timed_idea'), 'Events ohne «add_timed_idea»')
       h.pruefe(lies('mod/selbsttest_reich/common/ideas/selbsttest_reich_ideas.txt').includes('consumer_goods_factor = -0.1'), 'Bonus-Geist fehlt')
       lies('mod/selbsttest_reich/common/decisions/categories/selbsttest_reich_categories.txt')
+      const bern = lies('mod/selbsttest_reich/history/states/3-Bern.txt')
+      for (const teil of ['industrial_complex = 1', 'arms_factory = 4', 'oil = 6', 'add_extra_state_shared_building_slots = 1', 'naval_base = 1']) h.pruefe(bern.includes(teil), `Bern ohne «${teil}»`)
+      const ersatz = new TextDecoder().decode(dateien['mod/selbsttest_reich/localisation/german/replace/selbsttest_reich_replace_l_german.yml'])
+      h.pruefe(ersatz.includes('STATE_3:') && ersatz.includes('VICTORY_POINTS_4:'), 'Neue Namen für Bern fehlen')
       h.pruefe(zustand().projekt.mod.gespeichertAls === 'selbsttest_reich', 'gespeichertAls nicht gesetzt')
     },
   },
