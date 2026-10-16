@@ -598,7 +598,9 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       if (bereich && !technologieBereiche.some(b => b.id === bereich)) {
         technologieBereiche.push({ id: bereich, name: text(bereich) ?? text(`${bereich}_name`) ?? STANDARD_BEREICHE.get(bereich) ?? bereich })
       }
-      const jahr = Number(wertText(finde(ti, 'start_year')?.wert))
+      // Ohne start_year bleibt das Jahr unbekannt (Number('') waere 0 und fiele in jede Jahres-Schnellwahl)
+      const jahrText = wertText(finde(ti, 'start_year')?.wert)
+      const jahr = jahrText ? Number(jahrText) : NaN
       for (const weg of findeAlle(ti, 'path')) {
         const ziel = weg.wert.typ === 'block' ? wertText(finde(weg.wert.inhalt, 'leads_to_tech')?.wert) : null
         if (ziel) nachfolger.push([t.schluessel, ziel])

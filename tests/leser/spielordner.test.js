@@ -250,3 +250,12 @@ test('Etappe 4c: Technologien, Bereiche, Forschung pro Land', () => {
   expect(sd.laender.FRA.forschung).toEqual([])
   expect(sd.bericht.technologien).toBe(7)
 })
+
+test('Review: Technologie ohne start_year hat kein Jahr und faellt nicht in die Jahres-Schnellwahl', async () => {
+  const o = erstelleMiniSpielordner()
+  o['common/technologies/industry.txt'] = 'technologies = {\n\t@1936 = 2\n\tconcentrated_industry = {\n\t\tresearch_cost = 2\n\t\tfolder = { name = industry_folder position = { x = 0 y = @1936 } }\n\t}\n}\n'
+  const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
+  expect(spieldaten.technologien.find(t => t.id === 'concentrated_industry').jahr).toBeNull()
+  const { schnellwahl } = await import('../../src/projekt/forschung.js')
+  expect(schnellwahl(spieldaten, 'jahr', 1950)).not.toContain('concentrated_industry')
+})
