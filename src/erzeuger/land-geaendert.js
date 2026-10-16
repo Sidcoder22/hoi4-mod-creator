@@ -44,10 +44,25 @@ export function erzeugeGeaenderteLaender(k) {
         `set_stability = ${zahl(land.startwerte.stabilitaet / 100)}`,
         `set_war_support = ${zahl(land.startwerte.kriegsunterstuetzung / 100)}`,
       )
-      const technik = land.technikWie ? technikVon(spieldaten, land.technikWie) : []
+      // Mit eigener Forschungsliste (Etappe 4c) gilt «Forschungsstand wie …» nicht mehr
+      const eigeneListe = a.forschung && Array.isArray(land.forschung)
+      const technik = land.technikWie && !eigeneListe ? technikVon(spieldaten, land.technikWie) : []
       if (technik.length) anhang.push(...alsZeilen([eintrag('set_technology', block(technik.map(t => eintrag(t, wort(1)))))]))
       if (Number(land.startwerte.rekruten) > 0) anhang.push(`add_manpower = ${Math.round(land.startwerte.rekruten)}`)
       bevoelkerungAnpassen(k, land)
+    }
+    if (a.forschung && Array.isArray(land.forschung)) {
+      const spielForschung = spieldaten.laender[tag]?.forschung ?? []
+      const weg = new Set(spielForschung.filter(t => !land.forschung.includes(t)))
+      const neu = land.forschung.filter(t => !spielForschung.includes(t))
+      if (weg.size) {
+        k.verlaufUmformen(tag, (x) => {
+          if (x.schluessel?.toLowerCase() !== 'set_technology' || x.wert.typ !== 'block') return x
+          const inhalt = x.wert.inhalt.filter(t => !(t.schluessel && weg.has(t.schluessel)))
+          return inhalt.some(t => t.schluessel) ? { ...x, wert: { ...x.wert, inhalt } } : null
+        })
+      }
+      if (neu.length) anhang.push(...alsZeilen([eintrag('set_technology', block(neu.map(t => eintrag(t, wort(1)))))]))
     }
     if (a.regierung) {
       anhang.push(...alsZeilen(politikEintraege(spieldaten, land.regierung)))

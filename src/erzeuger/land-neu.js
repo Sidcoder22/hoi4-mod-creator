@@ -33,6 +33,12 @@ export function technikFuer(spieldaten, land) {
   return technik.length ? technik : MINIMALE_TECHNIK
 }
 
+/** set_technology fuer ein neues Land: eigene Liste (Etappe 4c) oder wie bisher; eine leere Liste schreibt nichts. */
+function forschungEintraege(spieldaten, land) {
+  const liste = Array.isArray(land.forschung) ? land.forschung : technikFuer(spieldaten, land)
+  return liste.length ? [eintrag('set_technology', block(liste.map(t => eintrag(t, wort(1)))))] : []
+}
+
 export function ideologieIds(spieldaten) {
   return spieldaten.ideologien?.length ? spieldaten.ideologien.map(g => g.id) : ['democratic', 'communism', 'fascism', 'neutrality']
 }
@@ -168,7 +174,7 @@ export function erzeugeNeueLaender(k) {
       eintrag('set_research_slots', wort(land.startwerte.forschungsplaetze)),
       eintrag('set_stability', wort(zahl(land.startwerte.stabilitaet / 100))),
       eintrag('set_war_support', wort(zahl(land.startwerte.kriegsunterstuetzung / 100))),
-      eintrag('set_technology', block(technikFuer(spieldaten, land).map(t => eintrag(t, wort(1))))),
+      ...forschungEintraege(spieldaten, land),
       ...politikEintraege(spieldaten, land.regierung),
     )
     const anfuehrer = schreibeAnfuehrer(k, land)

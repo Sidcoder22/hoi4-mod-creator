@@ -59,6 +59,7 @@ export function erzeugeMod(projekt, spieldaten) {
   const neueVerlaeufe = new Map()
   const neueZeilen = new Map()
   const entfernen = new Map()
+  const umformen = new Map()
   const bonusGeister = new Map()
   const staatsEditor = new Map()
   const neueTags = new Set(projekt.laender.filter(l => l.art === 'neu').map(l => l.tag))
@@ -101,6 +102,11 @@ export function erzeugeMod(projekt, spieldaten) {
       if (!entfernen.has(tag)) entfernen.set(tag, [])
       entfernen.get(tag).push(pruefe)
     },
+    /** Formt in der kopierten Verlaufsdatei Eintraege um (fn → Eintrag oder null zum Entfernen); keine Datumsbloecke. */
+    verlaufUmformen(tag, fn) {
+      if (!umformen.has(tag)) umformen.set(tag, [])
+      umformen.get(tag).push(fn)
+    },
     staatManpower: (staatId, faktor) => manpower.set(staatId, faktor),
     /** Aenderung aus dem Staaten-Editor; wird mit Besitzer und Bevoelkerung in dieselbe Datei geschrieben. */
     staatAenderung: (staatId, aenderung) => staatsEditor.set(staatId, aenderung),
@@ -135,18 +141,22 @@ export function erzeugeMod(projekt, spieldaten) {
       neuerBesitzer: aenderung?.tag, kernAltEntfernen: aenderung?.kernAltEntfernen, manpowerFaktor: manpower.get(staatId), staat: staatsEditor.get(staatId),
     }), { kopie: true })
   }
-  for (const tag of new Set([...anhaenge.keys(), ...entfernen.keys()])) {
+  for (const tag of new Set([...anhaenge.keys(), ...entfernen.keys(), ...umformen.keys()])) {
     const datei = spieldaten.laender[tag]?.verlaufDatei
     if (!datei || spieldaten.originaltexte[datei] === undefined) {
       fehler.push(`Für ${tag} gibt es keine Verlaufsdatei im Spiel.`)
       continue
     }
     let basis = spieldaten.originaltexte[datei]
-    const pruefungen = entfernen.get(tag)
-    if (pruefungen?.length) {
+    const pruefungen = entfernen.get(tag) ?? []
+    const formen = umformen.get(tag) ?? []
+    if (pruefungen.length || formen.length) {
       // Oberste Ebene und bedingte Bloecke (if/else_if/else), aber keine Datumsbloecke
+      const forme = (x) => formen.reduce((e, f) => (e ? f(e) : e), x)
       const filtere = (inhalt) => inhalt
         .filter(x => !(x.schluessel && pruefungen.some(f => f(x))))
+        .map(x => (x.schluessel ? forme(x) : x))
+        .filter(Boolean)
         .map(x => (x.schluessel && ['if', 'else_if', 'else'].includes(x.schluessel.toLowerCase()) && x.wert.typ === 'block'
           ? { ...x, wert: { ...x.wert, inhalt: filtere(x.wert.inhalt) } } : x))
       basis = schreibeParadox(filtere(parseParadox(basis).eintraege))
