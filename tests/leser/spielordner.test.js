@@ -194,7 +194,7 @@ test('Etappe 3: Kategorie ohne icon und Rueckfall-Groessen', async () => {
 })
 
 test('Etappe 4b: Gebaeude, Ressourcen, Kategorien, Kueste, Werte pro Staat', () => {
-  expect(LESER_VERSION).toBe(6)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(6)
   expect(sd.gebaeudeArten.slice(0, 3).map(g => g.id)).toEqual(['arms_factory', 'dockyard', 'industrial_complex'])
   expect(sd.gebaeudeArten.find(g => g.id === 'naval_base')).toEqual({ id: 'naval_base', name: 'Marinestützpunkt', maxStufe: 10, provinz: true, kueste: true, gemeinsamerPlatz: false })
   expect(sd.gebaeudeArten.find(g => g.id === 'industrial_complex')).toMatchObject({ name: 'Zivilfabrik', maxStufe: 15, gemeinsamerPlatz: true, provinz: false })
@@ -235,4 +235,18 @@ test('Review: altes Gebaeude-Format (max_level, provincial, only_coastal) bleibt
   const { spieldaten } = await leseSpielordner(dateiquelleAusObjekt(o))
   expect(spieldaten.gebaeudeArten.find(g => g.id === 'naval_base')).toMatchObject({ maxStufe: 10, provinz: true, kueste: true })
   expect(spieldaten.gebaeudeArten.find(g => g.id === 'arms_factory')).toMatchObject({ maxStufe: 20, gemeinsamerPlatz: true })
+})
+
+test('Etappe 4c: Technologien, Bereiche, Forschung pro Land', () => {
+  expect(LESER_VERSION).toBe(7)
+  expect(sd.technologieBereiche).toEqual([{ id: 'infantry_folder', name: 'Infanterie' }, { id: 'support_folder', name: 'Unterstützung' },
+    { id: 'industry_folder', name: 'Industrie' }, { id: 'land_doctrine_folder', name: 'Heeresdoktrin' }])
+  expect(sd.technologien.map(t => t.id)).toEqual(['infantry_weapons', 'infantry_weapons1', 'infantry_weapons2', 'tech_support', 'basic_machine_tools', 'improved_machine_tools', 'grand_battle_plan'])
+  expect(sd.technologien.find(t => t.id === 'infantry_weapons1')).toEqual({ id: 'infantry_weapons1', name: 'Infanteriewaffen I', bereich: 'infantry_folder', jahr: 1936, voraussetzungen: ['infantry_weapons'], doktrin: false })
+  expect(sd.technologien.find(t => t.id === 'improved_machine_tools')).toMatchObject({ voraussetzungen: ['basic_machine_tools'], jahr: 1940 })
+  expect(sd.technologien.find(t => t.id === 'grand_battle_plan')).toMatchObject({ doktrin: true, voraussetzungen: [] })
+  expect(sd.laender.GER.forschung).toEqual(['infantry_weapons', 'infantry_weapons1', 'tech_support'])
+  expect(sd.laender.SWI.forschung).toEqual(['infantry_weapons', 'tech_support'])
+  expect(sd.laender.FRA.forschung).toEqual([])
+  expect(sd.bericht.technologien).toBe(7)
 })

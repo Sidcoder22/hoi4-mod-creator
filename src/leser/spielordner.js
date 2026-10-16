@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 6
+export const LESER_VERSION = 7
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -44,6 +44,9 @@ const STANDARD_GEBAEUDE = [
   ['radar_station', 'Radarstation', 6, ''], ['naval_base', 'Marinestützpunkt', 10, 'provinz kueste'], ['bunker', 'Bunker', 10, 'provinz'],
   ['coastal_bunker', 'Küstenbunker', 10, 'provinz kueste'],
 ]
+const STANDARD_BEREICHE = new Map([['infantry_folder', 'Infanterie'], ['support_folder', 'Unterstützung'], ['armour_folder', 'Panzer'],
+  ['artillery_folder', 'Artillerie'], ['naval_folder', 'Marine'], ['air_techs_folder', 'Luftwaffe'], ['industry_folder', 'Industrie'],
+  ['electronics_folder', 'Elektronik'], ['land_doctrine_folder', 'Heeresdoktrin'], ['naval_doctrine_folder', 'Marinedoktrin'], ['air_doctrine_folder', 'Luftdoktrin']])
 const STANDARD_RESSOURCEN = [['oil', 'Öl'], ['aluminium', 'Aluminium'], ['rubber', 'Gummi'], ['tungsten', 'Wolfram'], ['steel', 'Stahl'], ['chromium', 'Chrom']]
 const STANDARD_KATEGORIEN_STAAT = [['wasteland', 0], ['enclave', 0], ['tiny_island', 0], ['pastoral', 1], ['small_island', 1], ['rural', 2],
   ['town', 4], ['large_town', 5], ['city', 6], ['large_city', 8], ['metropolis', 10], ['megalopolis', 12]]
@@ -215,7 +218,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
         tag, name: name(tag), nameDef: text(`${tag}_DEF`) ?? name(tag), adjektiv: text(`${tag}_ADJ`) ?? name(tag),
         farbe: [128, 128, 128], grafikstil: 'western_european_gfx', grafikstil2d: 'western_european_2d',
         landDatei: 'common/' + x.wert.text.replace(/\\/g, '/'), verlaufDatei: null, hauptstadt: null, regierung: null,
-        anfuehrer: null, flaggen: [], namensVarianten: [], marionetten: [], fraktion: null,
+        anfuehrer: null, flaggen: [], namensVarianten: [], marionetten: [], forschung: [], fraktion: null,
       }
     }
   }
@@ -309,6 +312,8 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
           const ziel = wertText(finde(x.wert.inhalt, 'target')?.wert)
           const stufe = wertText(finde(x.wert.inhalt, 'autonomous_state')?.wert) || wertText(finde(x.wert.inhalt, 'autonomy_state')?.wert)
           if (ziel && stufe) merkeMarionette(ziel, stufe, bedingt)
+        } else if (k === 'set_technology' && x.wert.typ === 'block') {
+          for (const t of x.wert.inhalt) if (t.schluessel && !land.forschung.includes(t.schluessel)) land.forschung.push(t.schluessel)
         } else if (k === 'create_faction' && x.wert.typ !== 'block') {
           land.fraktion = x.wert.text
         } else if (['if', 'else_if', 'else'].includes(k) && x.wert.typ === 'block') {
@@ -576,6 +581,46 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   }
   if (!autonomieStufen.length) for (const [id, n] of STANDARD_AUTONOMIE) autonomieStufen.push({ id, name: text(id) ?? n })
 
+  // Etappe 4c: Technologien und ihre Bereiche (Ordner im Forschungsbildschirm)
+  fortschritt(0.91, 'Technologien werden gelesen …')
+  const technologien = []
+  const technologieBereiche = []
+  const nachfolger = []
+  for (const pfad of imOrdner('common/technologies/', '.txt')) {
+    const block = finde(await leseSkript(pfad), 'technologies')
+    if (!block || block.wert.typ !== 'block') continue
+    for (const t of block.wert.inhalt) {
+      // Variablen wie @1936 = 4 und Werte ohne Block sind keine Technologien
+      if (!t.schluessel || t.schluessel.startsWith('@') || t.wert.typ !== 'block' || technologien.some(x => x.id === t.schluessel)) continue
+      const ti = t.wert.inhalt
+      const ordner = finde(ti, 'folder')
+      const bereich = ordner?.wert?.typ === 'block' ? wertText(finde(ordner.wert.inhalt, 'name')?.wert) || '' : ''
+      if (bereich && !technologieBereiche.some(b => b.id === bereich)) {
+        technologieBereiche.push({ id: bereich, name: text(bereich) ?? text(`${bereich}_name`) ?? STANDARD_BEREICHE.get(bereich) ?? bereich })
+      }
+      const jahr = Number(wertText(finde(ti, 'start_year')?.wert))
+      for (const weg of findeAlle(ti, 'path')) {
+        const ziel = weg.wert.typ === 'block' ? wertText(finde(weg.wert.inhalt, 'leads_to_tech')?.wert) : null
+        if (ziel) nachfolger.push([t.schluessel, ziel])
+      }
+      technologien.push({
+        id: t.schluessel, name: name(t.schluessel), bereich, jahr: Number.isFinite(jahr) ? jahr : null, voraussetzungen: [],
+        doktrin: String(wertText(finde(ti, 'doctrine')?.wert) ?? '').toLowerCase() === 'yes' || /doctrine_folder$/.test(bereich),
+      })
+    }
+  }
+  for (const [von, zu] of nachfolger) {
+    const t = technologien.find(x => x.id === zu)
+    if (t && !t.voraussetzungen.includes(von)) t.voraussetzungen.push(von)
+  }
+  // Bekannte Bereiche in der Reihenfolge des Spiels, weitere dahinter in der Reihenfolge ihres Auftretens
+  const bekannt = [...STANDARD_BEREICHE.keys()]
+  const rang = (id) => (bekannt.includes(id) ? bekannt.indexOf(id) : bekannt.length)
+  technologieBereiche.sort((a, b) => rang(a.id) - rang(b.id))
+  const bereichPos = new Map(technologieBereiche.map((b, i) => [b.id, i]))
+  technologien.sort((a, b) => (bereichPos.get(a.bereich) ?? 999) - (bereichPos.get(b.bereich) ?? 999)
+    || (a.jahr ?? 9999) - (b.jahr ?? 9999) || a.name.localeCompare(b.name, 'de'))
+
   // Etappe 4b: Gebaeudearten, Ressourcen, Staatskategorien
   const ja = (inhalt, schluessel) => String(wertText(finde(inhalt, schluessel)?.wert) ?? '').toLowerCase() === 'yes'
   let gebaeudeArten = []
@@ -644,7 +689,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
     eventBilder, entscheidungsSymbole, kategorieSymbole, entscheidungsKategorien,
-    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen,
+    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
@@ -671,6 +716,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       gebaeudeArten: gebaeudeArten.length,
       ressourcenArten: ressourcenArten.length,
       staatsKategorien: staatsKategorien.length,
+      technologien: technologien.length,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

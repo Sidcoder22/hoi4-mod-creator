@@ -147,6 +147,12 @@ set_war_support = 0.1
 set_technology = {
 	infantry_weapons = 1
 }
+if = {
+	limit = { has_dlc = "La Resistance" }
+	set_technology = {
+		tech_support = 1
+	}
+}
 set_politics = {
 	ruling_party = democratic
 	last_election = "1935.10.27"
@@ -356,6 +362,22 @@ set_autonomy = {
     ['schweizer_neutralitaet', 'Schweizer Neutralität'], ['schweizer_neutralitaet_desc', 'Wir bleiben draussen.'],
     ['deutsche_industrie', 'Deutsche Industrie'], ['MODIFIER_CONSUMER_GOODS_FACTOR', 'Konsumgüter'], ['stability_factor', 'Stabilität'],
     ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
+  ])
+
+  // Etappe 4c: Technologien (Variablen wie @1918 stehen im Spiel oben in der Datei)
+  const tech = (id, jahr, ordner, extra = '') => `\t${id} = {\n\t\tstart_year = ${jahr}\n\t\tresearch_cost = 1.5\n${extra}\t\tfolder = {\n\t\t\tname = ${ordner}\n\t\t\tposition = { x = 0 y = @1918 }\n\t\t}\n\t}\n`
+  const weiter = (ziel) => `\t\tpath = {\n\t\t\tleads_to_tech = ${ziel}\n\t\t\tresearch_cost_coeff = 1\n\t\t}\n`
+  o['common/technologies/infantry.txt'] = '@1918 = 0\n@1936 = 4\ntechnologies = {\n' +
+    tech('infantry_weapons', 1918, 'infantry_folder', weiter('infantry_weapons1')) +
+    tech('infantry_weapons1', 1936, 'infantry_folder', weiter('infantry_weapons2')) +
+    tech('infantry_weapons2', 1939, 'infantry_folder') +
+    tech('tech_support', 1936, 'support_folder') + '}\n'
+  o['common/technologies/industry.txt'] = 'technologies = {\n' +
+    tech('basic_machine_tools', 1936, 'industry_folder', weiter('improved_machine_tools')) +
+    tech('improved_machine_tools', 1940, 'industry_folder') + '}\n'
+  o['common/technologies/land_doctrine.txt'] = 'technologies = {\n' + tech('grand_battle_plan', 1936, 'land_doctrine_folder', '\t\tdoctrine = yes\n') + '}\n'
+  o['localisation/german/etappe4c_l_german.yml'] = schreibeYml('german', [
+    ['infantry_weapons', 'Infanteriewaffen'], ['infantry_weapons1', 'Infanteriewaffen I'], ['infantry_weapons2', 'Infanteriewaffen II'], ['industry_folder', 'Industrie'],
   ])
 
   // Etappe 4b: Gebaeudearten, Ressourcen, Staatskategorien
