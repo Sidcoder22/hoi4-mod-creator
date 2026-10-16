@@ -29,7 +29,7 @@ test('geaendertes Land vorbefuellt, nicht doppelt', () => {
   const l = land(p, id)
   expect(l).toMatchObject({ art: 'geaendert', tag: 'GER', name: 'Deutschland', farbe: [75, 75, 75],
     startwerte: { stabilitaet: 60, kriegsunterstuetzung: 30, forschungsplaetze: 4 } })
-  expect(l.aendern).toEqual({ name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false })
+  expect(l.aendern).toEqual({ name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false, forschung: false })
   expect(l.regierung.ideologie).toBe('fascism')
   expect(werte(p, id)).toEqual({ democratic: 10, communism: 5, fascism: 70, neutrality: 15 })
   expect(l.anfuehrer.unterideologie).toBe('nazism')

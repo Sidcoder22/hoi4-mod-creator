@@ -143,10 +143,11 @@ export function ergaenzeProjekt(p, sd) {
     laender: (p.laender ?? []).map(l => ({
       ...l,
       spielIdeen: l.spielIdeen ?? [],
+      forschung: l.forschung ?? null,
       startwerte: { rekruten: 0, bevoelkerung: 0, ...l.startwerte },
       anfuehrer: { eigenschaften: [], modus: 'neu', ...l.anfuehrer },
       diplomatie: l.diplomatie ?? leereDiplomatie(l.art === 'neu' ? [] : (sd?.laender?.[l.tag]?.marionetten ? structuredClone(sd.laender[l.tag].marionetten) : null)),
-      ...(l.art === 'geaendert' ? { aendern: { diplomatie: false, ...l.aendern } } : {}),
+      ...(l.art === 'geaendert' ? { aendern: { diplomatie: false, forschung: false, ...l.aendern } } : {}),
     })),
   }
 }

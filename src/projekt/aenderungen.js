@@ -60,7 +60,7 @@ export function fuegeLandHinzu(p, sd, art, tag) {
       anfuehrer: { name: '', unterideologie: ersteUnterideologie(sd, ids.includes('neutrality') ? 'neutrality' : ids[0]),
         bild: { art: 'spiel', pfad: sd.portraets?.[0] ?? null }, eigenschaften: [], modus: 'neu' },
       startwerte: { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 3, rekruten: 0, bevoelkerung: 0 },
-      technikWie: null, armee: { divisionen: 6 }, ideen: [], spielIdeen: [], diplomatie: leereDiplomatie(),
+      technikWie: null, forschung: null, armee: { divisionen: 6 }, ideen: [], spielIdeen: [], diplomatie: leereDiplomatie(),
     }
   } else {
     const spiel = sd.laender[tag]
@@ -82,9 +82,9 @@ export function fuegeLandHinzu(p, sd, art, tag) {
       anfuehrer: { name: leiter?.name ?? '', unterideologie: unter,
         bild: { art: 'spiel', pfad: leiter?.portraet ?? sd.portraets?.[0] ?? null }, eigenschaften: [], modus: 'neu' },
       startwerte: { stabilitaet: werte.stabilitaet, kriegsunterstuetzung: werte.kriegsunterstuetzung, forschungsplaetze: werte.forschungsplaetze, rekruten: 0, bevoelkerung: 0 },
-      technikWie: null, armee: { divisionen: 0 }, ideen: [], spielIdeen: [],
+      technikWie: null, forschung: null, armee: { divisionen: 0 }, ideen: [], spielIdeen: [],
       diplomatie: leereDiplomatie(structuredClone(spiel.marionetten ?? [])),
-      aendern: { name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false },
+      aendern: { name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false, forschung: false },
     }
   }
   return [{ ...p, laender: [...p.laender, land] }, id]
