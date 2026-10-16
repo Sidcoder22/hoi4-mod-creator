@@ -8,6 +8,7 @@ import { pruefeBausteine } from '../bausteine/erzeugen.js'
 import { pruefeFeld } from '../bausteine/felder.js'
 import { pruefeBonus } from '../projekt/boni.js'
 import { effektiveStaatswerte, normalisiereStaat, verwerfeStaat, aendereStaat } from '../projekt/staaten.js'
+import { setzeForschung, alleVoraussetzungen } from '../projekt/forschung.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
 
@@ -359,6 +360,26 @@ export function pruefeProjekt(p, sd) {
     const ziel = { bereich: 'entscheidung', id: d.id }
     unbekannteBoni(d.wirkungen, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
     if (Number(d.dauer) > 0) unbekannteBoni(d.wirkungenEnde, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
+  }
+
+  // Etappe 4c: Forschung (nur eigene Listen; bei bestehenden Laendern nur mit Schalter)
+  const technologieIds = new Set((sd.technologien ?? []).map(t => t.id))
+  for (const l of p.laender) {
+    if (!Array.isArray(l.forschung) || !(l.art === 'neu' || l.aendern?.forschung)) continue
+    const ziel = { bereich: 'land', id: l.id, reiter: 'forschung' }
+    const lname = `«${landName(l.tag, p, sd)}»`
+    const unbekannt = l.forschung.filter(t => !technologieIds.has(t))
+    if (unbekannt.length) {
+      fehler('forschung-unbekannt', `${lname} hat Technologien, die es im eingelesenen Spiel nicht gibt: ${unbekannt.join(', ')}.`, ziel,
+        { text: 'unbekannte entfernen', anwenden: (q, s) => setzeForschung(q, s, l.id, l.forschung.filter(t => technologieIds.has(t))) })
+    }
+    const fehlend = [...new Set(l.forschung.filter(t => technologieIds.has(t)).flatMap(t => alleVoraussetzungen(sd, t)).filter(v => !l.forschung.includes(v)))]
+    if (fehlend.length) {
+      const namen = fehlend.map(v => sd.technologien.find(t => t.id === v)?.name ?? v).join(', ')
+      hinweis('forschung-voraussetzung', `${lname} hat Technologien ohne ihre Voraussetzungen (es fehlen: ${namen}).`, ziel,
+        { text: 'Voraussetzungen ergänzen', anwenden: (q, s) => setzeForschung(q, s, l.id, [...l.forschung, ...fehlend]) })
+    }
+    if (l.art === 'neu' && !l.forschung.length) hinweis('forschung-leer', `${lname} beginnt ganz ohne Forschung.`, ziel)
   }
 
   // Etappe 4b: Staaten-Editor
