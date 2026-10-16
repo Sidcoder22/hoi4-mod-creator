@@ -397,3 +397,11 @@ h2.mit-abstand { margin-top: 1.6rem; }
 .staat-zeile > .stufe { justify-self: start; }
 .zurueck-platz { width: auto; }
 .staat-zeile > label { overflow-wrap: anywhere; }
+
+/* Etappe 4c: Forschung */
+.forschung { display: flex; flex-direction: column; gap: 0.6rem; }
+.forschung-schnell { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem; align-items: end; }
+.tech-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.15rem 1rem; }
+.tech-liste .haken .leise { margin-left: auto; font-size: 0.8rem; }
+.hinweis-zeile { margin: 0; padding: 0.4rem 0.6rem; border-left: 3px solid var(--gelb); background: var(--flaeche2); font-size: 0.88rem; }
+.forschung-schnell .knopfreihe { grid-column: 1 / -1; }

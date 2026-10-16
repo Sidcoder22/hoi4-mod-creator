@@ -51,6 +51,8 @@ Etappe 4 bringt dazu:
 
   Jedes Feld zeigt den Wert aus dem Spiel und lässt sich mit «↺ Spielwert» zurücksetzen. Gespeichert wird nur, was du änderst.
   Zu viele Fabriken für die Bauplätze meldet die Prüfung und erhöht die Bauplätze auf Knopfdruck.
+- **Forschung** (Reiter im Land-Editor): Startforschung per Schnellwahl («alles bis 1936», «wie Land …», «nichts») und danach mit Häkchen nach Bereichen.
+  Voraussetzungen kommen automatisch mit, abhängige Technologien fallen beim Abhaken mit weg. Bestehenden Ländern kannst du auch Technologien wegnehmen.
 - **Kleinere Verbesserungen:** Warnung, wenn ein Event sich immer wieder selbst auslöst; nur ganze Tage bei Verzögerung und Dauer.
 
 ## Benutzen (Windows-PC)
@@ -84,7 +86,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4b)
+- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4c)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)
@@ -106,6 +108,7 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
   Nach einem Spiel-Update liest du den Spielordner neu ein und speicherst die Mod noch einmal.
 - Änderungen an Staaten gelten für den Start 1936. Datumsblöcke in den Staatsdateien (zum Beispiel für 1939) bleiben unverändert.
 - Ob das Spiel zusätzliche Bauplätze aus dem Startblock eines Staats übernimmt, zeigt erst der Spieltest.
+- Technologien, die es nur mit bestimmten DLCs gibt, zeigt der Creator trotzdem an. Ob sie im Spiel ohne DLC wirken, entscheidet das Spiel.
 - Ein Event «an einem Datum» kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.
 - Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.

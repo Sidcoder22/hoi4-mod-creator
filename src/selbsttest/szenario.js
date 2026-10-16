@@ -233,6 +233,28 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Forschung',
+    async lauf(h) {
+      await h.klicke('reiter-forschung')
+      await h.waehle('forschung-schnell-art', 'jahr')
+      await h.tippe('forschung-schnell-jahr', '1936')
+      await h.klicke('forschung-schnell-anwenden')
+      const f = zustand().projekt.laender.find(l => l.tag === 'MRE').forschung
+      h.pruefe(JSON.stringify([...f].sort()) === JSON.stringify(['basic_machine_tools', 'infantry_weapons', 'infantry_weapons1', 'tech_support']), 'Schnellwahl falsch: ' + JSON.stringify(f))
+      h.pruefe((await h.text('forschung-anzahl')).startsWith('4 von 7'), 'Anzahl falsch: ' + await h.text('forschung-anzahl'))
+    },
+  },
+  {
+    name: 'Forschung abhängig',
+    async lauf(h) {
+      await h.hakeAn('tech-infantry_weapons2', true)
+      await h.hakeAn('tech-infantry_weapons', false)
+      const f = zustand().projekt.laender.find(l => l.tag === 'MRE').forschung
+      h.pruefe(!f.includes('infantry_weapons1') && !f.includes('infantry_weapons2') && !f.includes('infantry_weapons'), 'Abhängige nicht entfernt: ' + JSON.stringify(f))
+      h.pruefe((await h.text('forschung-mitgeaendert')).includes('Infanteriewaffen I'), 'Meldung zu mitgeänderten Technologien fehlt')
+    },
+  },
+  {
     name: 'Schweiz ändern',
     async lauf(h) {
       const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
@@ -243,6 +265,19 @@ export const SCHRITTE = [
       await h.tippe('land-name', 'Helvetien')
       await h.klicke('nav-laender')
       await h.warte(async () => (await h.text(`land-${swi.id}`)).includes('Helvetien'), 3000, 'Kachel Helvetien')
+    },
+  },
+  {
+    name: 'Schweiz Forschung',
+    async lauf(h) {
+      const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
+      await h.klicke(`land-${swi.id}`)
+      await h.klicke('reiter-forschung')
+      await h.hakeAn('aendern-forschung', true)
+      await h.hakeAn('tech-tech_support', false)
+      const f = zustand().projekt.laender.find(l => l.tag === 'SWI').forschung
+      h.pruefe(JSON.stringify(f) === JSON.stringify(['infantry_weapons']), 'Schweizer Forschung falsch: ' + JSON.stringify(f))
+      await h.klicke('nav-laender')
     },
   },
   {
@@ -685,6 +720,9 @@ export const SCHRITTE = [
       h.pruefe(events.includes('add_timed_idea'), 'Events ohne «add_timed_idea»')
       h.pruefe(lies('mod/selbsttest_reich/common/ideas/selbsttest_reich_ideas.txt').includes('consumer_goods_factor = -0.1'), 'Bonus-Geist fehlt')
       lies('mod/selbsttest_reich/common/decisions/categories/selbsttest_reich_categories.txt')
+      const mreVerlauf = new TextDecoder().decode(dateien['mod/selbsttest_reich/history/countries/MRE - Mein Reich.txt'])
+      h.pruefe(mreVerlauf.includes('basic_machine_tools = 1') && !mreVerlauf.includes('infantry_weapons1'), 'Forschung von MRE falsch')
+      h.pruefe(!lies('mod/selbsttest_reich/history/countries/SWI - Switzerland.txt').includes('tech_support'), 'tech_support nicht aus der Schweiz entfernt')
       const bern = lies('mod/selbsttest_reich/history/states/3-Bern.txt')
       for (const teil of ['industrial_complex = 1', 'arms_factory = 4', 'oil = 6', 'add_extra_state_shared_building_slots = 1', 'naval_base = 1']) h.pruefe(bern.includes(teil), `Bern ohne «${teil}»`)
       const ersatz = new TextDecoder().decode(dateien['mod/selbsttest_reich/localisation/german/replace/selbsttest_reich_replace_l_german.yml'])
