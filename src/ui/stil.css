@@ -416,3 +416,21 @@ h2.mit-abstand { margin-top: 1.6rem; }
 .person-werte.raster4 .staat-zahl { width: 100%; }
 @media (max-width: 700px) { .person-werte.raster4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .karte.person .staat-zeile { grid-template-columns: 11rem minmax(0, 20rem) auto; justify-content: start; }
+
+/* Etappe 4e: Armee */
+.armee { display: flex; flex-direction: column; gap: 0.6rem; }
+.karte.vorlage { display: flex; flex-direction: column; gap: 0.5rem; }
+.vorlage-kopf { display: flex; gap: 0.8rem; align-items: center; }
+.vorlage-name { flex: 1; max-width: 22rem; }
+.vorlage-raster { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.4rem; }
+.vorlage-raster > div { display: flex; flex-direction: column; gap: 0.25rem; }
+.vorlage-kompanien { padding-right: 0.4rem; border-right: 1px dashed var(--rand); }
+.armee-zelle { width: 100%; font-size: 0.8rem; padding: 0.25rem; }
+.armee-zelle.belegt { border-color: var(--messing-dunkel); background: var(--flaeche3); }
+.zeile.verband { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+@media (max-width: 900px) { .vorlage-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.zeile.verband { flex-direction: row; justify-content: flex-start; }
+.zeile.verband > select { width: auto; flex: 1 1 12rem; min-width: 0; }
+.zeile.verband > input.staat-zahl { width: 5rem; flex: 0 0 auto; }
+.zeile.verband > span { flex: 0 0 auto; }
+.karte.vorlage { align-items: stretch; text-align: left; } .karte.vorlage .vorlage-raster { justify-content: start; }

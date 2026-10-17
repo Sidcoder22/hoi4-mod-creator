@@ -14,6 +14,7 @@ import { ReiterGeister } from './reiter-geister.jsx'
 import { ReiterDiplomatie } from './reiter-diplomatie.jsx'
 import { ReiterForschung } from './reiter-forschung.jsx'
 import { ReiterPersonen } from './reiter-personen.jsx'
+import { ReiterArmee } from './reiter-armee.jsx'
 
 export const REITER = [
   { id: 'name', text: 'Name & Farbe', ansicht: ReiterName, schalter: 'Name ändern' },
@@ -24,6 +25,7 @@ export const REITER = [
   { id: 'personen', text: 'Personen', ansicht: ReiterPersonen, schalter: 'Personen hinzufügen' },
   { id: 'startwerte', text: 'Startwerte', ansicht: ReiterStartwerte, schalter: 'Startwerte ändern' },
   { id: 'forschung', text: 'Forschung', ansicht: ReiterForschung, schalter: 'Forschung ändern' },
+  { id: 'armee', text: 'Armee', ansicht: ReiterArmee, schalter: 'Armee ergänzen' },
   { id: 'geister', text: 'Nationale Geister', ansicht: ReiterGeister, schalter: 'Nationale Geister hinzufügen' },
   { id: 'diplomatie', text: 'Diplomatie', ansicht: ReiterDiplomatie, schalter: 'Diplomatie ändern' },
 ]

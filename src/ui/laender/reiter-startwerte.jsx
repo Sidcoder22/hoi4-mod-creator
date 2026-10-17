@@ -15,10 +15,6 @@ export function ReiterStartwerte({ land, z }) {
           wert={w.rekruten ?? 0} test="start-rekruten" onAendere={(v) => setze('rekruten')(Math.round(v))} />
         <Regler label="Bevölkerung der eigenen Staaten" hilfe="Ändert die Einwohnerzahl aller Staaten, die dem Land zum Start gehören – dauerhaft mehr oder weniger Rekruten." min={-50} max={200} schritt={5}
           wert={w.bevoelkerung ?? 0} test="start-bevoelkerung" onAendere={setze('bevoelkerung')} />
-        {land.art === 'neu' && (
-          <ZahlFeld label="Infanteriedivisionen zu Beginn" hilfe="Einfache Infanteriedivisionen, die in der Hauptstadt stehen." min={0} max={24} wert={land.armee.divisionen} test="start-divisionen"
-            onAendere={(v) => aendereFeld(land, { armee: { divisionen: Math.round(v) } }, 'divisionen')} />
-        )}
       </div>
     </fieldset>
   )

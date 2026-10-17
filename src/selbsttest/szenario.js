@@ -159,10 +159,9 @@ export const SCHRITTE = [
     async lauf(h) {
       await h.klicke('reiter-startwerte')
       await h.tippe('start-stabilitaet', '70')
-      await h.tippe('start-divisionen', '4')
       const land = zustand().projekt.laender.find(l => l.tag === 'MRE')
       h.pruefe(land.startwerte.stabilitaet === 70, 'Stabilität nicht 70')
-      h.pruefe(land.armee.divisionen === 4, 'Divisionen nicht 4')
+      h.pruefe(!h.el('start-divisionen'), 'Altes Feld für Divisionen noch da')
     },
   },
   {
@@ -276,6 +275,31 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Armee',
+    async lauf(h) {
+      const mre = () => zustand().projekt.laender.find(l => l.tag === 'MRE')
+      await h.klicke('reiter-armee')
+      await h.klicke('vorlage-neu')
+      const v = mre().armee.vorlagen[1].id
+      await h.tippe(`vorlage-${v}-name`, 'Panzer-Division')
+      await h.waehle(`vorlage-${v}-b-0-0`, 'motorized')
+      await h.waehle(`vorlage-${v}-b-0-1`, 'motorized')
+      await h.waehle(`vorlage-${v}-u-0`, 'engineer')
+      h.pruefe((await h.text(`vorlage-${v}-breite`)).includes('Kampfbreite 4'), 'Kampfbreite falsch: ' + await h.text(`vorlage-${v}-breite`))
+      await h.klicke('verband-neu')
+      const vb = mre().armee.verbaende[1].id
+      await h.waehle(`verband-${vb}-vorlage`, v)
+      await h.tippe(`verband-${vb}-anzahl`, '2')
+      await h.waehle(`verband-${vb}-staat`, '4')
+      const verband = mre().armee.verbaende[1]
+      h.pruefe(verband.vorlage === v && verband.anzahl === 2 && verband.staat === 4, 'Verband falsch: ' + JSON.stringify(verband))
+      h.pruefe((await h.text('armee-summe')).includes('8 Divisionen'), 'Summe falsch: ' + await h.text('armee-summe'))
+      await h.klicke('nav-pruefung')
+      await h.element('meldung-vorlage-forschung-0')
+      await h.klicke('nav-laender')
+    },
+  },
+  {
     name: 'Schweiz ändern',
     async lauf(h) {
       const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
@@ -312,6 +336,22 @@ export const SCHRITTE = [
       const a = swi().personen[0].id
       await h.tippe(`person-${a}-name`, 'Hans Seemann')
       h.pruefe(swi().personen[0].rolle === 'admiral' && swi().personen[0].name === 'Hans Seemann', 'Admiral fehlt')
+      await h.klicke('nav-laender')
+    },
+  },
+  {
+    name: 'Schweiz Armee',
+    async lauf(h) {
+      const swi = () => zustand().projekt.laender.find(l => l.tag === 'SWI')
+      await h.klicke(`land-${swi().id}`)
+      await h.klicke('reiter-armee')
+      await h.hakeAn('aendern-armee', true)
+      await h.klicke('vorlage-neu')
+      const v = swi().armee.vorlagen[0].id
+      await h.tippe(`vorlage-${v}-name`, 'Gebirgsdivision')
+      await h.waehle(`vorlage-${v}-b-0-0`, 'infantry')
+      await h.klicke('verband-neu')
+      h.pruefe(swi().armee.verbaende[0]?.vorlage === v, 'Verband ohne vorbelegte Vorlage')
       await h.klicke('nav-laender')
     },
   },
@@ -762,6 +802,10 @@ export const SCHRITTE = [
       for (const teil of ['corps_commander', 'panzer_leader', 'slot = theorist']) h.pruefe(mreChar.includes(teil), `Charaktere MRE ohne «${teil}»`)
       h.pruefe(lies('mod/selbsttest_reich/common/characters/selbsttest_reich_SWI.txt').includes('navy_leader'), 'Admiral der Schweiz fehlt')
       h.pruefe(lies('mod/selbsttest_reich/history/countries/SWI - Switzerland.txt').includes('recruit_character = selbsttest_reich_person_'), 'Admiral nicht rekrutiert')
+      const mreOob = lies('mod/selbsttest_reich/history/units/MRE_1936.txt')
+      h.pruefe(mreOob.includes('motorized') && (mreOob.match(/Panzer-Division/g) ?? []).length >= 3, 'Panzer-Divisionen fehlen in MRE_1936')
+      lies('mod/selbsttest_reich/history/units/selbsttest_reich_SWI_1936.txt')
+      h.pruefe(lies('mod/selbsttest_reich/history/countries/SWI - Switzerland.txt').includes('load_oob = "selbsttest_reich_SWI_1936"'), 'load_oob fehlt bei der Schweiz')
       const bern = lies('mod/selbsttest_reich/history/states/3-Bern.txt')
       for (const teil of ['industrial_complex = 1', 'arms_factory = 4', 'oil = 6', 'add_extra_state_shared_building_slots = 1', 'naval_base = 1']) h.pruefe(bern.includes(teil), `Bern ohne «${teil}»`)
       const ersatz = new TextDecoder().decode(dateien['mod/selbsttest_reich/localisation/german/replace/selbsttest_reich_replace_l_german.yml'])

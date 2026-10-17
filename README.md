@@ -55,6 +55,8 @@ Etappe 4 bringt dazu:
   Voraussetzungen kommen automatisch mit, abhängige Technologien fallen beim Abhaken mit weg. Bestehenden Ländern kannst du auch Technologien wegnehmen.
 - **Personen** (Reiter im Land-Editor): neue Generäle, Feldmarschälle und Admirale mit Stufe, Fähigkeiten, Porträt und Eigenschaften aus dem Spiel,
   dazu Berater (politischer Berater, Generalstab, Oberkommando, Theoretiker) mit Kosten und einer Eigenschaft. Alle stehen dem Land ab Spielbeginn zur Verfügung.
+- **Armee** (Reiter im Land-Editor): Divisionsvorlagen wie im Spiel (Bataillone im Raster, Unterstützungskompanien, Kampfbreite)
+  und Startverbände («Vorlage × Anzahl in Staat»). Bestehende Länder behalten ihre Armee aus dem Spiel und bekommen die neuen Divisionen dazu.
 - **Kleinere Verbesserungen:** Warnung, wenn ein Event sich immer wieder selbst auslöst; nur ganze Tage bei Verzögerung und Dauer.
 
 ## Benutzen (Windows-PC)
@@ -88,7 +90,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4d)
+- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4e)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)
@@ -111,6 +113,8 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Änderungen an Staaten gelten für den Start 1936. Datumsblöcke in den Staatsdateien (zum Beispiel für 1939) bleiben unverändert.
 - Ob das Spiel zusätzliche Bauplätze aus dem Startblock eines Staats übernimmt, zeigt erst der Spieltest.
 - Technologien, die es nur mit bestimmten DLCs gibt, zeigt der Creator trotzdem an. Ob sie im Spiel ohne DLC wirken, entscheidet das Spiel.
+- Neue Vorlagen bestehender Länder brauchen einen eigenen Namen, der im Spiel noch nicht vorkommt.
+- Ob `load_oob` im Verlauf bestehender Länder zuverlässig wirkt, zeigt der Spieltest.
 - Ein Event «an einem Datum» kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.
 - Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.
