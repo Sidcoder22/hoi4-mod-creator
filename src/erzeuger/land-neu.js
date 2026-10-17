@@ -1,6 +1,7 @@
 // Neue Laender: Kuerzel, Laenderdatei, Verlauf, Einheiten, Anfuehrer, Flaggen, Texte.
 
 import { parseParadox, schreibeParadox, findeAlle } from '../leser/paradox.js'
+import { oobDatei, oobName } from './armee.js'
 import { schreibeTga, schreibeDds, skaliereRgba } from './bilder.js'
 import { zeichneFlagge } from './flagge.js'
 import { anfuehrerKennung, asciiDateiname, geistKennung, eigenschaftKennung, modPfad, zahl } from './kennungen.js'
@@ -134,27 +135,6 @@ export function bevoelkerungAnpassen(k, land) {
   }
 }
 
-function einheiten(spieldaten, land) {
-  const provinzen = [...(spieldaten.staaten[land.hauptstadt]?.provinzen || [])].sort((a, b) => a - b)
-  const ort = provinzen.find(p => spieldaten.provinzArten[p] !== 'sea' && spieldaten.provinzArten[p] !== 'lake') ?? provinzen[0]
-  const regimenter = []
-  for (let x = 0; x < 2; x++) for (let y = 0; y < 3; y++) regimenter.push(eintrag('infantry', block([eintrag('x', wort(x)), eintrag('y', wort(y))])))
-  const divisionen = []
-  const anzahl = (land.armee?.verbaende ?? []).reduce((s, v) => s + (Number(v.anzahl) || 0), 0)
-  for (let n = 1; n <= anzahl; n++) {
-    divisionen.push(eintrag('division', block([
-      eintrag('name', text(`${n}. Infanterie-Division`)),
-      eintrag('location', wort(ort)),
-      eintrag('division_template', text('Infanterie-Division')),
-      eintrag('start_experience_factor', wort(0.2)),
-    ])))
-  }
-  return schreibeParadox([
-    eintrag('division_template', block([eintrag('name', text('Infanterie-Division')), eintrag('regiments', block(regimenter))])),
-    eintrag('units', block(divisionen)),
-  ])
-}
-
 export function erzeugeNeueLaender(k) {
   const { projekt, spieldaten, modid } = k
   const neue = projekt.laender.filter(l => l.art === 'neu')
@@ -168,10 +148,8 @@ export function erzeugeNeueLaender(k) {
     k.neueFarbe(tag, land.farbe)
 
     const verlauf = [eintrag('capital', wort(land.hauptstadt))]
-    // Uebergang bis Task 3 (Etappe 4e): Summe der Verbaende als einfache Infanteriedivisionen
-    const anzahlDivisionen = (land.armee?.verbaende ?? []).reduce((s, v) => s + (Number(v.anzahl) || 0), 0)
-    const mitArmee = anzahlDivisionen > 0
-    if (mitArmee) verlauf.push(eintrag('oob', text(`${tag}_1936`)))
+    const oob = oobDatei(spieldaten, land)
+    if (oob) verlauf.push(eintrag('oob', text(oobName(modid, land))))
     verlauf.push(
       eintrag('set_research_slots', wort(land.startwerte.forschungsplaetze)),
       eintrag('set_stability', wort(zahl(land.startwerte.stabilitaet / 100))),
@@ -187,7 +165,7 @@ export function erzeugeNeueLaender(k) {
     k.neuerVerlauf(tag, modPfad(modid, `history/countries/${tag} - ${asciiDateiname(land.name) || tag}.txt`), schreibeParadox(verlauf))
     bevoelkerungAnpassen(k, land)
 
-    if (mitArmee) k.schreibe(modPfad(modid, `history/units/${tag}_1936.txt`), einheiten(spieldaten, land))
+    if (oob) k.schreibe(modPfad(modid, `history/units/${oobName(modid, land)}.txt`), oob)
     for (const s of land.staaten) k.staatAnLand(s, tag, { kernAltEntfernen: !land.kerneAltBesitzerBehalten })
     schreibeFlaggen(k, land.flagge, [tag])
 

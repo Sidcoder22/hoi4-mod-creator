@@ -1,6 +1,7 @@
 // Bestehende Laender: Nur Reiter mit aendern.<reiter> === true wirken.
 
 import { schreibeParadox } from '../leser/paradox.js'
+import { oobDatei, oobName } from './armee.js'
 import { aendereLandDatei } from './kern.js'
 import { modPfad, zahl } from './kennungen.js'
 import { politikEintraege, parteiTexte, schreibeAnfuehrer, schreibeFlaggen, geisterKennungen, eigenschaftenKennungen, bevoelkerungAnpassen, technikVon } from './land-neu.js'
@@ -63,6 +64,13 @@ export function erzeugeGeaenderteLaender(k) {
         })
       }
       if (neu.length) anhang.push(...alsZeilen([eintrag('set_technology', block(neu.map(t => eintrag(t, wort(1)))))]))
+    }
+    if (a.armee) {
+      const oob = oobDatei(spieldaten, land)
+      if (oob) {
+        k.schreibe(modPfad(modid, `history/units/${oobName(modid, land)}.txt`), oob)
+        anhang.push(`load_oob = "${oobName(modid, land)}"`)
+      }
     }
     if (a.regierung) {
       anhang.push(...alsZeilen(politikEintraege(spieldaten, land.regierung)))
