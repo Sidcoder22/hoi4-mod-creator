@@ -8,7 +8,9 @@ import { pruefeBausteine } from '../bausteine/erzeugen.js'
 import { pruefeFeld } from '../bausteine/felder.js'
 import { pruefeBonus } from '../projekt/boni.js'
 import { effektiveStaatswerte, normalisiereStaat, verwerfeStaat, aendereStaat } from '../projekt/staaten.js'
-import { setzeForschung, alleVoraussetzungen } from '../projekt/forschung.js'
+import { setzeForschung, alleVoraussetzungen, forschungVon } from '../projekt/forschung.js'
+import { kampfbreite } from '../projekt/armee.js'
+import { asciiName } from '../erzeuger/armee.js'
 
 const zaehlt = (l, feld) => l.art === 'neu' || l.aendern?.[feld]
 
@@ -360,6 +362,44 @@ export function pruefeProjekt(p, sd) {
     const ziel = { bereich: 'entscheidung', id: d.id }
     unbekannteBoni(d.wirkungen, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
     if (Number(d.dauer) > 0) unbekannteBoni(d.wirkungenEnde, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
+  }
+
+  // Etappe 4e: Armee (neue Laender; bestehende nur mit Schalter)
+  const einheitArt = new Map((sd.einheitenArten ?? []).map(e => [e.id, e]))
+  for (const l of p.laender) {
+    if (!(l.art === 'neu' || l.aendern?.armee)) continue
+    const ziel = { bereich: 'land', id: l.id, reiter: 'armee' }
+    const { vorlagen = [], verbaende = [] } = l.armee ?? {}
+    const freigeschaltet = new Set(forschungVon(sd, l).flatMap(t => sd.technologien?.find(x => x.id === t)?.einheiten ?? []))
+    const namen = new Map()
+    for (const v of vorlagen) {
+      const vname = `Vorlage «${v.name || 'ohne Namen'}» (${landName(l.tag, p, sd)})`
+      const ascii = asciiName(v.name)
+      if (!ascii) fehler('vorlage-name', `Eine Vorlage von ${landName(l.tag, p, sd)} braucht einen Namen.`, ziel)
+      else if (namen.has(ascii)) fehler('vorlage-name', `${vname}: Den Namen hat schon eine andere Vorlage.`, ziel)
+      namen.set(ascii, v)
+      if (!v.bataillone.flat().some(Boolean)) fehler('vorlage-leer', `${vname} hat kein Bataillon.`, ziel)
+      const zellen = [...v.bataillone.flat().filter(Boolean).map(art => [art, false]), ...v.unterstuetzung.filter(Boolean).map(art => [art, true])]
+      const fehlend = new Set()
+      for (const [art, kompanie] of zellen) {
+        const info = einheitArt.get(art)
+        if (!info) fehler('vorlage-einheit', `${vname} enthält die Einheit «${art}», die es im Spiel nicht gibt.`, ziel)
+        else if (info.unterstuetzung !== kompanie) fehler('vorlage-einheit', `${vname}: «${info.name}» gehört ${info.unterstuetzung ? 'zu den Unterstützungskompanien' : 'in das Bataillonsraster'}.`, ziel)
+        else if (!info.aktiv && !freigeschaltet.has(art)) fehlend.add(info.name)
+      }
+      if (fehlend.size) hinweis('vorlage-forschung', `${vname} enthält ${[...fehlend].join(', ')} – das Land hat die nötige Forschung zu Beginn noch nicht.`, ziel)
+      const breite = kampfbreite(sd, v)
+      if (breite > 40) hinweis('vorlage-breite', `${vname} hat Kampfbreite ${breite}. Üblich sind höchstens 40.`, ziel)
+    }
+    for (const vb of verbaende) {
+      const vorlage = vorlagen.find(x => x.id === vb.vorlage)
+      const staat = vb.staat ?? l.hauptstadt
+      if (!vorlage) fehler('verband-verweis', `Ein Verband von ${landName(l.tag, p, sd)} nutzt eine Vorlage, die es nicht mehr gibt.`, ziel)
+      if (staat == null || !sd.staaten[staat]) fehler('verband-verweis', `Ein Verband von ${landName(l.tag, p, sd)} hat keinen gültigen Staat${staat == null ? ' (das Land hat keine Hauptstadt)' : ''}.`, ziel)
+      else if (besitzer.get(Number(staat)) !== l.tag) hinweis('verband-fremd', `Ein Verband von ${landName(l.tag, p, sd)} steht in ${staatName(staat)}, das dem Land zum Start nicht gehört.`, ziel)
+      const n = Number(vb.anzahl)
+      if (!Number.isInteger(n) || n < 1 || n > 99) fehler('verband-verweis', `Ein Verband von ${landName(l.tag, p, sd)} muss 1 bis 99 Divisionen haben.`, ziel)
+    }
   }
 
   // Etappe 4d: Personen (neue Laender; bestehende nur mit Schalter)
