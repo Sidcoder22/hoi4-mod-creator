@@ -7,9 +7,11 @@ export class ProjektFehler extends Error {
   }
 }
 
+import { wandleAlteArmee } from './armee.js'
+
 export const FORMAT_VERSION = 1
 
-const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0, event: 0, entscheidung: 0, kategorie: 0, person: 0 }
+const STANDARD_ZAEHLER = { geist: 0, baum: 0, fokus: 0, fraktion: 0, eigenschaft: 0, event: 0, entscheidung: 0, kategorie: 0, person: 0, vorlage: 0 }
 
 export const GRAFIKSTILE = [
   { id: 'western_european', name: 'Westeuropa', beschreibung: 'Soldaten und Fahrzeuge im westeuropäischen Stil' },
@@ -129,7 +131,7 @@ export function leereDiplomatie(marionetten = []) {
  * Ohne Spieldaten bleiben die Marionetten geaenderter Laender «wie im Spiel» (null).
  */
 export function ergaenzeProjekt(p, sd) {
-  return {
+  return wandleAlteArmee({
     ...p,
     ideen: p.ideen ?? [],
     fokusbaeume: p.fokusbaeume ?? [],
@@ -148,7 +150,7 @@ export function ergaenzeProjekt(p, sd) {
       startwerte: { rekruten: 0, bevoelkerung: 0, ...l.startwerte },
       anfuehrer: { eigenschaften: [], modus: 'neu', ...l.anfuehrer },
       diplomatie: l.diplomatie ?? leereDiplomatie(l.art === 'neu' ? [] : (sd?.laender?.[l.tag]?.marionetten ? structuredClone(sd.laender[l.tag].marionetten) : null)),
-      ...(l.art === 'geaendert' ? { aendern: { diplomatie: false, forschung: false, personen: false, ...l.aendern } } : {}),
+      ...(l.art === 'geaendert' ? { aendern: { diplomatie: false, forschung: false, personen: false, armee: false, ...l.aendern } } : {}),
     })),
-  }
+  })
 }

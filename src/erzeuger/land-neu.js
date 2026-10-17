@@ -140,7 +140,8 @@ function einheiten(spieldaten, land) {
   const regimenter = []
   for (let x = 0; x < 2; x++) for (let y = 0; y < 3; y++) regimenter.push(eintrag('infantry', block([eintrag('x', wort(x)), eintrag('y', wort(y))])))
   const divisionen = []
-  for (let n = 1; n <= land.armee.divisionen; n++) {
+  const anzahl = (land.armee?.verbaende ?? []).reduce((s, v) => s + (Number(v.anzahl) || 0), 0)
+  for (let n = 1; n <= anzahl; n++) {
     divisionen.push(eintrag('division', block([
       eintrag('name', text(`${n}. Infanterie-Division`)),
       eintrag('location', wort(ort)),
@@ -167,7 +168,9 @@ export function erzeugeNeueLaender(k) {
     k.neueFarbe(tag, land.farbe)
 
     const verlauf = [eintrag('capital', wort(land.hauptstadt))]
-    const mitArmee = land.armee?.divisionen > 0
+    // Uebergang bis Task 3 (Etappe 4e): Summe der Verbaende als einfache Infanteriedivisionen
+    const anzahlDivisionen = (land.armee?.verbaende ?? []).reduce((s, v) => s + (Number(v.anzahl) || 0), 0)
+    const mitArmee = anzahlDivisionen > 0
     if (mitArmee) verlauf.push(eintrag('oob', text(`${tag}_1936`)))
     verlauf.push(
       eintrag('set_research_slots', wort(land.startwerte.forschungsplaetze)),

@@ -14,7 +14,7 @@ test('neues Land mit Vorgaben', () => {
   const [p, id] = fuegeLandHinzu(neuesProjekt('X'), sd, 'neu')
   const l = land(p, id)
   expect(l).toMatchObject({ art: 'neu', tagManuell: false, name: '', farbe: [120, 120, 160], grafikstil: 'western_european',
-    staaten: [], hauptstadt: null, kerneAltBesitzerBehalten: true, technikWie: null, armee: { divisionen: 6 }, ideen: [],
+    staaten: [], hauptstadt: null, kerneAltBesitzerBehalten: true, technikWie: null, ideen: [],
     startwerte: { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 3 } })
   expect(l.flagge).toEqual({ art: 'designer', vorlage: 'drei_waagrecht', farben: ['#ffffff', '#3060a0', '#c03030'], symbol: null, symbolFarbe: '#ffd700' })
   expect(l.regierung).toMatchObject({ ideologie: 'neutrality', wahlen: false, wahlintervall: 48 })
@@ -29,7 +29,7 @@ test('geaendertes Land vorbefuellt, nicht doppelt', () => {
   const l = land(p, id)
   expect(l).toMatchObject({ art: 'geaendert', tag: 'GER', name: 'Deutschland', farbe: [75, 75, 75],
     startwerte: { stabilitaet: 60, kriegsunterstuetzung: 30, forschungsplaetze: 4 } })
-  expect(l.aendern).toEqual({ name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false, forschung: false, personen: false })
+  expect(l.aendern).toEqual({ name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false, forschung: false, personen: false, armee: false })
   expect(l.regierung.ideologie).toBe('fascism')
   expect(werte(p, id)).toEqual({ democratic: 10, communism: 5, fascism: 70, neutrality: 15 })
   expect(l.anfuehrer.unterideologie).toBe('nazism')

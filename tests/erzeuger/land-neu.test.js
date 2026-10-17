@@ -118,7 +118,7 @@ test('Sonderzeichen im Namen (Review Focus 3)', () => {
 })
 
 test('ohne Armee kein oob, ohne Anfuehrer kein Charakter', () => {
-  const q = aendereLand(p, sd, landId, { armee: { divisionen: 0 }, anfuehrer: { ...p.laender[0].anfuehrer, name: '' } })
+  const q = aendereLand(p, sd, landId, { armee: { vorlagen: [], verbaende: [] }, anfuehrer: { ...p.laender[0].anfuehrer, name: '' } })
   const r = erzeugeMod(q, sd)
   expect(r.fehler).toEqual([])
   expect(r.dateien.some(d => d.pfad.includes('history/units'))).toBe(false)

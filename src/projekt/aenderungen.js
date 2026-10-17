@@ -1,6 +1,7 @@
 // Reine Aenderungsfunktionen: Sie geben immer ein neues Projekt zurueck.
 
 import { neueId, tagVorschlag, modidAusName, leereDiplomatie } from './modell.js'
+import { standardArmee } from './armee.js'
 import { bonusAusSpiel } from './boni.js'
 import { belegteTags, verlaufsWerte } from './abgeleitet.js'
 import { zuBase64 } from './base64.js'
@@ -60,7 +61,7 @@ export function fuegeLandHinzu(p, sd, art, tag) {
       anfuehrer: { name: '', unterideologie: ersteUnterideologie(sd, ids.includes('neutrality') ? 'neutrality' : ids[0]),
         bild: { art: 'spiel', pfad: sd.portraets?.[0] ?? null }, eigenschaften: [], modus: 'neu' },
       startwerte: { stabilitaet: 50, kriegsunterstuetzung: 20, forschungsplaetze: 3, rekruten: 0, bevoelkerung: 0 },
-      technikWie: null, forschung: null, personen: [], armee: { divisionen: 6 }, ideen: [], spielIdeen: [], diplomatie: leereDiplomatie(),
+      technikWie: null, forschung: null, personen: [], armee: null, ideen: [], spielIdeen: [], diplomatie: leereDiplomatie(),
     }
   } else {
     const spiel = sd.laender[tag]
@@ -82,12 +83,14 @@ export function fuegeLandHinzu(p, sd, art, tag) {
       anfuehrer: { name: leiter?.name ?? '', unterideologie: unter,
         bild: { art: 'spiel', pfad: leiter?.portraet ?? sd.portraets?.[0] ?? null }, eigenschaften: [], modus: 'neu' },
       startwerte: { stabilitaet: werte.stabilitaet, kriegsunterstuetzung: werte.kriegsunterstuetzung, forschungsplaetze: werte.forschungsplaetze, rekruten: 0, bevoelkerung: 0 },
-      technikWie: null, forschung: null, personen: [], armee: { divisionen: 0 }, ideen: [], spielIdeen: [],
+      technikWie: null, forschung: null, personen: [], armee: { vorlagen: [], verbaende: [] }, ideen: [], spielIdeen: [],
       diplomatie: leereDiplomatie(structuredClone(spiel.marionetten ?? [])),
-      aendern: { name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false, forschung: false, personen: false },
+      aendern: { name: false, farbe: false, flagge: false, gebiet: false, regierung: false, anfuehrer: false, startwerte: false, geister: false, diplomatie: false, forschung: false, personen: false, armee: false },
     }
   }
-  return [{ ...p, laender: [...p.laender, land] }, id]
+  let q = p
+  if (!land.armee) [q, land.armee] = standardArmee(p)
+  return [{ ...q, laender: [...q.laender, land] }, id]
 }
 
 export function aendereLand(p, sd, landId, patch) {
