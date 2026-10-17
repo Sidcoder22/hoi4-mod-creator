@@ -364,6 +364,30 @@ set_autonomy = {
     ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
   ])
 
+  // Etappe 4d: Eigenschaften fuer Generaele, Feldmarschaelle und Admirale
+  o['common/unit_leader/00_traits.txt'] = `leader_traits = {
+	panzer_leader = {
+		type = corps_commander
+		trait_type = assignable_trait
+	}
+	offensive_doctrine = {
+		type = land
+		trait_type = personality_trait
+	}
+	seawolf = {
+		type = navy
+	}
+	wounded = {
+		type = all
+		trait_type = status_trait
+	}
+	operative_infiltrator = {
+		type = operative
+	}
+}
+`
+  o['localisation/german/etappe4d_l_german.yml'] = schreibeYml('german', [['panzer_leader', 'Panzerexperte'], ['seawolf', 'Seewolf']])
+
   // Etappe 4c: Technologien (Variablen wie @1918 stehen im Spiel oben in der Datei)
   const tech = (id, jahr, ordner, extra = '') => `\t${id} = {\n\t\tstart_year = ${jahr}\n\t\tresearch_cost = 1.5\n${extra}\t\tfolder = {\n\t\t\tname = ${ordner}\n\t\t\tposition = { x = 0 y = @1918 }\n\t\t}\n\t}\n`
   const weiter = (ziel) => `\t\tpath = {\n\t\t\tleads_to_tech = ${ziel}\n\t\t\tresearch_cost_coeff = 1\n\t\t}\n`

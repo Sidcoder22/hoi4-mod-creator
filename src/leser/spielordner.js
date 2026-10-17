@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 7
+export const LESER_VERSION = 8
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -581,6 +581,25 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   }
   if (!autonomieStufen.length) for (const [id, n] of STANDARD_AUTONOMIE) autonomieStufen.push({ id, name: text(id) ?? n })
 
+  // Etappe 4d: Eigenschaften fuer Generaele, Feldmarschaelle und Admirale
+  const ROLLEN_FUER_TYP = { corps_commander: ['general'], field_marshal: ['feldmarschall'], land: ['general', 'feldmarschall'], navy: ['admiral'], all: ['general', 'feldmarschall', 'admiral'] }
+  const fuehrerEigenschaften = []
+  for (const pfad of imOrdner('common/unit_leader/', '.txt')) {
+    for (const block of findeAlle(await leseSkript(pfad) ?? [], 'leader_traits')) {
+      if (block.wert.typ !== 'block') continue
+      for (const t of block.wert.inhalt) {
+        if (!t.schluessel || t.wert.typ !== 'block' || fuehrerEigenschaften.some(x => x.id === t.schluessel)) continue
+        // Zustaende wie «verwundet» und Eigenschaften von Agenten sind nicht waehlbar
+        if (String(wertText(finde(t.wert.inhalt, 'trait_type')?.wert) ?? '').toLowerCase() === 'status_trait') continue
+        const typ = finde(t.wert.inhalt, 'type')?.wert
+        const typen = !typ ? ['all'] : typ.typ === 'block' ? typ.inhalt.filter(x => !x.schluessel).map(x => x.text) : [typ.text]
+        const rollen = ['general', 'feldmarschall', 'admiral'].filter(r => typen.some(ty => (ROLLEN_FUER_TYP[ty] ?? []).includes(r)))
+        if (rollen.length) fuehrerEigenschaften.push({ id: t.schluessel, name: name(t.schluessel), rollen })
+      }
+    }
+  }
+  fuehrerEigenschaften.sort((a, b) => a.name.localeCompare(b.name, 'de') || a.id.localeCompare(b.id))
+
   // Etappe 4c: Technologien und ihre Bereiche (Ordner im Forschungsbildschirm)
   fortschritt(0.91, 'Technologien werden gelesen …')
   const technologien = []
@@ -691,7 +710,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
     eventBilder, entscheidungsSymbole, kategorieSymbole, entscheidungsKategorien,
-    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche,
+    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche, fuehrerEigenschaften,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
@@ -719,6 +738,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       ressourcenArten: ressourcenArten.length,
       staatsKategorien: staatsKategorien.length,
       technologien: technologien.length,
+      fuehrerEigenschaften: fuehrerEigenschaften.length,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

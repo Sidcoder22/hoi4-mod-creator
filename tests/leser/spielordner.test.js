@@ -238,7 +238,7 @@ test('Review: altes Gebaeude-Format (max_level, provincial, only_coastal) bleibt
 })
 
 test('Etappe 4c: Technologien, Bereiche, Forschung pro Land', () => {
-  expect(LESER_VERSION).toBe(7)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(7)
   expect(sd.technologieBereiche).toEqual([{ id: 'infantry_folder', name: 'Infanterie' }, { id: 'support_folder', name: 'Unterstützung' },
     { id: 'industry_folder', name: 'Industrie' }, { id: 'land_doctrine_folder', name: 'Heeresdoktrin' }])
   expect(sd.technologien.map(t => t.id)).toEqual(['infantry_weapons', 'infantry_weapons1', 'infantry_weapons2', 'tech_support', 'basic_machine_tools', 'improved_machine_tools', 'grand_battle_plan'])
@@ -258,4 +258,14 @@ test('Review: Technologie ohne start_year hat kein Jahr und faellt nicht in die 
   expect(spieldaten.technologien.find(t => t.id === 'concentrated_industry').jahr).toBeNull()
   const { schnellwahl } = await import('../../src/projekt/forschung.js')
   expect(schnellwahl(spieldaten, 'jahr', 1950)).not.toContain('concentrated_industry')
+})
+
+test('Etappe 4d: Eigenschaften fuer Heer- und Flottenfuehrer', () => {
+  expect(LESER_VERSION).toBe(8)
+  expect(sd.fuehrerEigenschaften).toEqual([
+    { id: 'offensive_doctrine', name: 'offensive_doctrine', rollen: ['general', 'feldmarschall'] },
+    { id: 'panzer_leader', name: 'Panzerexperte', rollen: ['general'] },
+    { id: 'seawolf', name: 'Seewolf', rollen: ['admiral'] },
+  ])
+  expect(sd.bericht.fuehrerEigenschaften).toBe(3)
 })
