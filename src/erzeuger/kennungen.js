@@ -63,3 +63,7 @@ export function kategorieKennung(p, x) {
 export function bonusKennung(p, bausteinId) {
   return `${p.mod.modid}_bonus_${bausteinId}`
 }
+
+export function personKennung(p, person) {
+  return `${p.mod.modid}_person_${person.nummer}`
+}

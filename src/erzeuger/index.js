@@ -16,10 +16,11 @@ import { erzeugeDiplomatie } from './diplomatie.js'
 import { erzeugeEvents } from './events.js'
 import { erzeugeEntscheidungen } from './entscheidungen.js'
 import { erzeugeStaaten } from './staaten.js'
+import { erzeugePersonen } from './personen.js'
 
 /** Erzeuger fuer Laender, Geister usw.; jeder bekommt den Kontext. */
 // Die Geister kommen zuletzt: Bausteine «Bonus erhalten» der anderen Erzeuger melden ihnen noch Geister.
-export const ERZEUGER = [erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen, erzeugeStaaten, erzeugeIdeen]
+export const ERZEUGER = [erzeugeEigenschaften, erzeugeNeueLaender, erzeugeGeaenderteLaender, erzeugePersonen, erzeugeDiplomatie, erzeugeFokusbaeume, erzeugeEvents, erzeugeEntscheidungen, erzeugeStaaten, erzeugeIdeen]
 
 function deskriptor(projekt, spieldaten) {
   const m = projekt.mod
@@ -62,6 +63,7 @@ export function erzeugeMod(projekt, spieldaten) {
   const umformen = new Map()
   const bonusGeister = new Map()
   const staatsEditor = new Map()
+  const charaktere = new Map()
   const neueTags = new Set(projekt.laender.filter(l => l.art === 'neu').map(l => l.tag))
 
   const kontext = {
@@ -107,6 +109,11 @@ export function erzeugeMod(projekt, spieldaten) {
       if (!umformen.has(tag)) umformen.set(tag, [])
       umformen.get(tag).push(fn)
     },
+    /** Charakter eines Landes (Anfuehrer, Personen); am Ende entsteht je Land eine Datei common/characters. */
+    charakter(tag, kennung, inhalt) {
+      if (!charaktere.has(tag)) charaktere.set(tag, [])
+      charaktere.get(tag).push({ schluessel: kennung, op: '=', wert: { typ: 'block', inhalt } })
+    },
     staatManpower: (staatId, faktor) => manpower.set(staatId, faktor),
     /** Aenderung aus dem Staaten-Editor; wird mit Besitzer und Bevoelkerung in dieselbe Datei geschrieben. */
     staatAenderung: (staatId, aenderung) => staatsEditor.set(staatId, aenderung),
@@ -125,6 +132,9 @@ export function erzeugeMod(projekt, spieldaten) {
     }
   }
 
+  for (const [tag, eintraege] of charaktere) {
+    kontext.schreibe(modPfad(modid, `common/characters/${modid}_${tag}.txt`), schreibeParadox([{ schluessel: 'characters', op: '=', wert: { typ: 'block', inhalt: eintraege } }]))
+  }
   for (const [tag, { pfad, text }] of neueVerlaeufe) {
     const extra = neueZeilen.get(tag) ?? []
     kontext.schreibe(pfad, extra.length ? `${text}${extra.join('\n')}\n` : text)

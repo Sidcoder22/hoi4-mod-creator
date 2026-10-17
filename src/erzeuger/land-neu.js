@@ -95,8 +95,7 @@ export function schreibeAnfuehrer(k, land) {
   const eigenschaften = eigenschaftenKennungen(projekt, land)
   if (eigenschaften.length) leiter.push(eintrag('traits', block(eigenschaften.map(wort))))
   inhalt.push(eintrag('country_leader', block(leiter)))
-  k.schreibe(modPfad(modid, `common/characters/${modid}_${land.tag}.txt`),
-    schreibeParadox([eintrag('characters', block([eintrag(kennung, block(inhalt))]))]))
+  k.charakter(land.tag, kennung, inhalt)
   k.sprache.setze(kennung, land.anfuehrer.name)
   k.braucheSprache(kennung)
   return kennung
