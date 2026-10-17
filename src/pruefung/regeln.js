@@ -362,6 +362,37 @@ export function pruefeProjekt(p, sd) {
     if (Number(d.dauer) > 0) unbekannteBoni(d.wirkungenEnde, `Entscheidung «${d.name || 'ohne Namen'}»`, ziel)
   }
 
+  // Etappe 4d: Personen (neue Laender; bestehende nur mit Schalter)
+  const fuehrerEig = new Map((sd.fuehrerEigenschaften ?? []).map(t => [t.id, t]))
+  const spielBeraterEig = new Set((sd.anfuehrerEigenschaften ?? []).map(t => t.id))
+  const eigeneEig = new Set((p.eigenschaften ?? []).map(t => t.id))
+  for (const l of p.laender) {
+    if (!(l.art === 'neu' || l.aendern?.personen)) continue
+    const ziel = { bereich: 'land', id: l.id, reiter: 'personen' }
+    const plaetze = new Map()
+    for (const person of l.personen ?? []) {
+      const pname = `«${person.name || 'ohne Namen'}» (${landName(l.tag, p, sd)})`
+      if (!String(person.name || '').trim()) fehler('person-name', `Eine Person von ${landName(l.tag, p, sd)} braucht einen Namen.`, ziel)
+      const imBereich = (w, min, max) => Number.isInteger(Number(w)) && Number(w) >= min && Number(w) <= max
+      if (person.rolle === 'berater') {
+        if (!imBereich(person.kosten, 0, 500)) fehler('person-wert', `${pname}: Die Kosten müssen zwischen 0 und 500 liegen.`, ziel)
+        const be = person.beraterEigenschaft
+        if (!be) hinweis('berater-ohne-eigenschaft', `${pname} hat keine Eigenschaft und bringt im Spiel nichts.`, ziel)
+        else if (!(be.art === 'eigen' ? eigeneEig.has(be.id) : spielBeraterEig.has(be.id))) fehler('person-eigenschaft', `${pname} hat eine Eigenschaft, die es nicht mehr gibt.`, ziel)
+        plaetze.set(person.platz, (plaetze.get(person.platz) ?? 0) + 1)
+        if (plaetze.get(person.platz) === 2) hinweis('berater-platz-doppelt', `${landName(l.tag, p, sd)} hat mehrere Berater auf demselben Platz. Im Spiel kann nur einer davon gleichzeitig aktiv sein.`, ziel)
+      } else {
+        if (!imBereich(person.stufe, 1, 9) || Object.values(person.werte ?? {}).some(w => !imBereich(w, 1, 9))) fehler('person-wert', `${pname}: Stufe und Fähigkeiten müssen zwischen 1 und 9 liegen.`, ziel)
+        for (const t of person.eigenschaften ?? []) {
+          const info = fuehrerEig.get(t)
+          if (!info) fehler('person-eigenschaft', `${pname} hat die Eigenschaft «${t}», die es im Spiel nicht gibt.`, ziel)
+          else if (!info.rollen.includes(person.rolle)) fehler('person-eigenschaft', `${pname}: «${info.name}» passt nicht zu dieser Rolle.`, ziel)
+        }
+      }
+      if (person.bild?.art === 'eigen' && !p.bilder?.[person.bild.bildId]) fehler('person-bild', `Das Porträt von ${pname} fehlt. Bitte wähle ein anderes.`, ziel)
+    }
+  }
+
   // Etappe 4c: Forschung (nur eigene Listen; bei bestehenden Laendern nur mit Schalter)
   const technologieIds = new Set((sd.technologien ?? []).map(t => t.id))
   for (const l of p.laender) {
