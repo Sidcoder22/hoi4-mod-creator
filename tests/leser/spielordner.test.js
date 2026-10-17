@@ -242,7 +242,7 @@ test('Etappe 4c: Technologien, Bereiche, Forschung pro Land', () => {
   expect(sd.technologieBereiche).toEqual([{ id: 'infantry_folder', name: 'Infanterie' }, { id: 'support_folder', name: 'Unterstützung' },
     { id: 'industry_folder', name: 'Industrie' }, { id: 'land_doctrine_folder', name: 'Heeresdoktrin' }])
   expect(sd.technologien.map(t => t.id)).toEqual(['infantry_weapons', 'infantry_weapons1', 'infantry_weapons2', 'tech_support', 'basic_machine_tools', 'improved_machine_tools', 'grand_battle_plan'])
-  expect(sd.technologien.find(t => t.id === 'infantry_weapons1')).toEqual({ id: 'infantry_weapons1', name: 'Infanteriewaffen I', bereich: 'infantry_folder', jahr: 1936, voraussetzungen: ['infantry_weapons'], doktrin: false })
+  expect(sd.technologien.find(t => t.id === 'infantry_weapons1')).toEqual({ id: 'infantry_weapons1', name: 'Infanteriewaffen I', bereich: 'infantry_folder', jahr: 1936, voraussetzungen: ['infantry_weapons'], doktrin: false, einheiten: [] })
   expect(sd.technologien.find(t => t.id === 'improved_machine_tools')).toMatchObject({ voraussetzungen: ['basic_machine_tools'], jahr: 1940 })
   expect(sd.technologien.find(t => t.id === 'grand_battle_plan')).toMatchObject({ doktrin: true, voraussetzungen: [] })
   expect(sd.laender.GER.forschung).toEqual(['infantry_weapons', 'infantry_weapons1', 'tech_support'])
@@ -261,11 +261,24 @@ test('Review: Technologie ohne start_year hat kein Jahr und faellt nicht in die 
 })
 
 test('Etappe 4d: Eigenschaften fuer Heer- und Flottenfuehrer', () => {
-  expect(LESER_VERSION).toBe(8)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(8)
   expect(sd.fuehrerEigenschaften).toEqual([
     { id: 'offensive_doctrine', name: 'offensive_doctrine', rollen: ['general', 'feldmarschall'] },
     { id: 'panzer_leader', name: 'Panzerexperte', rollen: ['general'] },
     { id: 'seawolf', name: 'Seewolf', rollen: ['admiral'] },
   ])
   expect(sd.bericht.fuehrerEigenschaften).toBe(3)
+})
+
+test('Etappe 4e: Einheitenarten und freigeschaltete Einheiten', () => {
+  expect(LESER_VERSION).toBe(9)
+  expect(sd.einheitenArten).toEqual([
+    { id: 'artillery_brigade', name: 'artillery_brigade', unterstuetzung: false, kampfbreite: 3, aktiv: true },
+    { id: 'infantry', name: 'Infanterie', unterstuetzung: false, kampfbreite: 2, aktiv: true },
+    { id: 'motorized', name: 'Motorisiert', unterstuetzung: false, kampfbreite: 2, aktiv: false },
+    { id: 'engineer', name: 'Pioniere', unterstuetzung: true, kampfbreite: 0, aktiv: false },
+  ])
+  expect(sd.technologien.find(t => t.id === 'tech_support').einheiten).toEqual(['engineer'])
+  expect(sd.technologien.find(t => t.id === 'infantry_weapons').einheiten).toEqual([])
+  expect(sd.bericht.einheitenArten).toBe(4)
 })

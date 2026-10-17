@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 8
+export const LESER_VERSION = 9
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -581,6 +581,27 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   }
   if (!autonomieStufen.length) for (const [id, n] of STANDARD_AUTONOMIE) autonomieStufen.push({ id, name: text(id) ?? n })
 
+  // Etappe 4e: Bataillone und Unterstuetzungskompanien
+  const einheitenArten = []
+  for (const pfad of imOrdner('common/units/', '.txt')) {
+    for (const block of findeAlle(await leseSkript(pfad) ?? [], 'sub_units')) {
+      if (block.wert.typ !== 'block') continue
+      for (const u of block.wert.inhalt) {
+        if (!u.schluessel || u.wert.typ !== 'block' || einheitenArten.some(x => x.id === u.schluessel)) continue
+        const ui = u.wert.inhalt
+        const kategorien = finde(ui, 'categories')?.wert?.typ === 'block' ? finde(ui, 'categories').wert.inhalt.map(x => x.text) : []
+        const aktiv = wertText(finde(ui, 'active')?.wert)
+        einheitenArten.push({
+          id: u.schluessel, name: name(u.schluessel),
+          unterstuetzung: String(wertText(finde(ui, 'group')?.wert) ?? '').toLowerCase() === 'support' || kategorien.includes('category_support_battalions'),
+          kampfbreite: Number(wertText(finde(ui, 'combat_width')?.wert)) || 0,
+          aktiv: aktiv ? aktiv.toLowerCase() === 'yes' : true,
+        })
+      }
+    }
+  }
+  einheitenArten.sort((a, b) => Number(a.unterstuetzung) - Number(b.unterstuetzung) || a.name.localeCompare(b.name, 'de') || a.id.localeCompare(b.id))
+
   // Etappe 4d: Eigenschaften fuer Generaele, Feldmarschaelle und Admirale
   const ROLLEN_FUER_TYP = { corps_commander: ['general'], field_marshal: ['feldmarschall'], land: ['general', 'feldmarschall'], navy: ['admiral'], all: ['general', 'feldmarschall', 'admiral'] }
   const fuehrerEigenschaften = []
@@ -627,6 +648,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       technologien.push({
         id: t.schluessel, name: name(t.schluessel), bereich, jahr: Number.isFinite(jahr) ? jahr : null, voraussetzungen: [],
         doktrin: String(wertText(finde(ti, 'doctrine')?.wert) ?? '').toLowerCase() === 'yes' || /doctrine_folder$/.test(bereich),
+        einheiten: findeAlle(ti, 'enable_subunits').flatMap(b => (b.wert.typ === 'block' ? b.wert.inhalt.filter(x => !x.schluessel).map(x => x.text) : [])),
       })
     }
   }
@@ -710,7 +732,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
     eventBilder, entscheidungsSymbole, kategorieSymbole, entscheidungsKategorien,
-    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche, fuehrerEigenschaften,
+    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche, fuehrerEigenschaften, einheitenArten,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
@@ -739,6 +761,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       staatsKategorien: staatsKategorien.length,
       technologien: technologien.length,
       fuehrerEigenschaften: fuehrerEigenschaften.length,
+      einheitenArten: einheitenArten.length,
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },

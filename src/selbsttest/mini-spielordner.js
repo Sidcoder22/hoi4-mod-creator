@@ -364,6 +364,14 @@ set_autonomy = {
     ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
   ])
 
+  // Etappe 4e: Einheiten (Bataillone und Kompanien) im Format des Spiels
+  const einheit = (id, werte) => `sub_units = {\n\t${id} = {\n\t\tsprite = ${id}\n${werte}\t\tneed = {\n\t\t\tinfantry_equipment = 100\n\t\t}\n\t}\n}\n`
+  o['common/units/infantry.txt'] = einheit('infantry', '\t\tactive = yes\n\t\tgroup = infantry\n\t\tcategories = {\n\t\t\tcategory_front_line\n\t\t\tcategory_army\n\t\t}\n\t\tcombat_width = 2\n')
+  o['common/units/artillery.txt'] = einheit('artillery_brigade', '\t\tactive = yes\n\t\tgroup = infantry\n\t\tcombat_width = 3\n')
+  o['common/units/engineer.txt'] = einheit('engineer', '\t\tactive = no\n\t\tgroup = support\n\t\tcategories = {\n\t\t\tcategory_support_battalions\n\t\t}\n\t\tcombat_width = 0\n')
+  o['common/units/motorized.txt'] = einheit('motorized', '\t\tactive = no\n\t\tgroup = mobile\n\t\tcombat_width = 2\n')
+  o['localisation/german/etappe4e_l_german.yml'] = schreibeYml('german', [['infantry', 'Infanterie'], ['motorized', 'Motorisiert'], ['engineer', 'Pioniere']])
+
   // Etappe 4d: Eigenschaften fuer Generaele, Feldmarschaelle und Admirale
   o['common/unit_leader/00_traits.txt'] = `leader_traits = {
 	panzer_leader = {
@@ -395,7 +403,7 @@ set_autonomy = {
     tech('infantry_weapons', 1918, 'infantry_folder', weiter('infantry_weapons1')) +
     tech('infantry_weapons1', 1936, 'infantry_folder', weiter('infantry_weapons2')) +
     tech('infantry_weapons2', 1939, 'infantry_folder') +
-    tech('tech_support', 1936, 'support_folder') + '}\n'
+    tech('tech_support', 1936, 'support_folder', '\t\tenable_subunits = {\n\t\t\tengineer\n\t\t}\n') + '}\n'
   o['common/technologies/industry.txt'] = 'technologies = {\n' +
     tech('basic_machine_tools', 1936, 'industry_folder', weiter('improved_machine_tools')) +
     tech('improved_machine_tools', 1940, 'industry_folder') + '}\n'
