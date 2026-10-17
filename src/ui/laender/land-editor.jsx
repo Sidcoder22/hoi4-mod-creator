@@ -13,6 +13,7 @@ import { ReiterStartwerte } from './reiter-startwerte.jsx'
 import { ReiterGeister } from './reiter-geister.jsx'
 import { ReiterDiplomatie } from './reiter-diplomatie.jsx'
 import { ReiterForschung } from './reiter-forschung.jsx'
+import { ReiterPersonen } from './reiter-personen.jsx'
 
 export const REITER = [
   { id: 'name', text: 'Name & Farbe', ansicht: ReiterName, schalter: 'Name ändern' },
@@ -20,6 +21,7 @@ export const REITER = [
   { id: 'gebiet', text: 'Gebiet', ansicht: ReiterGebiet, schalter: 'Gebiet und Hauptstadt ändern' },
   { id: 'regierung', text: 'Regierung', ansicht: ReiterRegierung, schalter: 'Regierung und Parteien ändern' },
   { id: 'anfuehrer', text: 'Anführer', ansicht: ReiterAnfuehrer, schalter: 'Anführer ändern' },
+  { id: 'personen', text: 'Personen', ansicht: ReiterPersonen, schalter: 'Personen hinzufügen' },
   { id: 'startwerte', text: 'Startwerte', ansicht: ReiterStartwerte, schalter: 'Startwerte ändern' },
   { id: 'forschung', text: 'Forschung', ansicht: ReiterForschung, schalter: 'Forschung ändern' },
   { id: 'geister', text: 'Nationale Geister', ansicht: ReiterGeister, schalter: 'Nationale Geister hinzufügen' },

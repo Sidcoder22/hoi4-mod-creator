@@ -53,6 +53,8 @@ Etappe 4 bringt dazu:
   Zu viele Fabriken für die Bauplätze meldet die Prüfung und erhöht die Bauplätze auf Knopfdruck.
 - **Forschung** (Reiter im Land-Editor): Startforschung per Schnellwahl («alles bis 1936», «wie Land …», «nichts») und danach mit Häkchen nach Bereichen.
   Voraussetzungen kommen automatisch mit, abhängige Technologien fallen beim Abhaken mit weg. Bestehenden Ländern kannst du auch Technologien wegnehmen.
+- **Personen** (Reiter im Land-Editor): neue Generäle, Feldmarschälle und Admirale mit Stufe, Fähigkeiten, Porträt und Eigenschaften aus dem Spiel,
+  dazu Berater (politischer Berater, Generalstab, Oberkommando, Theoretiker) mit Kosten und einer Eigenschaft. Alle stehen dem Land ab Spielbeginn zur Verfügung.
 - **Kleinere Verbesserungen:** Warnung, wenn ein Event sich immer wieder selbst auslöst; nur ganze Tage bei Verzögerung und Dauer.
 
 ## Benutzen (Windows-PC)
@@ -86,7 +88,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4c)
+- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4d)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)

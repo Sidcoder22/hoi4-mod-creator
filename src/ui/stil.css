@@ -405,3 +405,14 @@ h2.mit-abstand { margin-top: 1.6rem; }
 .tech-liste .haken .leise { margin-left: auto; font-size: 0.8rem; }
 .hinweis-zeile { margin: 0; padding: 0.4rem 0.6rem; border-left: 3px solid var(--gelb); background: var(--flaeche2); font-size: 0.88rem; }
 .forschung-schnell .knopfreihe { grid-column: 1 / -1; }
+
+/* Etappe 4d: Personen */
+.personen { display: flex; flex-direction: column; gap: 0.7rem; }
+.karte.person { display: flex; flex-direction: column; gap: 0.5rem; }
+.person-kopf { display: flex; gap: 0.8rem; align-items: flex-start; }
+.person-bild { width: 62px; height: 84px; object-fit: cover; border: 1px solid var(--rand); border-radius: 3px; flex-shrink: 0; }
+.person-felder { flex: 1; min-width: 0; }
+.person-werte.raster4 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
+.person-werte.raster4 .staat-zahl { width: 100%; }
+@media (max-width: 700px) { .person-werte.raster4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.karte.person .staat-zeile { grid-template-columns: 11rem minmax(0, 20rem) auto; justify-content: start; }

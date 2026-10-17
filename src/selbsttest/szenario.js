@@ -255,6 +255,27 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Personen',
+    async lauf(h) {
+      const mre = () => zustand().projekt.laender.find(l => l.tag === 'MRE')
+      await h.klicke('reiter-personen')
+      await h.klicke('person-neu-general')
+      const g = mre().personen[0].id
+      await h.tippe(`person-${g}-name`, 'Hans Muster')
+      await h.tippe(`person-${g}-angriff`, '4')
+      h.pruefe(!h.el(`person-${g}-eig-seawolf`), 'Admirals-Eigenschaft beim General angeboten')
+      await h.hakeAn(`person-${g}-eig-panzer_leader`, true)
+      await h.klicke('person-neu-berater')
+      const b = mre().personen[1].id
+      await h.tippe(`person-${b}-name`, 'Erika Rat')
+      await h.waehle(`person-${b}-platz`, 'theorist')
+      await h.waehle(`person-${b}-beratereig`, 'spiel:popular_figurehead')
+      const [general, berater] = mre().personen
+      h.pruefe(general.name === 'Hans Muster' && general.werte.angriff === 4 && general.eigenschaften.join() === 'panzer_leader', 'General falsch: ' + JSON.stringify(general))
+      h.pruefe(berater.platz === 'theorist' && berater.beraterEigenschaft?.id === 'popular_figurehead', 'Berater falsch: ' + JSON.stringify(berater))
+    },
+  },
+  {
     name: 'Schweiz ändern',
     async lauf(h) {
       const swi = zustand().projekt.laender.find(l => l.tag === 'SWI')
@@ -277,6 +298,20 @@ export const SCHRITTE = [
       await h.hakeAn('tech-tech_support', false)
       const f = zustand().projekt.laender.find(l => l.tag === 'SWI').forschung
       h.pruefe(JSON.stringify(f) === JSON.stringify(['infantry_weapons']), 'Schweizer Forschung falsch: ' + JSON.stringify(f))
+      await h.klicke('nav-laender')
+    },
+  },
+  {
+    name: 'Schweiz Admiral',
+    async lauf(h) {
+      const swi = () => zustand().projekt.laender.find(l => l.tag === 'SWI')
+      await h.klicke(`land-${swi().id}`)
+      await h.klicke('reiter-personen')
+      await h.hakeAn('aendern-personen', true)
+      await h.klicke('person-neu-admiral')
+      const a = swi().personen[0].id
+      await h.tippe(`person-${a}-name`, 'Hans Seemann')
+      h.pruefe(swi().personen[0].rolle === 'admiral' && swi().personen[0].name === 'Hans Seemann', 'Admiral fehlt')
       await h.klicke('nav-laender')
     },
   },
@@ -723,6 +758,10 @@ export const SCHRITTE = [
       const mreVerlauf = new TextDecoder().decode(dateien['mod/selbsttest_reich/history/countries/MRE - Mein Reich.txt'])
       h.pruefe(mreVerlauf.includes('basic_machine_tools = 1') && !mreVerlauf.includes('infantry_weapons1'), 'Forschung von MRE falsch')
       h.pruefe(!lies('mod/selbsttest_reich/history/countries/SWI - Switzerland.txt').includes('tech_support'), 'tech_support nicht aus der Schweiz entfernt')
+      const mreChar = lies('mod/selbsttest_reich/common/characters/selbsttest_reich_MRE.txt')
+      for (const teil of ['corps_commander', 'panzer_leader', 'slot = theorist']) h.pruefe(mreChar.includes(teil), `Charaktere MRE ohne «${teil}»`)
+      h.pruefe(lies('mod/selbsttest_reich/common/characters/selbsttest_reich_SWI.txt').includes('navy_leader'), 'Admiral der Schweiz fehlt')
+      h.pruefe(lies('mod/selbsttest_reich/history/countries/SWI - Switzerland.txt').includes('recruit_character = selbsttest_reich_person_'), 'Admiral nicht rekrutiert')
       const bern = lies('mod/selbsttest_reich/history/states/3-Bern.txt')
       for (const teil of ['industrial_complex = 1', 'arms_factory = 4', 'oil = 6', 'add_extra_state_shared_building_slots = 1', 'naval_base = 1']) h.pruefe(bern.includes(teil), `Bern ohne «${teil}»`)
       const ersatz = new TextDecoder().decode(dateien['mod/selbsttest_reich/localisation/german/replace/selbsttest_reich_replace_l_german.yml'])
