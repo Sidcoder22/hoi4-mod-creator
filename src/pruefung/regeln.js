@@ -155,6 +155,8 @@ export function pruefeProjekt(p, sd) {
       const feld = `${f.x},${f.y}`
       if (felder.has(feld)) fehler('fokus-ueberlappung', `${fname} liegt auf demselben Feld wie «${felder.get(feld).name || 'ohne Namen'}».`, ziel)
       else felder.set(feld, f)
+      // Geteilte Fokusse aus dem Spiel (Etappe 4f) sind gesperrt und werden nicht geschrieben
+      if (f.gesperrt) continue
       if ([...f.voraussetzungen, ...f.ausschluss].some(v => !ids.has(v))) fehler('fokus-verweis', `${fname} verweist auf einen Fokus, den es nicht mehr gibt.`, ziel)
       if (f.symbol?.art === 'eigen' ? !p.bilder?.[f.symbol.bildId] : !sd.sprites?.[f.symbol?.sprite]) {
         fehler('fokus-symbol', `Das Symbol von ${fname} fehlt. Bitte wähle ein anderes.`, ziel)
@@ -164,6 +166,17 @@ export function pruefeProjekt(p, sd) {
       }
       if (!f.belohnung?.length) hinweis('fokus-ohne-belohnung', `${fname} hat keine Belohnung.`, ziel)
       if (String(f.name || '').trim() && !String(f.beschreibung || '').trim()) hinweis('fokus-beschreibung', `${fname} hat keine Beschreibung.`, ziel)
+    }
+    // Etappe 4f: importierte Baeume
+    if (baum.herkunft?.art === 'aendern') {
+      const vorhanden = new Set(baum.fokusse.map(f => f.spielId).filter(Boolean))
+      const weg = (baum.herkunft.spielFokusIds ?? []).filter(id => !vorhanden.has(id))
+      if (weg.length) hinweis('fokus-spiel-geloescht', `In ${bname} fehlen Fokusse aus dem Spiel (${weg.join(', ')}). Andere Inhalte des Spiels könnten noch auf sie verweisen.`, zielBaum)
+    }
+    if (baum.herkunft?.art === 'vorlage') {
+      const mitSpielcode = baum.fokusse.filter(f => [...(f.belohnung ?? []), ...(f.verfuegbar?.liste ?? [])].some(b => b.ausSpiel))
+      const anzahl = baum.fokusse.reduce((s, f) => s + [...(f.belohnung ?? []), ...(f.verfuegbar?.liste ?? [])].filter(b => b.ausSpiel).length, 0)
+      if (anzahl) hinweis('fokus-spielcode-vorlage', `${bname} enthält ${anzahl} Bausteine mit Code aus dem Spiel. Sie beziehen sich oft auf das Originalland – prüfe, ob sie für dein Land passen.`, { bereich: 'fokus', id: baum.id, fokus: mitSpielcode[0].id })
     }
     const kreis = fokusZyklus(baum)
     if (kreis) {
