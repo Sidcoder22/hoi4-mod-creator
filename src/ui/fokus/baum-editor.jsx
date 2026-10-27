@@ -23,10 +23,14 @@ export function BaumEditor({ z }) {
         <div>
           <input class="baum-titel" type="text" value={baum.name} data-test="baum-titel"
             onInput={(e) => { const v = e.currentTarget.value; aktionen.aendere((p) => aendereBaum(p, baum.id, { name: v }), { gruppe: `baum:${baum.id}:name` }) }} />
-          <span class="leise" style={{ display: 'block' }}>Fokusbaum für {landName(baum.land, z.projekt, z.spieldaten)} · ersetzt den Fokusbaum des Spiels</span>
+          <span class="leise" style={{ display: 'block' }}>
+            {baum.herkunft?.art === 'aendern'
+              ? `Geänderter Fokusbaum des Spiels für ${landName(baum.land, z.projekt, z.spieldaten)} · ersetzt ${baum.herkunft.datei}`
+              : `Fokusbaum für ${landName(baum.land, z.projekt, z.spieldaten)} · ersetzt den Fokusbaum des Spiels`}
+          </span>
         </div>
         <div class="rechts">
-          <select value={baum.land} data-test="baum-land-aendern" title="Land ändern"
+          <select value={baum.land} data-test="baum-land-aendern" title="Land ändern" disabled={baum.herkunft?.art === 'aendern'}
             onChange={(e) => { const v = e.currentTarget.value; aktionen.aendere((p) => aendereBaum(p, baum.id, { land: v })) }}>
             {landOptionen(z.projekt, z.spieldaten).map(o => <option key={o.wert} value={o.wert}>{o.text}</option>)}
           </select>
@@ -40,7 +44,9 @@ export function BaumEditor({ z }) {
       <p class="leise">Doppelklick auf ein freies Feld legt einen Fokus an. Karten lassen sich verschieben; den Punkt unter einer Karte ziehst du auf eine andere, um sie zu verbinden.</p>
       <div class="baum-arbeitsflaeche">
         <Raster baum={baum} projekt={z.projekt} gewaehlt={fokus?.id} onWaehle={waehle} />
-        {fokus
+        {fokus?.gesperrt
+          ? <aside class="fokus-seite leer" data-test="fokus-seite"><p><strong>{fokus.name}</strong></p><p class="leise">Geteilter Fokus aus dem Spiel ({fokus.spielId}). Er bleibt im Baum, lässt sich hier aber nicht bearbeiten.</p></aside>
+          : fokus
           ? <FokusSeite baum={baum} fokus={fokus} z={z} />
           : <aside class="fokus-seite leer"><p class="leise">Wähle einen Fokus aus oder lege mit einem Doppelklick einen neuen an.</p></aside>}
       </div>

@@ -231,5 +231,16 @@ export const aktionen = {
     }
   },
 
+  /** Vollstaendige Fokusbaeume des Spiels (Etappe 4f); null, wenn der Spielordner neu eingelesen werden muss. */
+  async ladeSpielfokus() {
+    const d = speicher.lies().db
+    if (!d) return null
+    try {
+      return await db.ladeSpielfokus(d)
+    } catch {
+      return null
+    }
+  },
+
   speichereJetzt: speichereProjektJetzt,
 }

@@ -23,6 +23,7 @@ export function FokusSeite({ baum, fokus, z }) {
         <FokusSymbol fokus={fokus} projekt={z.projekt} />
         <h2>{fokus.name || 'Neuer Fokus'}</h2>
       </div>
+      {fokus.spielId && <p class="leise" data-test="fokus-spielkennung">Kennung im Spiel: {fokus.spielId}</p>}
       <TextFeld label="Name" wert={fokus.name} test="fokus-name" onAendere={(v) => setze({ name: v }, 'name')} />
       <TextFeld label="Beschreibung" wert={fokus.beschreibung} test="fokus-beschreibung" mehrzeilig onAendere={(v) => setze({ beschreibung: v }, 'beschreibung')} />
       <ZahlFeld label="Dauer" einheit="Wochen" hilfe="Im Spiel dauert ein Fokus meist 10 Wochen (70 Tage)." min={1} max={100} wert={fokus.dauer} test="fokus-dauer"
@@ -31,6 +32,7 @@ export function FokusSeite({ baum, fokus, z }) {
       <details class="abschnitt" open>
         <summary>Voraussetzungen</summary>
         {andere.length === 0 && <p class="leise">Lege weitere Fokusse an, um sie zu verbinden.</p>}
+        {fokus.voraussetzungsGruppen?.length > 0 && <p class="hinweis-zeile">Voraussetzungen aus dem Spiel mit Gruppen. Eine Änderung macht daraus «alle» bzw. «einen davon».</p>}
         {andere.map(f => (
           <label class="haken" key={f.id}>
             <input type="checkbox" data-test={`voraussetzung-${f.id}`} checked={fokus.voraussetzungen.includes(f.id)}

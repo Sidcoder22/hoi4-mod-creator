@@ -120,14 +120,14 @@ export function Raster({ baum, projekt, gewaehlt, onWaehle }) {
             ? { left: `${geschoben.px - KARTE_B / 2}px`, top: `${geschoben.py - KARTE_H / 2}px`, zIndex: 5, opacity: 0.85 }
             : { left: `${f.x * ZELLE_B + (ZELLE_B - KARTE_B) / 2}px`, top: `${obenY(f)}px` }
           return (
-            <div key={f.id} class={`fokus-karte${f.id === gewaehlt ? ' gewaehlt' : ''}`} data-test={`fokus-${f.id}`} style={stil}
-              title={f.name || 'Fokus ohne Namen'} tabIndex={0} role="button" aria-label={`Fokus ${f.name || 'ohne Namen'}`}
-              onPointerDown={(e) => beginne('verschieben', f, e)} onClick={() => onWaehle(f.id)}
+            <div key={f.id} class={`fokus-karte${f.id === gewaehlt ? ' gewaehlt' : ''}${f.gesperrt ? ' gesperrt' : ''}`} data-test={`fokus-${f.id}`} style={stil}
+              title={f.gesperrt ? `${f.name} – geteilter Fokus aus dem Spiel` : (f.name || 'Fokus ohne Namen')} tabIndex={0} role="button" aria-label={`Fokus ${f.name || 'ohne Namen'}`}
+              onPointerDown={(e) => { if (!f.gesperrt) beginne('verschieben', f, e) }} onClick={() => onWaehle(f.id)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onWaehle(f.id) } }}>
               <FokusSymbol fokus={f} projekt={projekt} />
-              <span class="fokus-schild">{f.name || '…'}</span>
-              <span class="fokus-griff" data-test={`griff-${f.id}`} title="Ziehen, um zu verbinden (mit Umschalttaste: schliesst sich aus)"
-                onPointerDown={(e) => beginne('verbinden', f, e)} onClick={(e) => e.stopPropagation()} />
+              <span class="fokus-schild">{f.gesperrt ? '🔒 ' : ''}{f.name || '…'}</span>
+              {!f.gesperrt && <span class="fokus-griff" data-test={`griff-${f.id}`} title="Ziehen, um zu verbinden (mit Umschalttaste: schliesst sich aus)"
+                onPointerDown={(e) => beginne('verbinden', f, e)} onClick={(e) => e.stopPropagation()} />}
             </div>
           )
         })}

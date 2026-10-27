@@ -434,3 +434,10 @@ h2.mit-abstand { margin-top: 1.6rem; }
 .zeile.verband > input.staat-zahl { width: 5rem; flex: 0 0 auto; }
 .zeile.verband > span { flex: 0 0 auto; }
 .karte.vorlage { align-items: stretch; text-align: left; } .karte.vorlage .vorlage-raster { justify-content: start; }
+
+/* Etappe 4f: Fokusbaeume aus dem Spiel */
+.fokus-karte.gesperrt { cursor: default; filter: grayscale(0.9); opacity: 0.75; }
+.aus-spiel { font-size: 0.72rem; padding: 0.05rem 0.4rem; border-radius: 999px; background: var(--flaeche3); color: var(--messing-hell); white-space: nowrap; }
+.liste.spielbaeume { max-height: 300px; margin-top: 0.5rem; }
+.liste.spielbaeume > button.zeile { width: 100%; display: flex; justify-content: space-between; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
+.liste.spielbaeume > button.zeile.aktiv { background: var(--flaeche3); }

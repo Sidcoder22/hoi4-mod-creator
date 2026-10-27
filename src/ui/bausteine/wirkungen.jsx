@@ -39,6 +39,7 @@ export function WirkungenEditor({ liste, onAendere, kontext, test, tiefe = 0 }) 
         return (
           <div class="baustein" key={b.id} data-test={`${test}-${i}`}>
             <div class="baustein-kopf">
+              {b.ausSpiel && <span class="aus-spiel" data-test={`${test}-ausspiel-${i}`} title="Unveränderter Code aus dem Fokusbaum des Spiels">aus dem Spiel</span>}
               <ArtAuswahl katalog={WIRKUNGEN} wert={b.art} test={`${test}-art-${i}`}
                 onAendere={(art) => setze(i, { ...neueWirkung(art, kontext.spieldaten), id: b.id })} />
               <button class="knopf klein leise" title="Entfernen" data-test={`${test}-entfernen-${i}`} onClick={() => onAendere(liste.filter((_, k) => k !== i))}>✕</button>

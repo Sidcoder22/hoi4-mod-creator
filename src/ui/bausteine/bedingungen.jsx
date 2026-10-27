@@ -26,6 +26,7 @@ export function BedingungenEditor({ block, onAendere, kontext, test }) {
         return (
           <div class="baustein" key={b.id} data-test={`${test}-${i}`}>
             <div class="baustein-kopf">
+              {b.ausSpiel && <span class="aus-spiel" data-test={`${test}-ausspiel-${i}`} title="Unveränderter Code aus dem Fokusbaum des Spiels">aus dem Spiel</span>}
               <ArtAuswahl katalog={BEDINGUNGEN} wert={b.art} test={`${test}-art-${i}`}
                 onAendere={(art) => setze(i, { ...neueBedingung(art), id: b.id, nicht: b.nicht })} />
               <label class="haken klein" title="Gilt, wenn die Bedingung NICHT zutrifft">

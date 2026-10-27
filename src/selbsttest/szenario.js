@@ -576,6 +576,45 @@ export const SCHRITTE = [
     },
   },
   {
+    name: 'Spielbaum ändern',
+    async lauf(h) {
+      await h.klicke('nav-fokusbaeume')
+      await h.klicke('baum-aus-spiel')
+      await h.tippe('spielbaum-suche', 'german')
+      await h.klicke('spielbaum-german_focus')
+      await h.waehle('spielbaum-art', 'aendern')
+      await h.klicke('spielbaum-importieren')
+      await h.element('baum-editor')
+      const baum = zustand().projekt.fokusbaeume.find(b => b.herkunft?.art === 'aendern')
+      h.pruefe(baum && baum.land === 'GER', 'Spielbaum nicht importiert')
+      await h.warte(() => document.querySelectorAll('.fokus-karte').length === 7, 3000, '7 Fokuskarten')
+      h.pruefe(document.querySelectorAll('.fokus-karte.gesperrt').length === 1, 'Geteilter Fokus nicht gesperrt')
+      const anschluss = baum.fokusse.find(f => f.spielId === 'GER_anschluss')
+      await h.klicke(`fokus-${anschluss.id}`)
+      h.pruefe((await h.text('fokus-seite')).includes('GER_anschluss'), 'Kennung im Spiel wird nicht gezeigt')
+      await h.tippe('fokus-name', 'Anschluss')
+      await h.doppelklicke('zelle-0-5')
+      await h.tippe('fokus-name', 'Neu')
+      const neu = zustand().projekt.fokusbaeume.find(b => b.id === baum.id).fokusse
+      h.pruefe(neu.length === 8 && neu.some(f => f.name === 'Neu' && !f.spielId), 'Neuer Fokus fehlt')
+    },
+  },
+  {
+    name: 'Spielbaum als Vorlage',
+    async lauf(h) {
+      await h.klicke('nav-fokusbaeume')
+      await h.klicke('baum-aus-spiel')
+      await h.klicke('spielbaum-german_focus')
+      await h.waehle('spielbaum-art', 'vorlage')
+      await h.waehle('spielbaum-land', 'FRA')
+      await h.klicke('spielbaum-importieren')
+      await h.element('baum-editor')
+      h.pruefe(zustand().projekt.fokusbaeume.some(b => b.herkunft?.art === 'vorlage' && b.land === 'FRA'), 'Vorlage für Frankreich fehlt')
+      await h.klicke('nav-pruefung')
+      await h.element('meldung-fokus-spielcode-vorlage-0')
+    },
+  },
+  {
     name: 'Event anlegen',
     async lauf(h) {
       await h.klicke('nav-events')
@@ -802,6 +841,9 @@ export const SCHRITTE = [
       for (const teil of ['corps_commander', 'panzer_leader', 'slot = theorist']) h.pruefe(mreChar.includes(teil), `Charaktere MRE ohne «${teil}»`)
       h.pruefe(lies('mod/selbsttest_reich/common/characters/selbsttest_reich_SWI.txt').includes('navy_leader'), 'Admiral der Schweiz fehlt')
       h.pruefe(lies('mod/selbsttest_reich/history/countries/SWI - Switzerland.txt').includes('recruit_character = selbsttest_reich_person_'), 'Admiral nicht rekrutiert')
+      const deutschland = lies('mod/selbsttest_reich/common/national_focus/germany.txt')
+      h.pruefe(deutschland.includes('GER_rhineland') && deutschland.includes('shared_focus = SHARED_army'), 'Geänderter deutscher Baum fehlt')
+      h.pruefe(new TextDecoder().decode(dateien['mod/selbsttest_reich/localisation/german/replace/selbsttest_reich_replace_l_german.yml']).includes('GER_anschluss:'), 'Neuer Name für GER_anschluss fehlt')
       const mreOob = lies('mod/selbsttest_reich/history/units/MRE_1936.txt')
       h.pruefe(mreOob.includes('motorized') && (mreOob.match(/Panzer-Division/g) ?? []).length >= 3, 'Panzer-Divisionen fehlen in MRE_1936')
       lies('mod/selbsttest_reich/history/units/selbsttest_reich_SWI_1936.txt')
