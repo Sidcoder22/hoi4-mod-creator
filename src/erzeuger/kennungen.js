@@ -30,7 +30,9 @@ export function baumKennung(p, baum) {
   return `${p.mod.modid}_baum_${baum.nummer}`
 }
 
+/** Fokuskennung; Fokusse aus dem Spiel («Baum aendern», geteilte Fokusse) behalten ihre Kennung. */
 export function fokusKennung(p, fokus) {
+  if (fokus.spielId) return fokus.spielId
   return `${p.mod.modid}_fokus_${fokus.nummer}`
 }
 

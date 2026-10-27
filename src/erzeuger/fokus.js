@@ -1,6 +1,6 @@
 // Fokusbaeume (common/national_focus) samt eigenen Symbolen und Schimmer.
 
-import { schreibeParadox } from '../leser/paradox.js'
+import { schreibeParadox, parseParadox } from '../leser/paradox.js'
 import { erzeugeWirkungen, erzeugeBedingungen } from '../bausteine/erzeugen.js'
 import { e, wort, text as _t, block } from '../bausteine/hilfen.js'
 import { schreibeDds, skaliereRgba } from './bilder.js'
@@ -38,14 +38,21 @@ export function erzeugeFokusbaeume(k) {
   const schimmerTeile = []
   const kennungVon = new Map(baeume.flatMap(b => b.fokusse).map(f => [f.id, fokusKennung(projekt, f)]))
   for (const baum of baeume) {
-    const inhalt = [
-      e('id', wort(baumKennung(projekt, baum))),
-      e('country', block([e('factor', wort(0)), e('modifier', block([e('add', wort(100)), e('tag', wort(baum.land))]))])),
-      e('default', wort('no')),
-      // Die Leiste fuer Dauer-Fokusse liegt unter dem tiefsten Fokus (eine Zeile im Spiel = 130 Pixel)
-      e('continuous_focus_position', block([e('x', wort(50)), e('y', wort(Math.max(1200, (Math.max(0, ...baum.fokusse.map(f => f.y)) + 2) * 130)))])),
-    ]
+    // «Baum aendern» (Etappe 4f): Kennung und Einstellungen des Spiels, Datei unter dem Pfad des Spiels
+    const aendern = baum.herkunft?.art === 'aendern'
+    const inhalt = aendern
+      ? [e('id', wort(baum.herkunft.spielId)), ...parseParadox(baum.herkunft.weitere ?? '').eintraege]
+      : [
+        e('id', wort(baumKennung(projekt, baum))),
+        e('country', block([e('factor', wort(0)), e('modifier', block([e('add', wort(100)), e('tag', wort(baum.land))]))])),
+        e('default', wort('no')),
+        // Die Leiste fuer Dauer-Fokusse liegt unter dem tiefsten Fokus (eine Zeile im Spiel = 130 Pixel)
+        e('continuous_focus_position', block([e('x', wort(50)), e('y', wort(Math.max(1200, (Math.max(0, ...baum.fokusse.map(f => f.y)) + 2) * 130)))])),
+      ]
+    for (const g of baum.herkunft?.geteilt ?? []) inhalt.push(e('shared_focus', wort(g)))
     for (const f of baum.fokusse) {
+      // Geteilte Fokusse stehen im Spiel in ihrer eigenen Datei
+      if (f.gesperrt) continue
       const kennung = kennungVon.get(f.id)
       let icon
       if (f.symbol?.art === 'eigen') {
@@ -70,7 +77,12 @@ export function erzeugeFokusbaeume(k) {
         e('cost', wort(zahl(f.dauer || 10))),
       ]
       const voraus = f.voraussetzungen.filter(v => kennungVon.has(v)).map(v => e('focus', wort(kennungVon.get(v))))
-      if (voraus.length) {
+      if (f.voraussetzungsGruppen?.length) {
+        for (const gruppe of f.voraussetzungsGruppen) {
+          const teile = gruppe.filter(v => kennungVon.has(v)).map(v => e('focus', wort(kennungVon.get(v))))
+          if (teile.length) fokus.push(e('prerequisite', block(teile)))
+        }
+      } else if (voraus.length) {
         if (f.voraussetzungsArt === 'eine') fokus.push(e('prerequisite', block(voraus)))
         else for (const v of voraus) fokus.push(e('prerequisite', block([v])))
       }
@@ -80,13 +92,22 @@ export function erzeugeFokusbaeume(k) {
       const verfuegbar = erzeugeBedingungen(f.verfuegbar, bk)
       if (verfuegbar.length) fokus.push(e('available', block(verfuegbar)))
       fokus.push(e('completion_reward', block(erzeugeWirkungen(f.belohnung, bk))))
-      fokus.push(e('ai_will_do', block([e('factor', wort(zahl(f.kiGewicht ?? 1)))])))
+      // Importierte Fokusse: KI-Gewichtung des Spiels steckt in «weitere» (kiGewicht = null)
+      if (f.kiGewicht != null) fokus.push(e('ai_will_do', block([e('factor', wort(zahl(f.kiGewicht)))])))
+      if (f.weitere) fokus.push(...parseParadox(f.weitere).eintraege)
       inhalt.push(e('focus', block(fokus)))
-      k.sprache.setze(kennung, f.name)
-      k.sprache.setze(`${kennung}_desc`, f.beschreibung || '')
-      k.braucheSprache(kennung)
+      if (f.spielId) {
+        // Texte des Spiels nur ueberschreiben, wenn sie geaendert wurden
+        if (f.name !== f.spielName) k.sprache.ersetze(kennung, f.name)
+        if ((f.beschreibung || '') !== (f.spielBeschreibung || '')) k.sprache.ersetze(`${kennung}_desc`, f.beschreibung || '')
+      } else {
+        k.sprache.setze(kennung, f.name)
+        k.sprache.setze(`${kennung}_desc`, f.beschreibung || '')
+        k.braucheSprache(kennung)
+      }
     }
-    k.schreibe(modPfad(modid, `common/national_focus/${modid}_${baumKennung(projekt, baum)}.txt`), schreibeParadox([e('focus_tree', block(inhalt))]))
+    const pfad = aendern ? baum.herkunft.datei : `common/national_focus/${modid}_${baumKennung(projekt, baum)}.txt`
+    k.schreibe(modPfad(modid, pfad), schreibeParadox([e('focus_tree', block(inhalt))]))
   }
   if (sprites.length) {
     k.schreibe(modPfad(modid, `interface/${modid}_goals.gfx`), schreibeParadox([e('spriteTypes', block(sprites))]))
