@@ -87,3 +87,17 @@ test('vorlage fuer FRA: eigener Baum mit neuen Kennungen', () => {
   expect(normal.get(`mein_reich_fokus_${rhein.nummer}`)).toBe('Rheinland')
   expect(normal.has('SHARED_army')).toBe(false)
 })
+
+test('Review: Sonderzeichen im Spielcode sperren weder Pruefung noch Speichern', async () => {
+  const { pruefeProjekt } = await import('../../src/pruefung/regeln.js')
+  const o = erstelleMiniSpielordner()
+  o['common/national_focus/germany.txt'] = o['common/national_focus/germany.txt']
+    .replace('search_filters = { FOCUS_FILTER_POLITICAL }', 'search_filters = { FOCUS_FILTER_POLITICAL }\n\t\tcompletion_tooltip = "Rückkehr"')
+    .replace('add_political_power = 120', 'add_political_power = 120\n\t\t\tlog = "Rückkehr"')
+  const daten = await leseSpielordner(dateiquelleAusObjekt(o))
+  const [p] = importiereSpielbaum(testprojekt(daten.spieldaten), daten.spieldaten, daten.spielfokus, 'german_focus', 'aendern')
+  const { dateien, fehler } = erzeugeMod(p, daten.spieldaten)
+  expect(fehler).toEqual([])
+  expect(text(dateien, m + 'common/national_focus/germany.txt')).toContain('log = "Rückkehr"')
+  expect(pruefeProjekt(p, daten.spieldaten).filter(x => x.schwere === 'fehler' && (x.regel === 'baustein' || x.regel.startsWith('fokus')))).toEqual([])
+})

@@ -107,7 +107,8 @@ export function erzeugeFokusbaeume(k) {
       }
     }
     const pfad = aendern ? baum.herkunft.datei : `common/national_focus/${modid}_${baumKennung(projekt, baum)}.txt`
-    k.schreibe(modPfad(modid, pfad), schreibeParadox([e('focus_tree', block(inhalt))]))
+    // Baeume aus dem Spiel enthalten Spielcode, der Sonderzeichen in Texten haben darf (wie eine Kopie)
+    k.schreibe(modPfad(modid, pfad), schreibeParadox([e('focus_tree', block(inhalt))]), baum.herkunft ? { kopie: true } : undefined)
   }
   if (sprites.length) {
     k.schreibe(modPfad(modid, `interface/${modid}_goals.gfx`), schreibeParadox([e('spriteTypes', block(sprites))]))

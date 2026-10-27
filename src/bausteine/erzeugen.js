@@ -3,7 +3,7 @@
 import { neueId } from '../projekt/modell.js'
 import { WIRKUNGEN } from './wirkungen.js'
 import { BEDINGUNGEN } from './bedingungen.js'
-import { pruefeFeld, feldAktiv, feldAnzeige } from './felder.js'
+import { pruefeFeld, feldAktiv, feldAnzeige, pruefeCode } from './felder.js'
 import { e, block } from './hilfen.js'
 
 const wirkungsDef = (art) => WIRKUNGEN.find(d => d.art === art)
@@ -63,7 +63,7 @@ function pruefeEinen(def, b, kontext, ort, fehler) {
   const werte = mitStandard(def, b.werte)
   for (const feld of def.felder) {
     if (!feldAktiv(feld, werte)) continue
-    const f = pruefeFeld(feld, werte[feld.name], kontext)
+    const f = feld.typ === 'code' && b.ausSpiel ? pruefeCode(werte[feld.name], { umlauteErlaubt: true }) : pruefeFeld(feld, werte[feld.name], kontext)
     if (f) fehler.push({ text: `${ort}: «${def.name}» – ${f}`, ort })
   }
 }

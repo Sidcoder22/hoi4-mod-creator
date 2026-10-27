@@ -19,13 +19,14 @@ export function feldAktiv(feld, werte) {
   return !feld.nurWenn || werte?.[feld.nurWenn.feld] === feld.nurWenn.wert
 }
 
-export function pruefeCode(code) {
+/** umlauteErlaubt: fuer unveraenderten Code aus dem Spiel (Etappe 4f), dessen Texte Sonderzeichen enthalten duerfen. */
+export function pruefeCode(code, { umlauteErlaubt = false } = {}) {
   try {
     parseParadox(String(code ?? ''), { streng: true })
   } catch (e) {
     return `Eigener Code hat einen Klammer- oder Schreibfehler (Zeile ${e.zeile ?? '?'})`
   }
-  const sonder = /[^\x00-\x7F]/.exec(String(code ?? ''))
+  const sonder = umlauteErlaubt ? null : /[^\x00-\x7F]/.exec(String(code ?? ''))
   if (sonder) return `Eigener Code enthält das Sonderzeichen «${sonder[0]}» – im Spielcode sind nur Buchstaben ohne Umlaute erlaubt`
   if (!String(code ?? '').trim()) return 'Eigener Code ist leer'
   return null
