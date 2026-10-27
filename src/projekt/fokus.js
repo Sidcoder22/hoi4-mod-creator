@@ -41,17 +41,22 @@ export function fuegeFokusHinzu(p, sd, baumId, x, y) {
 }
 
 export function aendereFokus(p, baumId, fokusId, patch) {
-  return mitBaum(p, baumId, b => ({ ...b, fokusse: b.fokusse.map(f => (f.id === fokusId ? { ...f, ...structuredClone(patch) } : f)) }))
+  // Wer die Art der Voraussetzungen aendert, verlaesst die Gruppen aus dem Spiel (Etappe 4f)
+  const gruppenWeg = ('voraussetzungsArt' in patch || 'voraussetzungen' in patch) && !('voraussetzungsGruppen' in patch) ? { voraussetzungsGruppen: null } : {}
+  return mitBaum(p, baumId, b => ({ ...b, fokusse: b.fokusse.map(f => (f.id === fokusId ? { ...f, ...structuredClone(patch), ...gruppenWeg } : f)) }))
 }
+
+const gesperrt = (p, baumId, fokusId) => !!p.fokusbaeume.find(b => b.id === baumId)?.fokusse.find(f => f.id === fokusId)?.gesperrt
 
 /** Verschiebt nur auf ein freies Feld mit x, y >= 0; sonst bleibt das Projekt unveraendert. */
 export function verschiebeFokus(p, baumId, fokusId, x, y) {
   const baum = p.fokusbaeume.find(b => b.id === baumId)
-  if (!baum || x < 0 || y < 0 || besetzt(baum, x, y, fokusId)) return p
+  if (!baum || x < 0 || y < 0 || besetzt(baum, x, y, fokusId) || gesperrt(p, baumId, fokusId)) return p
   return aendereFokus(p, baumId, fokusId, { x, y })
 }
 
 export function entferneFokus(p, baumId, fokusId) {
+  if (gesperrt(p, baumId, fokusId)) return p
   return mitBaum(p, baumId, b => ({
     ...b,
     fokusse: b.fokusse.filter(f => f.id !== fokusId).map(f => ({
@@ -70,7 +75,7 @@ export function setzeVoraussetzung(p, baumId, vonId, zuId, an) {
     fokusse: b.fokusse.map(f => {
       if (f.id !== zuId) return f
       const ohne = f.voraussetzungen.filter(v => v !== vonId)
-      return { ...f, voraussetzungen: an ? [...ohne, vonId] : ohne }
+      return { ...f, voraussetzungen: an ? [...ohne, vonId] : ohne, voraussetzungsGruppen: null }
     }),
   }))
 }
