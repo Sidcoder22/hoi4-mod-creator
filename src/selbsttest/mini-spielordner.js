@@ -364,6 +364,106 @@ set_autonomy = {
     ['popular_figurehead', 'Volksheld'], ['autonomy_dominion', 'Dominion'], ['autonomy_puppet', 'Marionette'],
   ])
 
+  // Etappe 4f: Fokusbaum eines Landes und ein geteilter Fokus im Format des Spiels
+  o['common/national_focus/germany.txt'] = `@navy_x = 8
+focus_tree = {
+	id = german_focus
+	country = {
+		factor = 0
+		modifier = {
+			add = 10
+			tag = GER
+		}
+	}
+	default = no
+	continuous_focus_position = { x = 50 y = 1100 }
+	shared_focus = SHARED_army
+	focus = {
+		id = GER_rhineland
+		icon = GFX_goal_generic_construct_civ_factory
+		x = 5
+		y = 0
+		cost = 10
+		search_filters = { FOCUS_FILTER_POLITICAL }
+		ai_will_do = {
+			factor = 5
+		}
+		completion_reward = {
+			add_political_power = 120
+			add_stability = 0.05
+			GER = {
+				add_state_core = 1
+			}
+		}
+	}
+	focus = {
+		id = GER_anschluss
+		icon = GFX_goal_generic_construct_civ_factory
+		relative_position_id = GER_rhineland
+		x = 1
+		y = 1
+		cost = 10
+		prerequisite = { focus = GER_rhineland }
+		available = {
+			has_completed_focus = GER_rhineland
+			is_puppet = no
+		}
+		completion_reward = {
+			add_political_power = 50
+		}
+	}
+	focus = {
+		id = GER_army
+		icon = GFX_goal_generic_army_doctrines
+		relative_position_id = GER_anschluss
+		x = -2
+		y = 1
+		offset = {
+			x = 3
+			y = 0
+			trigger = { has_dlc = "x" }
+		}
+		cost = 5
+		prerequisite = { focus = GER_rhineland }
+		prerequisite = { focus = GER_anschluss focus = SHARED_army }
+		completion_reward = {
+			army_experience = 10
+		}
+	}
+	focus = {
+		id = GER_kreis_a
+		icon = GFX_goal_generic_army_doctrines
+		relative_position_id = GER_kreis_b
+		x = 9
+		y = 0
+		cost = 10
+		completion_reward = { add_political_power = 10 }
+	}
+	focus = {
+		id = GER_kreis_b
+		icon = GFX_goal_generic_army_doctrines
+		relative_position_id = GER_kreis_a
+		x = 10
+		y = 0
+		cost = 10
+		completion_reward = { add_political_power = 10 }
+	}
+	focus = {
+		id = GER_navy
+		icon = GFX_goal_generic_army_doctrines
+		x = @navy_x
+		y = 0
+		cost = 10
+		mutually_exclusive = { focus = GER_rhineland }
+		completion_reward = {
+			add_ideas = deutsche_industrie
+		}
+	}
+}
+`
+  o['common/national_focus/shared.txt'] = 'shared_focus = {\n\tid = SHARED_army\n\ticon = GFX_goal_generic_army_doctrines\n\tx = 2\n\ty = 0\n\tcost = 10\n}\n'
+  o['localisation/german/etappe4f_l_german.yml'] = schreibeYml('german', [['GER_rhineland', 'Rheinland'], ['GER_rhineland_desc', 'Zurück an den Rhein.'], ['SHARED_army', 'Heeresreform']])
+
   // Etappe 4e: Einheiten (Bataillone und Kompanien) im Format des Spiels
   const einheit = (id, werte) => `sub_units = {\n\t${id} = {\n\t\tsprite = ${id}\n${werte}\t\tneed = {\n\t\t\tinfantry_equipment = 100\n\t\t}\n\t}\n}\n`
   o['common/units/infantry.txt'] = einheit('infantry', '\t\tactive = yes\n\t\tgroup = infantry\n\t\tcategories = {\n\t\t\tcategory_front_line\n\t\t\tcategory_army\n\t\t}\n\t\tcombat_width = 2\n')

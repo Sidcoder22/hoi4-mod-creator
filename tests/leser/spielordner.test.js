@@ -271,7 +271,7 @@ test('Etappe 4d: Eigenschaften fuer Heer- und Flottenfuehrer', () => {
 })
 
 test('Etappe 4e: Einheitenarten und freigeschaltete Einheiten', () => {
-  expect(LESER_VERSION).toBe(9)
+  expect(LESER_VERSION).toBeGreaterThanOrEqual(9)
   expect(sd.einheitenArten).toEqual([
     { id: 'artillery_brigade', name: 'artillery_brigade', unterstuetzung: false, kampfbreite: 3, aktiv: true },
     { id: 'infantry', name: 'Infanterie', unterstuetzung: false, kampfbreite: 2, aktiv: true },
@@ -281,4 +281,31 @@ test('Etappe 4e: Einheitenarten und freigeschaltete Einheiten', () => {
   expect(sd.technologien.find(t => t.id === 'tech_support').einheiten).toEqual(['engineer'])
   expect(sd.technologien.find(t => t.id === 'infantry_weapons').einheiten).toEqual([])
   expect(sd.bericht.einheitenArten).toBe(4)
+})
+
+test('Etappe 4f: Fokusbaeume und geteilte Fokusse aus dem Spiel', () => {
+  expect(LESER_VERSION).toBe(10)
+  const spielfokus = ergebnis.spielfokus
+  expect(sd.spielFokusbaeume).toEqual([{ id: 'german_focus', datei: 'common/national_focus/germany.txt', land: 'GER', anzahl: 6 }])
+  const b = spielfokus.baeume.german_focus
+  const f = (id) => b.fokusse.find(x => x.id === id)
+  expect(b).toMatchObject({ id: 'german_focus', datei: 'common/national_focus/germany.txt', land: 'GER', geteilt: ['SHARED_army'] })
+  expect(b.weitere).toContain('continuous_focus_position')
+  expect(b.weitere).toContain('country')
+  expect(b.weitere).not.toContain('GER_rhineland')
+  expect(b.weitere).not.toContain('SHARED_army')
+  expect(f('GER_rhineland')).toMatchObject({ name: 'Rheinland', beschreibung: 'Zurück an den Rhein.', symbol: 'GFX_goal_generic_construct_civ_factory', x: 5, y: 0, dauer: 10, voraussetzungen: [], ausschluss: [] })
+  expect(f('GER_rhineland').weitere).toContain('search_filters')
+  expect(f('GER_rhineland').weitere).toContain('ai_will_do')
+  expect(f('GER_rhineland').weitere).not.toContain('completion_reward')
+  expect(f('GER_rhineland').belohnung.map(e => e.schluessel)).toEqual(['add_political_power', 'add_stability', 'GER'])
+  expect(f('GER_anschluss')).toMatchObject({ x: 6, y: 1, voraussetzungen: [['GER_rhineland']], name: 'GER_anschluss', beschreibung: '' })
+  expect(f('GER_anschluss').verfuegbar.map(e => e.schluessel)).toEqual(['has_completed_focus', 'is_puppet'])
+  expect(f('GER_army')).toMatchObject({ x: 4, y: 2, voraussetzungen: [['GER_rhineland'], ['GER_anschluss', 'SHARED_army']] })
+  expect(f('GER_army').weitere).not.toContain('offset')
+  expect([f('GER_kreis_a').x, f('GER_kreis_b').x]).toEqual([9, 10])
+  expect(f('GER_navy')).toMatchObject({ x: 8, y: 0, ausschluss: ['GER_rhineland'], verfuegbar: null })
+  expect(spielfokus.geteilt.SHARED_army).toEqual({ id: 'SHARED_army', name: 'Heeresreform', symbol: 'GFX_goal_generic_army_doctrines', x: 2, y: 0 })
+  expect(sd.bericht).toMatchObject({ fokusbaeume: 1, spielFokusse: 6 })
+  expect(sd.fokusbaeumeSpiel).toBeUndefined()
 })

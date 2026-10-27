@@ -2,7 +2,7 @@
 // Jede Datei wird einzeln behandelt: eine kaputte Datei erzeugt eine Warnung, aber keinen Abbruch.
 // Schluessel und Pfade werden wie im Spiel ohne Ruecksicht auf Gross-/Kleinschreibung gelesen.
 
-import { parseParadox, findeI as finde, findeAlleI as findeAlle, wertText, zahlen } from './paradox.js'
+import { parseParadox, schreibeParadox, findeI as finde, findeAlleI as findeAlle, wertText, zahlen } from './paradox.js'
 import { parseYml } from './yml.js'
 import { leseBmp } from './bmp.js'
 import { leseTga } from './tga.js'
@@ -10,7 +10,7 @@ import { leseDds } from './dds.js'
 import { parseDefinition, berechneKarte } from './karte.js'
 
 /** Wird erhoeht, wenn neue Spieldaten gebraucht werden (erzwingt neues Einlesen). */
-export const LESER_VERSION = 9
+export const LESER_VERSION = 10
 
 export class SpielordnerFehler extends Error {
   constructor(meldung) {
@@ -581,6 +581,74 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   }
   if (!autonomieStufen.length) for (const [id, n] of STANDARD_AUTONOMIE) autonomieStufen.push({ id, name: text(id) ?? n })
 
+  // Etappe 4f: Fokusbaeume und geteilte Fokusse des Spiels (vollstaendig nur in spielfokus, eigener Speicher)
+  const FOKUS_BEKANNT = new Set(['id', 'icon', 'x', 'y', 'relative_position_id', 'offset', 'cost', 'prerequisite', 'mutually_exclusive', 'available', 'completion_reward'])
+  const spielfokus = { baeume: {}, geteilt: {} }
+  const spielFokusbaeume = []
+  for (const pfad of imOrdner('common/national_focus/', '.txt')) {
+    const e = await leseSkript(pfad)
+    if (!e) continue
+    // Variablen der Datei (@x = 3) fuer Positionen und Kosten
+    const variablen = new Map(e.filter(x => x.schluessel?.startsWith('@')).map(x => [x.schluessel, Number(wertText(x.wert))]))
+    const zahlVon = (inhalt, k, rueckfall) => {
+      const t = wertText(finde(inhalt, k)?.wert)
+      const z = t?.startsWith('@') ? variablen.get(t) : Number(t)
+      return Number.isFinite(z) && t !== '' && t != null ? z : rueckfall
+    }
+    for (const g of findeAlle(e, 'shared_focus')) {
+      if (g.wert.typ !== 'block') continue
+      const id = wertText(finde(g.wert.inhalt, 'id')?.wert)
+      if (id) spielfokus.geteilt[id] = { id, name: text(id) ?? id, symbol: wertText(finde(g.wert.inhalt, 'icon')?.wert) || null, x: zahlVon(g.wert.inhalt, 'x', 0), y: zahlVon(g.wert.inhalt, 'y', 0) }
+    }
+    for (const baum of findeAlle(e, 'focus_tree')) {
+      if (baum.wert.typ !== 'block') continue
+      const bi = baum.wert.inhalt
+      const id = wertText(finde(bi, 'id')?.wert)
+      if (!id || spielfokus.baeume[id]) continue
+      let land = null
+      const country = finde(bi, 'country')
+      for (const m of country?.wert?.typ === 'block' ? findeAlle(country.wert.inhalt, 'modifier') : []) {
+        const tag = m.wert.typ === 'block' ? wertText(finde(m.wert.inhalt, 'tag')?.wert) : null
+        if (tag && Number(wertText(finde(m.wert.inhalt, 'add')?.wert)) > 0) { land = tag; break }
+      }
+      const roh = findeAlle(bi, 'focus').filter(f => f.wert.typ === 'block').map(f => f.wert.inhalt)
+      const nachId = new Map(roh.map(fi => [wertText(finde(fi, 'id')?.wert), fi]))
+      // Relative Positionen ueber Ketten aufloesen; fuehrt die Kette im Kreis, gilt die eigene Angabe
+      const eigen = (fi) => [zahlVon(fi, 'x', 0), zahlVon(fi, 'y', 0)]
+      const rel = (fi) => wertText(finde(fi, 'relative_position_id')?.wert)
+      const position = (fid) => {
+        const kette = [fid]
+        for (let r = rel(nachId.get(fid)); r && nachId.has(r); r = rel(nachId.get(r))) {
+          if (kette.includes(r)) return eigen(nachId.get(fid))
+          kette.push(r)
+        }
+        return kette.reduce(([x, y], id) => { const [ex, ey] = eigen(nachId.get(id)); return [x + ex, y + ey] }, [0, 0])
+      }
+      const fokusse = []
+      for (const [fid, fi] of nachId) {
+        if (!fid) continue
+        const [x, y] = position(fid)
+        const blockInhalt = (k) => { const b = finde(fi, k); return b?.wert?.typ === 'block' ? b.wert.inhalt : null }
+        fokusse.push({
+          id: fid, name: text(fid) ?? fid, beschreibung: text(`${fid}_desc`) ?? '',
+          symbol: wertText(finde(fi, 'icon')?.wert) || null, x, y, dauer: zahlVon(fi, 'cost', 10),
+          voraussetzungen: findeAlle(fi, 'prerequisite').filter(v => v.wert.typ === 'block')
+            .map(v => findeAlle(v.wert.inhalt, 'focus').map(x => wertText(x.wert)).filter(Boolean)).filter(gr => gr.length),
+          ausschluss: findeAlle(fi, 'mutually_exclusive').flatMap(v => (v.wert.typ === 'block' ? findeAlle(v.wert.inhalt, 'focus').map(x => wertText(x.wert)) : [])).filter(Boolean),
+          verfuegbar: blockInhalt('available'),
+          belohnung: blockInhalt('completion_reward'),
+          weitere: schreibeParadox(fi.filter(x => !(x.schluessel && FOKUS_BEKANNT.has(x.schluessel.toLowerCase())))),
+        })
+      }
+      const geteilt = findeAlle(bi, 'shared_focus').map(x => wertText(x.wert)).filter(Boolean)
+      const weitere = schreibeParadox(bi.filter(x => !(x.schluessel && ['id', 'focus', 'shared_focus'].includes(x.schluessel.toLowerCase()))))
+      spielfokus.baeume[id] = { id, datei: pfad, land, weitere, geteilt, fokusse }
+      spielFokusbaeume.push({ id, datei: pfad, land, anzahl: fokusse.length })
+    }
+  }
+  const baumName = (b) => (b.land ? (laender[b.land]?.name ?? b.land) : '\uffff' + b.id)
+  spielFokusbaeume.sort((a, b) => baumName(a).localeCompare(baumName(b), 'de') || a.id.localeCompare(b.id))
+
   // Etappe 4e: Bataillone und Unterstuetzungskompanien
   const einheitenArten = []
   for (const pfad of imOrdner('common/units/', '.txt')) {
@@ -732,7 +800,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     laender, ideologien, charaktere, staaten, provinzArten, sprites, ideenBilder, portraets, fokusSymbole, technologieKategorien,
     modifikatoren, spielGeister, anfuehrerEigenschaften, autonomieStufen,
     eventBilder, entscheidungsSymbole, kategorieSymbole, entscheidungsKategorien,
-    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche, fuehrerEigenschaften, einheitenArten,
+    gebaeudeArten, ressourcenArten, staatsKategorien, provinzKueste, siegpunktNamen, technologien, technologieBereiche, fuehrerEigenschaften, einheitenArten, spielFokusbaeume,
     bildgroessen: {
       flagge: haeufigsteGroesse(flaggenGroessen, [82, 52]),
       idee: haeufigsteGroesse(ideenGroessen, [64, 64]),
@@ -762,10 +830,12 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       technologien: technologien.length,
       fuehrerEigenschaften: fuehrerEigenschaften.length,
       einheitenArten: einheitenArten.length,
+      fokusbaeume: spielFokusbaeume.length,
+      spielFokusse: spielFokusbaeume.reduce((s, b) => s + b.anzahl, 0),
       warnungen: warnungen.slice(0, 200),
       warnungenGesamt: warnungen.length,
     },
   }
   fortschritt(1, 'Fertig')
-  return { spieldaten, karte, bilder, warnungen }
+  return { spieldaten, karte, bilder, warnungen, spielfokus }
 }

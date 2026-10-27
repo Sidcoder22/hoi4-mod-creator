@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { test, expect } from 'vitest'
-import { oeffneDb, alleProjekte, ladeProjekt, speichereProjekt, loescheProjekt, speichereSpieldaten, ladeSpieldaten, ladeBild, merke, hole, loescheDb } from '../../src/speicher/indexeddb.js'
+import { oeffneDb, alleProjekte, ladeProjekt, speichereProjekt, loescheProjekt, speichereSpieldaten, ladeSpieldaten, ladeSpielfokus, ladeBild, merke, hole, loescheDb } from '../../src/speicher/indexeddb.js'
 import { neuesProjekt } from '../../src/projekt/modell.js'
 
 test('Projekte speichern, auflisten, laden, loeschen', async () => {
@@ -44,4 +44,15 @@ test('Einstellungen merken', async () => {
   const neu = await oeffneDb('test-einstellungen')
   expect(await hole(neu, 'zielordner')).toBeNull()
   neu.close()
+})
+
+test('Etappe 4f: Fokusbaeume des Spiels getrennt speichern', async () => {
+  const db = await oeffneDb('test-spielfokus')
+  expect(await ladeSpielfokus(db)).toBeNull()
+  const karte = { breite: 1, hoehe: 1, staatIndex: Uint16Array.from([0]), staatIds: [0] }
+  const spielfokus = { baeume: { a: { id: 'a', fokusse: [] } }, geteilt: {} }
+  await speichereSpieldaten(db, { spieldaten: { version: '1' }, karte, bilder: new Map(), spielfokus })
+  expect(await ladeSpielfokus(db)).toEqual(spielfokus)
+  expect((await ladeSpieldaten(db)).spielfokus).toBeUndefined()
+  db.close()
 })

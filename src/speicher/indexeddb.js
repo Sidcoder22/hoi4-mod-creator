@@ -61,9 +61,11 @@ export async function loescheProjekt(db, id) {
   await fertig(tx)
 }
 
-export async function speichereSpieldaten(db, { spieldaten, karte, bilder }) {
+export async function speichereSpieldaten(db, { spieldaten, karte, bilder, spielfokus = null }) {
   const tx = db.transaction(['spieldaten', 'bilder'], 'readwrite')
   tx.objectStore('spieldaten').put({ spieldaten, karte }, 'aktuell')
+  // Vollstaendige Fokusbaeume des Spiels getrennt, damit der Start schnell bleibt (Etappe 4f)
+  tx.objectStore('spieldaten').put(spielfokus, 'spielfokus')
   const b = tx.objectStore('bilder')
   b.clear()
   for (const [schluessel, wert] of bilder) b.put(wert, schluessel)
@@ -72,6 +74,10 @@ export async function speichereSpieldaten(db, { spieldaten, karte, bilder }) {
 
 export async function ladeSpieldaten(db) {
   return (await anfrage(db.transaction('spieldaten').objectStore('spieldaten').get('aktuell'))) ?? null
+}
+
+export async function ladeSpielfokus(db) {
+  return (await anfrage(db.transaction('spieldaten').objectStore('spieldaten').get('spielfokus'))) ?? null
 }
 
 export async function ladeBild(db, schluessel) {
