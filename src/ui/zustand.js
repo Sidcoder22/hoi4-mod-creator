@@ -268,7 +268,16 @@ export const aktionen = {
         }
         handle = await window.showDirectoryPicker({ id: 'hoi4-benutzerordner', mode: 'readwrite', startIn: 'documents' })
         if (!(await pruefeZielordner(handle))) {
-          speicher.setze({ meldung: 'Das ist nicht der Ordner «Hearts of Iron IV» in deinen Dokumenten (Dokumente/Paradox Interactive/Hearts of Iron IV).' })
+          let istMod = false
+          try {
+            await handle.getFileHandle('descriptor.mod')
+            istMod = true
+          } catch { /* kein Mod-Ordner */ }
+          speicher.setze({
+            meldung: istMod
+              ? 'Das ist ein Mod-Ordner. Für die Liste deiner Mods braucht der Creator den Ordner Dokumente/Paradox Interactive/Hearts of Iron IV. Einen Mod-Ordner wählst du mit «Anderen Mod-Ordner wählen».'
+              : 'Das ist nicht der Ordner «Hearts of Iron IV» in deinen Dokumenten. Wähle Dokumente/Paradox Interactive/Hearts of Iron IV.',
+          })
           return
         }
         await aktionen.merkeZielordner(handle)

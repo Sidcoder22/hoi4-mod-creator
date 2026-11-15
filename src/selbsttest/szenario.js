@@ -903,6 +903,17 @@ export const SCHRITTE = [
       window.__hmc.aktionen.gehe({ bereich: 'spielordner' })
       await h.element('grundlage-karte')
       h.pruefe((await h.text('grundlage-aktuell')) === 'Nur das Spiel', 'Grundlage am Anfang nicht «Nur das Spiel»')
+      h.pruefe((await h.text('grundlage-karte')).includes('Dokumente/Paradox Interactive/Hearts of Iron IV'), 'Hinweis, welchen Ordner die Mod-Liste braucht, fehlt')
+      // Versehentlich einen Mod-Ordner statt des Benutzerordners gewaehlt
+      const gemerkt = zustand().zielordner
+      const echterPicker = window.showDirectoryPicker
+      window.__hmc.speicher.setze({ zielordner: null })
+      window.showDirectoryPicker = async () => erstelleFakeOrdner({ 'descriptor.mod': 'name="Kaiserreich"\n' }, 'Kaiserreich')
+      await h.klicke('modliste-lesen')
+      await h.warte(() => (zustand().meldung || '').includes('Anderen Mod-Ordner wählen'), 3000, 'Meldung erklärt den Mod-Ordner')
+      h.pruefe(zustand().zielordner === null, 'Mod-Ordner wurde als Zielordner gemerkt')
+      window.showDirectoryPicker = echterPicker
+      window.__hmc.speicher.setze({ zielordner: gemerkt, meldung: null })
       await h.klicke('modliste-lesen')
       await h.warte(async () => (await h.text('modliste-0')).includes('Mini-Reich'), 3000, 'Mod-Liste mit Mini-Reich')
       h.pruefe(!document.querySelector('[data-test="modliste-1"]'), 'Die eigene Mod steht in der Mod-Liste')

@@ -103,6 +103,7 @@ function Grundlage({ z }) {
         <button class="knopf" data-test="modliste-lesen" onClick={() => aktionen.modListeLesen()}>Installierte Mods anzeigen</button>
         <ModOrdnerKnopf test="grundlage-input" text="Anderen Mod-Ordner wählen" gesperrt={ohneSpiel} />
       </div>
+      {!z.modListe && <p class="leise">«Installierte Mods anzeigen» fragt beim ersten Mal nach dem Ordner <code>Dokumente/Paradox Interactive/Hearts of Iron IV</code> – dort steht, welche Mods installiert sind. Einen Mod-Ordner selbst (zum Beispiel aus <code>Dokumente/HOI4-Grundlagen</code>) wählst du mit «Anderen Mod-Ordner wählen».</p>}
       {z.modListe && (
         <>
           {z.modListe.length === 0 && <p class="leise">Keine Mods gefunden.</p>}
