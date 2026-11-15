@@ -286,7 +286,7 @@ test('Etappe 4e: Einheitenarten und freigeschaltete Einheiten', () => {
 test('Etappe 4f: Fokusbaeume und geteilte Fokusse aus dem Spiel', () => {
   expect(LESER_VERSION).toBe(10)
   const spielfokus = ergebnis.spielfokus
-  expect(sd.spielFokusbaeume).toEqual([{ id: 'german_focus', datei: 'common/national_focus/germany.txt', land: 'GER', anzahl: 6 }])
+  expect(sd.spielFokusbaeume).toEqual([{ id: 'german_focus', datei: 'common/national_focus/germany.txt', land: 'GER', anzahl: 6, quelle: 'Spiel' }])
   const b = spielfokus.baeume.german_focus
   const f = (id) => b.fokusse.find(x => x.id === id)
   expect(b).toMatchObject({ id: 'german_focus', datei: 'common/national_focus/germany.txt', land: 'GER', geteilt: ['SHARED_army'] })
@@ -308,4 +308,37 @@ test('Etappe 4f: Fokusbaeume und geteilte Fokusse aus dem Spiel', () => {
   expect(spielfokus.geteilt.SHARED_army).toEqual({ id: 'SHARED_army', name: 'Heeresreform', symbol: 'GFX_goal_generic_army_doctrines', x: 2, y: 0 })
   expect(sd.bericht).toMatchObject({ fokusbaeume: 1, spielFokusse: 6 })
   expect(sd.fokusbaeumeSpiel).toBeUndefined()
+})
+
+import { describe } from 'vitest'
+import { dateiquelleUeberlagert } from '../../src/leser/dateiquelle.js'
+import { leseModOrdner } from '../../src/leser/mod-ordner.js'
+import { erstelleMiniMod } from '../../src/selbsttest/mini-mod.js'
+
+describe('Etappe 4g', async () => {
+  const mod = await leseModOrdner(dateiquelleAusObjekt(erstelleMiniMod()))
+  const quelle = dateiquelleUeberlagert(dateiquelleAusObjekt(erstelleMiniSpielordner()), [mod])
+  const mit = await leseSpielordner(quelle, { grundlage: [{ name: mod.name, version: mod.version, id: mod.id }] })
+  const sdMod = mit.spieldaten
+
+  test('Sprachschlüssel der Mod gewinnen auch bei anderem Dateinamen', () => {
+    expect(sdMod.laender.GER.name).toBe('Reich (Mini)')
+  })
+
+  test('replace_path entfernt die Fokusbäume des Spiels, der Baum der Mod hat quelle', () => {
+    expect(sdMod.spielFokusbaeume.map(b => b.id)).toEqual(['reich_focus'])
+    expect(sdMod.spielFokusbaeume[0].quelle).toBe('Mini-Reich')
+    expect(mit.spielfokus.baeume.reich_focus.fokusse.length).toBe(2)
+  })
+
+  test('spieldaten.grundlage und bericht.grundlage', () => {
+    expect(sdMod.grundlage).toEqual([{ name: 'Mini-Reich', version: '2.0', id: '424242' }])
+    expect(sdMod.bericht.grundlage).toEqual(['Mini-Reich'])
+  })
+
+  test('ohne Grundlage: grundlage [] und quelle «Spiel»', () => {
+    expect(sd.grundlage).toEqual([])
+    expect(sd.bericht.grundlage).toEqual([])
+    expect(sd.spielFokusbaeume.find(b => b.id === 'german_focus').quelle).toBe('Spiel')
+  })
 })

@@ -111,13 +111,16 @@ function dekodiereBild(pfad, bytes) {
  * @param {import('./dateiquelle.js').Dateiquelle} quelle
  * @returns {Promise<{ spieldaten, karte, bilder: Map<string, any>, warnungen: string[] }>}
  */
-export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereBild } = {}) {
+export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereBild, grundlage = [] } = {}) {
   const kodiere = kodiereBild || (async (rgba, breite, hoehe) => ({ breite, hoehe, rgba }))
   if (!quelle.hat('launcher-settings.json') || !quelle.hat('map/provinces.bmp') || !quelle.hat('map/definition.csv')) {
     throw new SpielordnerFehler(FALSCHER_ORDNER)
   }
   const warnungen = []
   const alle = quelle.liste()
+  // Etappe 4g: Ebene einer Datei (0 = Spiel, danach die Mods der Grundlage)
+  const ebene = (p) => quelle.ebene?.(p) ?? 0
+  const ebenenName = (i) => quelle.ebenenName?.(i) ?? 'Spiel'
   const imOrdner = (praefix, endung) => alle.filter(p => p.startsWith(praefix) && p.toLowerCase().endsWith(endung)).sort()
   const direktImOrdner = (praefix, endung) => imOrdner(praefix, endung).filter(p => !p.slice(praefix.length).includes('/'))
   const originaltexte = {}
@@ -153,7 +156,8 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
   for (const sprache of ['english', 'german']) {
     const dateien = imOrdner(`localisation/${sprache}/`, '.yml')
     // Ersetzungen (replace-Ordner) zuletzt, damit sie gewinnen
-    dateien.sort((a, b) => Number(a.includes('/replace/')) - Number(b.includes('/replace/')) || a.localeCompare(b))
+    // Mods nach dem Spiel, damit ihre Texte auch bei anderem Dateinamen gewinnen
+    dateien.sort((a, b) => Number(a.includes('/replace/')) - Number(b.includes('/replace/')) || ebene(a) - ebene(b) || a.localeCompare(b))
     for (const pfad of dateien) {
       try {
         for (const [k, v] of parseYml(await quelle.text(pfad)).eintraege) texte[sprache].set(k, v)
@@ -643,7 +647,7 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       const geteilt = findeAlle(bi, 'shared_focus').map(x => wertText(x.wert)).filter(Boolean)
       const weitere = schreibeParadox(bi.filter(x => !(x.schluessel && ['id', 'focus', 'shared_focus'].includes(x.schluessel.toLowerCase()))))
       spielfokus.baeume[id] = { id, datei: pfad, land, weitere, geteilt, fokusse }
-      spielFokusbaeume.push({ id, datei: pfad, land, anzahl: fokusse.length })
+      spielFokusbaeume.push({ id, datei: pfad, land, anzahl: fokusse.length, quelle: ebenenName(ebene(pfad)) })
     }
   }
   const baumName = (b) => (b.land ? (laender[b.land]?.name ?? b.land) : '\uffff' + b.id)
@@ -811,7 +815,9 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
       kategorie: haeufigsteGroesse(kategorieGroessen, [32, 32]),
     },
     originaltexte,
+    grundlage,
     bericht: {
+      grundlage: grundlage.map(g => g.name),
       laender: Object.keys(laender).length,
       staaten: Object.keys(staaten).length,
       flaggen: flaggenBericht,
