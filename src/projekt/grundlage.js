@@ -19,3 +19,18 @@ export function ueberlagerung(spielQuelle, liste) {
 export function grundlageDaten(liste) {
   return liste.map(({ name, version, id }) => ({ name, version, id }))
 }
+
+/** Chrome laesst Webseiten nicht in den Ordner Library des Macs; dort liegen die Workshop-Mods von Steam. */
+export function brauchtKopie(mod) {
+  return !!mod.absolut && /^\/Users\/[^/]+\/Library\//.test(mod.pfad || '')
+}
+
+const inHochkommas = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`
+
+/** Terminal-Befehl: klont den Mod-Ordner nach Dokumente/HOI4-Grundlagen (APFS-Klon, sofort und ohne Zusatzspeicher). */
+export function kopierBefehl(mod) {
+  const bereinigt = String(mod.name || '').replace(/[^\p{L}\p{N} _-]/gu, ' ').replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim()
+  const ordner = /[A-Za-z0-9]/.test(bereinigt) ? bereinigt : (mod.id || 'Mod')
+  const ziel = `~/Documents/HOI4-Grundlagen/${inHochkommas(ordner)}`
+  return `mkdir -p ~/Documents/HOI4-Grundlagen && rm -rf ${ziel} && cp -Rc ${inHochkommas(mod.pfad)} ${ziel}`
+}

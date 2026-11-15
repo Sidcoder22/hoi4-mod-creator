@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks'
 import { aktionen } from './zustand.js'
 import { dateiquelleAusFileList } from '../leser/dateiquelle.js'
 import { grundlageText } from '../projekt/modell.js'
+import { brauchtKopie, kopierBefehl } from '../projekt/grundlage.js'
 
 const mitGrundlage = (sd) => (sd.bericht?.grundlage?.length ? ` + ${sd.bericht.grundlage.join(' + ')}` : '')
 
@@ -117,8 +118,15 @@ function Grundlage({ z }) {
                       {kopiert === m.datei ? 'Kopiert ✓' : 'Pfad kopieren'}
                     </button>
                   )}
+                  {brauchtKopie(m) && (
+                    <button class="knopf klein" data-test={`modliste-${i}-befehl`}
+                      onClick={async () => { try { await navigator.clipboard.writeText(kopierBefehl(m)); setKopiert(`befehl:${m.datei}`) } catch { setKopiert(null) } }}>
+                      {kopiert === `befehl:${m.datei}` ? 'Kopiert ✓' : 'Befehl fürs Terminal kopieren'}
+                    </button>
+                  )}
                   <ModOrdnerKnopf test={`grundlage-input-${i}`} text="Ordner wählen" erwartet={m.name} gesperrt={ohneSpiel} />
                 </div>
+                {brauchtKopie(m) && <p class="leise">Chrome öffnet diesen Ordner nicht («enthält Systemdateien»). Kopiere den Befehl, füge ihn im Programm Terminal ein und drücke Enter. Danach wählst du mit «Anderen Mod-Ordner wählen» den Ordner <code>Dokumente/HOI4-Grundlagen/…</code>. Die Kopie ist sofort fertig und braucht kaum Speicher. Aktualisiert Steam die Mod, führe den Befehl nochmals aus.</p>}
               </li>
             ))}
           </ul>

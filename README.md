@@ -119,7 +119,7 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Neue Vorlagen bestehender Länder brauchen einen eigenen Namen, der im Spiel noch nicht vorkommt.
 - Ob `load_oob` im Verlauf bestehender Länder zuverlässig wirkt, zeigt der Spieltest.
 - Geteilte Fokusse aus dem Spiel (`shared_focus`) sind im Editor gesperrt. Bedingte Verschiebungen von Fokussen (`offset`) fallen beim Import weg.
-- Mods als Grundlage: Massgeblich ist der Dateipfad. Gleichnamige Objekte in Dateien mit verschiedenen Namen löst der Creator nicht wie das Spiel auf. Mod-Ordner müssen nach jedem Neustart des Browsers neu gewählt werden, sobald neu eingelesen wird; sehr grosse Mods brauchen länger zum Einlesen.
+- Mods als Grundlage: Massgeblich ist der Dateipfad. Gleichnamige Objekte in Dateien mit verschiedenen Namen löst der Creator nicht wie das Spiel auf. Mod-Ordner müssen nach jedem Neustart des Browsers neu gewählt werden, sobald neu eingelesen wird; sehr grosse Mods brauchen länger zum Einlesen. Auf dem Mac öffnet Chrome den Steam-Ordner unter `~/Library` nicht («enthält Systemdateien»). Die Mod-Liste bietet dafür den Knopf «Befehl fürs Terminal kopieren»: Er klont die Mod nach `Dokumente/HOI4-Grundlagen`.
 - Ein Event «an einem Datum» kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.
 - Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.

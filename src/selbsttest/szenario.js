@@ -906,6 +906,8 @@ export const SCHRITTE = [
       await h.klicke('modliste-lesen')
       await h.warte(async () => (await h.text('modliste-0')).includes('Mini-Reich'), 3000, 'Mod-Liste mit Mini-Reich')
       h.pruefe(!document.querySelector('[data-test="modliste-1"]'), 'Die eigene Mod steht in der Mod-Liste')
+      h.pruefe((await h.text('modliste-0-befehl')).includes('Terminal'), 'Knopf für den Terminal-Befehl fehlt')
+      h.pruefe((await h.text('modliste-0')).includes('HOI4-Grundlagen'), 'Hinweis auf den kopierten Ordner fehlt')
       // webkitRelativePath laesst sich im Selbsttest nicht nachstellen: Mod-Ordner direkt uebergeben
       await window.__hmc.aktionen.grundlageHinzufuegen(dateiquelleAusObjekt(erstelleMiniMod()), { erwartet: 'Mini-Reich' })
       await h.warte(async () => (await h.text('grundlage-aktuell')) === 'Mini-Reich', 5000, 'Grundlage Mini-Reich')
