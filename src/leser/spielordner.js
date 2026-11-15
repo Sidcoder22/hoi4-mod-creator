@@ -335,6 +335,16 @@ export async function leseSpielordner(quelle, { fortschritt = () => {}, kodiereB
     }
   }
 
+  // Manche Mods (z. B. Millennium Dawn) benennen Laender nur je Ideologie: wie im Spiel den Namen der regierenden Ideologie nehmen
+  for (const land of Object.values(laender)) {
+    if (text(land.tag) !== undefined) continue
+    const basis = [land.regierung, ...ideologien.map(g => g.id)].filter(Boolean).map(i => `${land.tag}_${i}`).find(k => text(k) !== undefined)
+    if (!basis) continue
+    land.name = text(basis)
+    land.nameDef = text(`${land.tag}_DEF`) ?? text(`${basis}_DEF`) ?? land.name
+    land.adjektiv = text(`${land.tag}_ADJ`) ?? text(`${basis}_ADJ`) ?? land.name
+  }
+
   // Staaten
   fortschritt(0.55, 'Staaten werden gelesen …')
   const staaten = {}

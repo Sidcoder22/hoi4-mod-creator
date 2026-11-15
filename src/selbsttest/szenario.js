@@ -911,6 +911,12 @@ export const SCHRITTE = [
       await h.warte(async () => (await h.text('grundlage-aktuell')) === 'Mini-Reich', 5000, 'Grundlage Mini-Reich')
       await h.warte(async () => (await h.text('spielordner-bericht')).includes('+ Mini-Reich'), 3000, 'Bericht mit Grundlage')
       h.pruefe(!zustand().meldung, 'Unerwartete Meldung: ' + zustand().meldung)
+      // Neue Sitzung nachstellen: Spieldaten mit Grundlage gespeichert, aber keine Mod-Ordner gewaehlt
+      const gewaehlt = zustand().grundlageMods
+      window.__hmc.speicher.setze({ grundlageMods: [] })
+      await h.warte(async () => !!document.querySelector('[data-test="grundlage-neu-waehlen"]'), 3000, 'Hinweis zur neuen Sitzung')
+      h.pruefe((await h.text('grundlage-aktuell')) === 'Mini-Reich', 'Eingelesene Grundlage wird in neuer Sitzung nicht gezeigt')
+      window.__hmc.speicher.setze({ grundlageMods: gewaehlt })
     },
   },
   {

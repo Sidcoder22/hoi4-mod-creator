@@ -76,12 +76,17 @@ function ModOrdnerKnopf({ test, text, erwartet, gesperrt }) {
 function Grundlage({ z }) {
   const [kopiert, setKopiert] = useState(null)
   const ohneSpiel = !aktionen.hatSpielQuelle()
+  // Massgeblich ist, womit die Spieldaten eingelesen wurden (auch aus einer frueheren Sitzung)
+  const eingelesen = z.spieldaten?.grundlage ?? []
   const pfadAnzeige = (m) => m.pfad || ''
   return (
     <div class="karte grundlage" data-test="grundlage-karte">
       <h2>Grundlage für Submods</h2>
       <p class="leise">Willst du eine Mod erweitern, zum Beispiel Kaiserreich? Dann lies sie hier zusätzlich ein. Deine Mod wird dadurch zur Submod und verlangt sie im Launcher.</p>
-      <p>Grundlage: <strong data-test="grundlage-aktuell">{grundlageText(z.grundlageMods)}</strong></p>
+      <p>Grundlage: <strong data-test="grundlage-aktuell">{grundlageText(eingelesen)}</strong></p>
+      {eingelesen.length > 0 && z.grundlageMods.length === 0 && (
+        <p class="hinweis-zeile" data-test="grundlage-neu-waehlen">Eingelesen mit «{grundlageText(eingelesen)}». Liest du den Spielordner neu ein, wähle danach die Mod-Ordner hier nochmals – sonst fehlt die Grundlage.</p>
+      )}
       {z.grundlageMods.length > 0 && (
         <ul class="grundlage-liste">
           {z.grundlageMods.map((m, i) => (

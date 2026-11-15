@@ -342,3 +342,20 @@ describe('Etappe 4g', async () => {
     expect(sd.spielFokusbaeume.find(b => b.id === 'german_focus').quelle).toBe('Spiel')
   })
 })
+
+import { schreibeYml } from '../../src/leser/yml.js'
+
+test('Review 4g: Ländernamen nur je Ideologie (wie Millennium Dawn) → Name der regierenden Ideologie', async () => {
+  const modDateien = {
+    'descriptor.mod': 'name="Nur Ideologien"\n',
+    // gleicher Pfad wie im Spiel: ersetzt die Ländernamen des Spiels
+    'localisation/german/countries_l_german.yml': schreibeYml('german', [
+      ['GER', 'Deutschland'], ['FRA', 'Frankreich'],
+      ['SWI_neutrality', 'Falsch'], ['SWI_democratic', 'Eidgenossenschaft'], ['SWI_democratic_DEF', 'die Eidgenossenschaft'], ['SWI_democratic_ADJ', 'eidgenössisch'],
+    ]),
+  }
+  const mod = await leseModOrdner(dateiquelleAusObjekt(modDateien))
+  const { spieldaten } = await leseSpielordner(dateiquelleUeberlagert(dateiquelleAusObjekt(erstelleMiniSpielordner()), [mod]))
+  expect(spieldaten.laender.SWI).toMatchObject({ name: 'Eidgenossenschaft', nameDef: 'die Eidgenossenschaft', adjektiv: 'eidgenössisch' })
+  expect(spieldaten.laender.GER.name).toBe('Deutschland')
+})
