@@ -56,3 +56,42 @@ test('Dateiquelle findet Pfade ohne Ruecksicht auf Gross-/Kleinschreibung (Revie
   expect(q2.hat('map/definition.csv')).toBe(true)
   expect(await q2.text('map/definition.csv')).toBe('x')
 })
+
+import { dateiquelleUeberlagert } from '../../src/leser/dateiquelle.js'
+
+const ebeneMod = (name, dateien, replacePaths = []) => ({ name, replacePaths, quelle: dateiquelleAusObjekt(dateien) })
+
+test('ueberlagert: spätere Ebene gewinnt bei gleichem Pfad, auch bei anderer Gross-/Kleinschreibung', async () => {
+  const q = dateiquelleUeberlagert(dateiquelleAusObjekt({ 'common/a.txt': 'spiel', 'common/b.txt': 'b' }), [ebeneMod('M', { 'Common/A.txt': 'mod' })])
+  expect(await q.text('common/a.txt')).toBe('mod')
+  expect(q.liste().filter(p => p.toLowerCase() === 'common/a.txt')).toHaveLength(1)
+  expect(q.ebene('common/a.txt')).toBe(1)
+  expect(q.ebene('common/b.txt')).toBe(0)
+  expect(await q.text('common/b.txt')).toBe('b')
+})
+
+test('ueberlagert: replace_path entfernt direkte Dateien früherer Ebenen, Unterordner bleiben', async () => {
+  const spiel = dateiquelleAusObjekt({ 'common/national_focus/germany.txt': 'g', 'common/national_focus/sub/x.txt': 'x' })
+  const q = dateiquelleUeberlagert(spiel, [ebeneMod('M', { 'common/national_focus/reich.txt': 'r' }, ['common/national_focus'])])
+  expect(q.hat('common/national_focus/germany.txt')).toBe(false)
+  expect(q.hat('common/national_focus/sub/x.txt')).toBe(true)
+  expect(q.hat('common/national_focus/reich.txt')).toBe(true)
+  expect(q.liste()).not.toContain('common/national_focus/germany.txt')
+  await expect(q.text('common/national_focus/germany.txt')).rejects.toThrow()
+})
+
+test('ueberlagert: zwei Mods hintereinander, ebenenName', async () => {
+  const q = dateiquelleUeberlagert(dateiquelleAusObjekt({ 'a.txt': '0' }), [ebeneMod('Eins', { 'a.txt': '1', 'b.txt': '1' }), ebeneMod('Zwei', { 'a.txt': '2' })])
+  expect(await q.text('a.txt')).toBe('2')
+  expect(await q.text('b.txt')).toBe('1')
+  expect(q.ebene('a.txt')).toBe(2)
+  expect(q.ebenenName(0)).toBe('Spiel')
+  expect(q.ebenenName(2)).toBe('Zwei')
+  expect(new TextDecoder().decode(await q.bytes('b.txt'))).toBe('1')
+})
+
+test('ueberlagert: descriptor.mod, thumbnail.png und *.mod einer Mod gehören nicht dazu', () => {
+  const q = dateiquelleUeberlagert(dateiquelleAusObjekt({ 'a.txt': '0' }),
+    [ebeneMod('M', { 'descriptor.mod': 'name="M"', 'thumbnail.png': 'x', 'alt.mod': 'x', 'common/c.txt': 'c' })])
+  expect(q.liste().sort()).toEqual(['a.txt', 'common/c.txt'])
+})

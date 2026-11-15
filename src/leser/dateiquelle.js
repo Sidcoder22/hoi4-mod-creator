@@ -61,3 +61,45 @@ export function dateiquelleAusFileList(files) {
     },
   }
 }
+
+/** Gehoert nicht zum Inhalt einer Mod, sondern beschreibt sie. */
+const istModBeschreibung = (pfad) => !pfad.includes('/') && (/\.mod$/i.test(pfad) || pfad.toLowerCase() === 'thumbnail.png')
+
+/**
+ * Legt Mod-Ordner ueber den Spielordner (Etappe 4g): gleicher Pfad – spaetere Ebene gewinnt;
+ * replace_path blendet die direkten Dateien frueherer Ebenen in diesem Ordner aus.
+ * @param {Dateiquelle} spiel
+ * @param {{ quelle: Dateiquelle, name: string, replacePaths: string[] }[]} mods
+ */
+export function dateiquelleUeberlagert(spiel, mods) {
+  const eintraege = new Map()
+  const ordnerVon = (p) => p.slice(0, Math.max(0, p.lastIndexOf('/'))).toLowerCase()
+  for (const p of spiel.liste()) eintraege.set(p.toLowerCase(), { ebene: 0, quelle: spiel, pfad: p })
+  mods.forEach((mod, i) => {
+    const ersetzt = new Set((mod.replacePaths || []).map(r => r.toLowerCase()))
+    if (ersetzt.size) for (const [k, v] of eintraege) if (ersetzt.has(ordnerVon(v.pfad))) eintraege.delete(k)
+    for (const p of mod.quelle.liste()) {
+      if (istModBeschreibung(p)) continue
+      eintraege.set(p.toLowerCase(), { ebene: i + 1, quelle: mod.quelle, pfad: p })
+    }
+  })
+  const hole = (pfad) => {
+    const e = eintraege.get(String(pfad).toLowerCase())
+    if (!e) throw new Error(`Datei fehlt: ${pfad}`)
+    return e
+  }
+  return {
+    liste: () => [...eintraege.values()].map(e => e.pfad),
+    hat: (pfad) => eintraege.has(String(pfad).toLowerCase()),
+    async text(pfad) {
+      const e = hole(pfad)
+      return e.quelle.text(e.pfad)
+    },
+    async bytes(pfad) {
+      const e = hole(pfad)
+      return e.quelle.bytes(e.pfad)
+    },
+    ebene: (pfad) => eintraege.get(String(pfad).toLowerCase())?.ebene ?? 0,
+    ebenenName: (i) => (i === 0 ? 'Spiel' : mods[i - 1]?.name ?? 'Spiel'),
+  }
+}
