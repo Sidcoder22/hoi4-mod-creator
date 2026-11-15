@@ -28,6 +28,8 @@ function deskriptor(projekt, spieldaten) {
   let t = `version="${String(m.version || '1.0').replace(/"/g, '')}"\ntags={\n\t"Alternative History"\n}\nname="${name}"\n`
   t += `supported_version="${spieldaten.supportedVersion || '1.*'}"\n`
   if (m.vorschaubild?.pngBase64) t += 'picture="thumbnail.png"\n'
+  // Submod (Etappe 4g): Der Launcher laedt die Grundlage zuerst
+  if (m.grundlage?.length) t += `dependencies={\n${m.grundlage.map(g => `\t"${String(g.name).replace(/"/g, '')}"\n`).join('')}}\n`
   return t
 }
 

@@ -75,13 +75,14 @@ export function neueId() {
   return 'e' + [...zahlen].map(z => (z % 36).toString(36)).join('')
 }
 
-export function neuesProjekt(name) {
+export function neuesProjekt(name, grundlage = []) {
   return {
     id: neueId(),
     formatVersion: FORMAT_VERSION,
     mod: {
       name, modid: modidAusName(name), modidManuell: false, version: '1.0', beschreibung: '', spielversion: null,
       benutzerOrdner: '', gespeichertAls: null, vorschaubild: null,
+      grundlage: grundlage.map(({ name: n, id }) => ({ name: n, id })),
     },
     laender: [],
     ideen: [],
@@ -94,6 +95,11 @@ export function neuesProjekt(name) {
     bilder: {},
     zaehler: { ...STANDARD_ZAEHLER },
   }
+}
+
+/** Anzeige der Grundlage (Etappe 4g): «Nur das Spiel» oder die Mods in Ladereihenfolge. */
+export function grundlageText(liste) {
+  return liste?.length ? liste.map(g => g.name).join(' + ') : 'Nur das Spiel'
 }
 
 /** Kopie eines Projekts mit eigener modid, damit sie die Mod des Originals nicht ueberschreibt. */
@@ -133,6 +139,7 @@ export function leereDiplomatie(marionetten = []) {
 export function ergaenzeProjekt(p, sd) {
   return wandleAlteArmee({
     ...p,
+    mod: { ...p.mod, grundlage: p.mod?.grundlage ?? [] },
     ideen: p.ideen ?? [],
     fokusbaeume: p.fokusbaeume ?? [],
     eigenschaften: p.eigenschaften ?? [],

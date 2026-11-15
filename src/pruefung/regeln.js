@@ -1,6 +1,6 @@
 // Pruefregeln: Was muss stimmen, bevor die Mod gespeichert werden darf?
 
-import { tagGesperrt } from '../projekt/modell.js'
+import { tagGesperrt, grundlageText } from '../projekt/modell.js'
 import { effektiveBesitzer, landName, verlaufsWerte } from '../projekt/abgeleitet.js'
 import { fuegeLandHinzu, aendereLand } from '../projekt/aenderungen.js'
 import { fokusZyklus } from '../projekt/fokus.js'
@@ -30,6 +30,11 @@ export function pruefeProjekt(p, sd) {
   if (!String(p.mod.name || '').trim()) fehler('mod-name', 'Die Mod braucht einen Namen.', einstellungen)
   if (!/^[a-z][a-z0-9_]{0,19}$/.test(p.mod.modid || '')) {
     fehler('modid', 'Der interne Name der Mod darf nur Kleinbuchstaben, Ziffern und _ enthalten, muss mit einem Buchstaben beginnen und höchstens 20 Zeichen lang sein.', einstellungen)
+  }
+
+  const namen = (l) => (l ?? []).map(g => g.name).join('\n')
+  if (namen(p.mod.grundlage) !== namen(sd.grundlage)) {
+    fehler('grundlage-abweichend', `Dieses Projekt baut auf «${grundlageText(p.mod.grundlage)}» auf, eingelesen ist aber «${grundlageText(sd.grundlage)}». Lies den Spielordner mit der richtigen Grundlage ein oder stelle sie in den Einstellungen um.`, einstellungen)
   }
 
   // Laender

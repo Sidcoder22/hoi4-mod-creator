@@ -28,7 +28,7 @@ test('neuesProjekt', () => {
   const p = neuesProjekt('Mein Reich')
   expect(p).toMatchObject({ formatVersion: 1, laender: [], ideen: [], bilder: {}, zaehler: { geist: 0 } })
   expect(p.mod).toEqual({ name: 'Mein Reich', modid: 'mein_reich', modidManuell: false, version: '1.0', beschreibung: '',
-    spielversion: null, benutzerOrdner: '', gespeichertAls: null, vorschaubild: null })
+    spielversion: null, benutzerOrdner: '', gespeichertAls: null, grundlage: [], vorschaubild: null })
   expect(p.id).toMatch(/^e[0-9a-z]{10}$/)
   expect(neueId()).not.toBe(neueId())
   expect(GRAFIKSTILE.map(g => g.id)).toContain('western_european')
@@ -68,4 +68,25 @@ test('kopiereProjekt bekommt eigene modid (Review I2)', () => {
   const k = kopiereProjekt(p)
   expect(k.id).not.toBe(p.id)
   expect(k.mod).toMatchObject({ name: 'Mein Reich (Kopie)', modid: 'mein_reich_kopie', modidManuell: false, gespeichertAls: null })
+})
+
+import { ergaenzeProjekt, grundlageText } from '../../src/projekt/modell.js'
+
+test('neuesProjekt übernimmt die Grundlage ohne version', () => {
+  expect(neuesProjekt('A').mod.grundlage).toEqual([])
+  expect(neuesProjekt('A', [{ name: 'Kaiserreich', version: '0.27', id: '1521695605' }]).mod.grundlage).toEqual([{ name: 'Kaiserreich', id: '1521695605' }])
+})
+
+test('ergaenzeProjekt ergänzt grundlage []', () => {
+  const alt = neuesProjekt('A')
+  delete alt.mod.grundlage
+  expect(ergaenzeProjekt(alt).mod.grundlage).toEqual([])
+  const mit = neuesProjekt('B', [{ name: 'K', id: null }])
+  expect(ergaenzeProjekt(mit).mod.grundlage).toEqual([{ name: 'K', id: null }])
+})
+
+test('grundlageText', () => {
+  expect(grundlageText([])).toBe('Nur das Spiel')
+  expect(grundlageText(undefined)).toBe('Nur das Spiel')
+  expect(grundlageText([{ name: 'Kaiserreich' }, { name: 'KR Submod' }])).toBe('Kaiserreich + KR Submod')
 })
