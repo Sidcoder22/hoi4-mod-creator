@@ -1,13 +1,16 @@
 import { useState } from 'preact/hooks'
 import { aktionen } from './zustand.js'
 import { dateiquelleAusFileList } from '../leser/dateiquelle.js'
+import { grundlageText } from '../projekt/modell.js'
+
+const mitGrundlage = (sd) => (sd.bericht?.grundlage?.length ? ` + ${sd.bericht.grundlage.join(' + ')}` : '')
 
 /** Bericht als Text, damit der Nutzer ihn kopieren und weitergeben kann. */
 export function berichtAlsText(sd) {
   const b = sd.bericht
   const f = b.flaggen
   return [
-    `HOI4 Mod Creator – Einlese-Bericht (Spiel ${sd.version ?? 'unbekannt'})`,
+    `HOI4 Mod Creator – Einlese-Bericht (Spiel ${sd.version ?? 'unbekannt'}${mitGrundlage(sd)})`,
     `Länder: ${b.laender}, Staaten: ${b.staaten}`,
     `Flaggen: ${f.gelesen} von ${b.laender} Ländern, ${f.dateien} Flaggen-Dateien gefunden`,
     f.ohneFlagge.length ? `Ohne Flagge: ${f.ohneFlagge.join(', ')}` : 'Ohne Flagge: keine',
@@ -25,7 +28,7 @@ function Bericht({ sd }) {
   const f = b.flaggen
   return (
     <div class="karte" data-test="spielordner-bericht">
-      <h2>Eingelesen: Spiel {sd.version ?? 'unbekannt'}</h2>
+      <h2>Eingelesen: Spiel {sd.version ?? 'unbekannt'}{mitGrundlage(sd)}</h2>
       <ul>
         <li>{b.laender} Länder und {b.staaten} Staaten</li>
         <li>Flaggen: {f.gelesen} von {b.laender} Ländern ({f.dateien} Flaggen-Dateien gefunden)</li>
@@ -51,6 +54,72 @@ function Bericht({ sd }) {
         </button>
         <span class="leise">Fehlt etwas? Kopiere den Bericht und schicke ihn mit deiner Frage mit.</span>
       </div>
+    </div>
+  )
+}
+
+/** Ordnerwahl fuer einen Mod-Ordner (Etappe 4g). */
+function ModOrdnerKnopf({ test, text, erwartet, gesperrt }) {
+  return (
+    <label class={`knopf klein datei-knopf${gesperrt ? ' gesperrt' : ''}`}>
+      {text}
+      <input type="file" webkitdirectory={true} multiple disabled={gesperrt} data-test={test}
+        onChange={async (e) => {
+          const files = e.currentTarget.files
+          if (files && files.length) await aktionen.grundlageHinzufuegen(dateiquelleAusFileList(files), { erwartet })
+          e.currentTarget.value = ''
+        }} />
+    </label>
+  )
+}
+
+function Grundlage({ z }) {
+  const [kopiert, setKopiert] = useState(null)
+  const ohneSpiel = !aktionen.hatSpielQuelle()
+  const pfadAnzeige = (m) => m.pfad || ''
+  return (
+    <div class="karte grundlage" data-test="grundlage-karte">
+      <h2>Grundlage für Submods</h2>
+      <p class="leise">Willst du eine Mod erweitern, zum Beispiel Kaiserreich? Dann lies sie hier zusätzlich ein. Deine Mod wird dadurch zur Submod und verlangt sie im Launcher.</p>
+      <p>Grundlage: <strong data-test="grundlage-aktuell">{grundlageText(z.grundlageMods)}</strong></p>
+      {z.grundlageMods.length > 0 && (
+        <ul class="grundlage-liste">
+          {z.grundlageMods.map((m, i) => (
+            <li key={m.name} data-test={`grundlage-${i}`}>
+              {m.name}{m.version ? ` (Version ${m.version})` : ''}
+              <button class="knopf klein leise" data-test={`grundlage-${i}-entfernen`} onClick={() => aktionen.grundlageEntfernen(i)}>Entfernen</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {ohneSpiel && <p class="hinweis-zeile">Wähle zuerst oben den Spielordner (neu einlesen).</p>}
+      <div class="knopfreihe">
+        <button class="knopf" data-test="modliste-lesen" onClick={() => aktionen.modListeLesen()}>Installierte Mods anzeigen</button>
+        <ModOrdnerKnopf test="grundlage-input" text="Anderen Mod-Ordner wählen" gesperrt={ohneSpiel} />
+      </div>
+      {z.modListe && (
+        <>
+          {z.modListe.length === 0 && <p class="leise">Keine Mods gefunden.</p>}
+          <ul class="modliste">
+            {z.modListe.map((m, i) => (
+              <li key={m.datei} data-test={`modliste-${i}`}>
+                <strong>{m.name}</strong>{m.version ? ` · Version ${m.version}` : ''}
+                <div><code class="pfad">{pfadAnzeige(m)}</code>{!m.absolut && m.pfad && <span class="leise"> im Ordner «Hearts of Iron IV» (Dokumente)</span>}</div>
+                <div class="knopfreihe">
+                  {m.pfad && (
+                    <button class="knopf klein" data-test={`modliste-${i}-pfad`}
+                      onClick={async () => { try { await navigator.clipboard.writeText(m.pfad); setKopiert(m.datei) } catch { setKopiert(null) } }}>
+                      {kopiert === m.datei ? 'Kopiert ✓' : 'Pfad kopieren'}
+                    </button>
+                  )}
+                  <ModOrdnerKnopf test={`grundlage-input-${i}`} text="Ordner wählen" erwartet={m.name} gesperrt={ohneSpiel} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p class="leise">Im Auswahlfenster: Auf dem Mac ⌘⇧G drücken und den Pfad einfügen (der Steam-Ordner liegt im versteckten Ordner Library). Unter Windows den Pfad oben in die Adressleiste einfügen. Musst du später neu einlesen, wähle die Mod-Ordner dann nochmals.</p>
+        </>
+      )}
     </div>
   )
 }
@@ -87,6 +156,7 @@ export function Spielordner({ z }) {
         )}
       </div>
       {z.spieldaten && !z.einlesen && <Bericht sd={z.spieldaten} />}
+      {z.spieldaten && !z.einlesen && <Grundlage z={z} />}
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { erstelleMiniSpielordner } from './mini-spielordner.js'
 import { dateiquelleAusObjekt } from '../leser/dateiquelle.js'
 import { erstelleFakeOrdner } from './fake-ordner.js'
+import { erstelleMiniMod } from './mini-mod.js'
 import { parseParadox } from '../leser/paradox.js'
 
 let fakeOrdner = null
@@ -890,6 +891,26 @@ export const SCHRITTE = [
       await h.warte(() => zustand().projekte.length === vorher + 1, 3000, 'Projekt importiert')
       const mre = zustand().projekt.laender.find(l => l.tag === 'MRE')
       h.pruefe(JSON.stringify(mre.staaten) === '[1,4]', 'Staaten nach Import falsch')
+    },
+  },
+  {
+    name: 'Grundlage hinzufügen',
+    async lauf(h) {
+      const mods = await fakeOrdner.getDirectoryHandle('mod', { create: true })
+      const w = await (await mods.getFileHandle('ugc_424242.mod', { create: true })).createWritable()
+      await w.write('version="2.0"\nname="Mini-Reich"\npath="/Users/x/Library/Application Support/Steam/steamapps/workshop/content/394360/424242"\nremote_file_id="424242"\n')
+      await w.close()
+      window.__hmc.aktionen.gehe({ bereich: 'spielordner' })
+      await h.element('grundlage-karte')
+      h.pruefe((await h.text('grundlage-aktuell')) === 'Nur das Spiel', 'Grundlage am Anfang nicht «Nur das Spiel»')
+      await h.klicke('modliste-lesen')
+      await h.warte(async () => (await h.text('modliste-0')).includes('Mini-Reich'), 3000, 'Mod-Liste mit Mini-Reich')
+      h.pruefe(!document.querySelector('[data-test="modliste-1"]'), 'Die eigene Mod steht in der Mod-Liste')
+      // webkitRelativePath laesst sich im Selbsttest nicht nachstellen: Mod-Ordner direkt uebergeben
+      await window.__hmc.aktionen.grundlageHinzufuegen(dateiquelleAusObjekt(erstelleMiniMod()), { erwartet: 'Mini-Reich' })
+      await h.warte(async () => (await h.text('grundlage-aktuell')) === 'Mini-Reich', 5000, 'Grundlage Mini-Reich')
+      await h.warte(async () => (await h.text('spielordner-bericht')).includes('+ Mini-Reich'), 3000, 'Bericht mit Grundlage')
+      h.pruefe(!zustand().meldung, 'Unerwartete Meldung: ' + zustand().meldung)
     },
   },
 ]

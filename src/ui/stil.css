@@ -441,3 +441,11 @@ h2.mit-abstand { margin-top: 1.6rem; }
 .liste.spielbaeume { max-height: 300px; margin-top: 0.5rem; }
 .liste.spielbaeume > button.zeile { width: 100%; display: flex; justify-content: space-between; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
 .liste.spielbaeume > button.zeile.aktiv { background: var(--flaeche3); }
+
+/* Etappe 4g: Grundlage fuer Submods */
+.grundlage-liste, .modliste { list-style: none; padding: 0; margin: 8px 0; }
+.grundlage-liste li, .modliste li { padding: 6px 0; border-bottom: 1px solid var(--rand); }
+.grundlage-liste li .knopf { margin-left: 8px; }
+.modliste .pfad { word-break: break-all; font-size: 0.85em; }
+.modliste .knopfreihe { margin-top: 4px; }
+.datei-knopf.gesperrt { opacity: 0.5; pointer-events: none; }

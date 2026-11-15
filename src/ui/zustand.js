@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { neuesProjekt as leeresProjekt, kopiereProjekt, ladeProjektAusJson, ergaenzeProjekt } from '../projekt/modell.js'
+import { fuegeGrundlageHinzu, entferneGrundlage, ueberlagerung, grundlageDaten } from '../projekt/grundlage.js'
+import { leseModOrdner, leseModListe } from '../leser/mod-ordner.js'
+import { pruefeZielordner } from '../speicher/ordner.js'
 import { erstelleVerlauf } from '../projekt/verlauf.js'
 import { leseSpielordner, LESER_VERSION } from '../leser/spielordner.js'
 import * as db from '../speicher/indexeddb.js'
@@ -37,7 +40,12 @@ export const speicher = erstelleSpeicher({
   kannZurueck: false,
   kannVor: false,
   zielordner: null,
+  grundlageMods: [],
+  modListe: null,
 })
+
+// Dateiliste des Spielordners dieser Sitzung (Etappe 4g); der Browser gibt sie nicht dauerhaft heraus
+let spielQuelle = null
 
 /** Preact-Hook: liefert (einen Teil vom) Zustand und rendert bei Aenderungen neu. */
 export function useSpeicher(waehler = (z) => z) {
@@ -110,7 +118,7 @@ export const aktionen = {
   },
 
   async neuesProjekt(name) {
-    const p = leeresProjekt(String(name || '').trim() || 'Meine Mod')
+    const p = leeresProjekt(String(name || '').trim() || 'Meine Mod', speicher.lies().spieldaten?.grundlage ?? [])
     setzeProjekt(p)
     await speichereProjektJetzt()
     await aktualisiereListe()
@@ -198,9 +206,12 @@ export const aktionen = {
   },
 
   async spielordnerEinlesen(quelle) {
+    spielQuelle = quelle
+    const mods = speicher.lies().grundlageMods
     speicher.setze({ einlesen: { anteil: 0, text: 'Dateien werden gezählt …' }, meldung: null })
     try {
-      const ergebnis = await leseSpielordner(quelle, {
+      const ergebnis = await leseSpielordner(ueberlagerung(quelle, mods), {
+        grundlage: grundlageDaten(mods),
         kodiereBild,
         fortschritt: (anteil, text) => speicher.setze({ einlesen: { anteil, text } }),
       })
@@ -218,6 +229,59 @@ export const aktionen = {
     } catch (e) {
       speicher.setze({ einlesen: null, meldung: e.message })
       return null
+    }
+  },
+
+  /** true, wenn in dieser Sitzung schon ein Spielordner gewaehlt wurde (Voraussetzung fuer Mods als Grundlage). */
+  hatSpielQuelle: () => !!spielQuelle,
+
+  async grundlageHinzufuegen(modQuelle, { erwartet } = {}) {
+    if (!spielQuelle) {
+      speicher.setze({ meldung: 'Wähle zuerst oben den Spielordner (neu einlesen).' })
+      return
+    }
+    let mod
+    try {
+      mod = await leseModOrdner(modQuelle)
+    } catch (e) {
+      speicher.setze({ meldung: e.message })
+      return
+    }
+    speicher.setze({ grundlageMods: fuegeGrundlageHinzu(speicher.lies().grundlageMods, mod) })
+    await aktionen.spielordnerEinlesen(spielQuelle)
+    if (erwartet && mod.name !== erwartet) speicher.setze({ meldung: `Gewählt wurde «${mod.name}», nicht «${erwartet}».` })
+  },
+
+  async grundlageEntfernen(i) {
+    speicher.setze({ grundlageMods: entferneGrundlage(speicher.lies().grundlageMods, i) })
+    if (spielQuelle) await aktionen.spielordnerEinlesen(spielQuelle)
+  },
+
+  /** Liste der installierten Mods aus dem Benutzerordner; fragt beim ersten Mal nach dem Ordner. */
+  async modListeLesen() {
+    try {
+      let handle = speicher.lies().zielordner
+      if (!handle) {
+        if (typeof window.showDirectoryPicker !== 'function') {
+          speicher.setze({ meldung: 'Dieser Browser kann die Mod-Liste nicht lesen. Öffne den Creator in Chrome oder Edge.' })
+          return
+        }
+        handle = await window.showDirectoryPicker({ id: 'hoi4-benutzerordner', mode: 'readwrite', startIn: 'documents' })
+        if (!(await pruefeZielordner(handle))) {
+          speicher.setze({ meldung: 'Das ist nicht der Ordner «Hearts of Iron IV» in deinen Dokumenten (Dokumente/Paradox Interactive/Hearts of Iron IV).' })
+          return
+        }
+        await aktionen.merkeZielordner(handle)
+      } else if (handle.queryPermission && (await handle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+        if ((await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') {
+          speicher.setze({ meldung: 'Ohne Erlaubnis kann der Creator die Mod-Liste nicht lesen.' })
+          return
+        }
+      }
+      const projekt = speicher.lies().projekt
+      speicher.setze({ modListe: await leseModListe(handle, { ausser: projekt ? `${projekt.mod.modid}.mod` : undefined }) })
+    } catch (e) {
+      if (e?.name !== 'AbortError') speicher.setze({ meldung: `Die Mod-Liste liess sich nicht lesen: ${e.message}` })
     }
   },
 
