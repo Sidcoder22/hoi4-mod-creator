@@ -31,3 +31,26 @@ export async function leseModOrdner(quelle) {
   const { pfad, ...rest } = d
   return { ...rest, quelle }
 }
+
+/**
+ * Installierte Mods aus «Dokumente/Paradox Interactive/Hearts of Iron IV/mod/*.mod».
+ * @param {FileSystemDirectoryHandle} benutzerOrdner
+ */
+export async function leseModListe(benutzerOrdner, { ausser } = {}) {
+  let modOrdner
+  try {
+    modOrdner = await benutzerOrdner.getDirectoryHandle('mod')
+  } catch {
+    return []
+  }
+  const liste = []
+  for await (const [datei, handle] of modOrdner.entries()) {
+    if (handle.kind !== 'file' || !/\.mod$/i.test(datei) || datei === ausser) continue
+    try {
+      const d = leseDeskriptor(await (await handle.getFile()).text())
+      if (!d.name) continue
+      liste.push({ datei, name: d.name, version: d.version, id: d.id, pfad: d.pfad, absolut: /^(\/|[a-z]:)/i.test(d.pfad || '') })
+    } catch { /* unlesbare Datei auslassen */ }
+  }
+  return liste.sort((a, b) => a.name.localeCompare(b.name, 'de'))
+}

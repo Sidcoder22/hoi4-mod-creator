@@ -46,3 +46,35 @@ test('leseModOrdner liefert name und quelle', async () => {
   expect(mod.replacePaths).toEqual(['common/national_focus', 'history/states'])
   expect(mod.quelle).toBe(quelle)
 })
+
+import { leseModListe } from '../../src/leser/mod-ordner.js'
+import { erstelleFakeOrdner } from '../../src/selbsttest/fake-ordner.js'
+
+const benutzerOrdner = () => erstelleFakeOrdner({
+  'settings.txt': '',
+  'mod/ugc_1.mod': 'name="Zeta Mod"\nversion="3"\npath="/Users/x/Library/Application Support/Steam/steamapps/workshop/content/394360/1"\nremote_file_id="1"\n',
+  'mod/eigen.mod': 'name="Alpha Mod"\npath="mod/eigen"\n',
+  'mod/kaputt.mod': 'name=\n',
+  'mod/eigen/descriptor.mod': 'name="Alpha Mod"\n',
+})
+
+test('leseModListe liest .mod-Dateien, erkennt absolute Pfade, sortiert', async () => {
+  const liste = await leseModListe(benutzerOrdner())
+  expect(liste.map(m => m.name)).toEqual(['Alpha Mod', 'Zeta Mod'])
+  expect(liste[0]).toEqual({ datei: 'eigen.mod', name: 'Alpha Mod', version: null, id: null, pfad: 'mod/eigen', absolut: false })
+  expect(liste[1]).toMatchObject({ datei: 'ugc_1.mod', version: '3', id: '1', absolut: true })
+})
+
+test('leseModListe erkennt Windows-Pfade als absolut', async () => {
+  const liste = await leseModListe(erstelleFakeOrdner({ 'mod/w.mod': 'name="W"\npath="C:/Program Files (x86)/Steam/steamapps/workshop/content/394360/2"\n' }))
+  expect(liste[0].absolut).toBe(true)
+})
+
+test('leseModListe ohne Ordner mod → []', async () => {
+  expect(await leseModListe(erstelleFakeOrdner({ 'settings.txt': '' }))).toEqual([])
+})
+
+test('leseModListe mit ausser lässt die eigene Mod weg', async () => {
+  const liste = await leseModListe(benutzerOrdner(), { ausser: 'eigen.mod' })
+  expect(liste.map(m => m.datei)).toEqual(['ugc_1.mod'])
+})
