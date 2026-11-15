@@ -57,8 +57,9 @@ Etappe 4 bringt dazu:
   dazu Berater (politischer Berater, Generalstab, Oberkommando, Theoretiker) mit Kosten und einer Eigenschaft. Alle stehen dem Land ab Spielbeginn zur Verfügung.
 - **Armee** (Reiter im Land-Editor): Divisionsvorlagen wie im Spiel (Bataillone im Raster, Unterstützungskompanien, Kampfbreite)
   und Startverbände («Vorlage × Anzahl in Staat»). Bestehende Länder behalten ihre Armee aus dem Spiel und bekommen die neuen Divisionen dazu.
-- **Fokusbäume aus dem Spiel** (Knopf «Baum aus dem Spiel …» bei den Fokusbäumen): einen Baum des Spiels übernehmen und ändern, etwa den deutschen,
+- **Fokusbäume aus dem Spiel** (Knopf «Baum aus Spiel oder Mod …» bei den Fokusbäumen): einen Baum des Spiels übernehmen und ändern, etwa den deutschen,
   oder als Vorlage für ein anderes Land nehmen. Was der Baukasten nicht kennt, bleibt als «Eigener Code (aus dem Spiel)» erhalten.
+- **Mods als Grundlage (Submods)** (Seite «Spielordner einlesen» → «Grundlage für Submods»): installierte Mods anzeigen, einen Mod-Ordner wie Kaiserreich zusätzlich einlesen und mit allen Werkzeugen auf dessen Inhalte aufbauen – auch Fokusbäume der Mod lassen sich übernehmen. Die gespeicherte Mod verlangt die Grundlage im Launcher (`dependencies`).
 - **Kleinere Verbesserungen:** Warnung, wenn ein Event sich immer wieder selbst auslöst; nur ganze Tage bei Verzögerung und Dauer.
 
 ## Benutzen (Windows-PC)
@@ -92,7 +93,7 @@ npm run selbsttest   # baut und bedient die fertige Datei in Chrome (headless)
   Am Ende steht im Seitentitel `SELBSTTEST OK` oder `SELBSTTEST FEHLER`.
 - Chrome wird unter `/Applications/Google Chrome.app` erwartet. Ein anderer Ort lässt sich über `CHROME_PFAD` angeben.
 - Aufbau und Konzept: `docs/superpowers/specs/2026-10-07-hoi4-mod-creator-design.md`
-- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4f)
+- Baupläne: `docs/superpowers/plans/` (Etappe 1 bis 4g)
 
 ```
 src/leser      Spielordner lesen (Paradox-Skript, YML, BMP, DDS, TGA, Karte, Fehlerprotokoll)
@@ -118,6 +119,7 @@ src/selbsttest Mini-Spielordner, Ordner-Attrappe, Selbsttest-Ablauf
 - Neue Vorlagen bestehender Länder brauchen einen eigenen Namen, der im Spiel noch nicht vorkommt.
 - Ob `load_oob` im Verlauf bestehender Länder zuverlässig wirkt, zeigt der Spieltest.
 - Geteilte Fokusse aus dem Spiel (`shared_focus`) sind im Editor gesperrt. Bedingte Verschiebungen von Fokussen (`offset`) fallen beim Import weg.
+- Mods als Grundlage: Massgeblich ist der Dateipfad. Gleichnamige Objekte in Dateien mit verschiedenen Namen löst der Creator nicht wie das Spiel auf. Mod-Ordner müssen nach jedem Neustart des Browsers neu gewählt werden, sobald neu eingelesen wird; sehr grosse Mods brauchen länger zum Einlesen.
 - Ein Event «an einem Datum» kommt kurz nach diesem Datum. Das Spiel prüft solche Events nur etwa alle 20 Tage, es kann also bis zu drei Wochen später erscheinen.
 - Events sind immer Länder-Events (`country_event`). Nachrichten-Events, die alle Länder sehen, gibt es nicht.
 - Fokus-Symbole im Format BC7 (DX10) kann der Creator nicht anzeigen. Sie stehen trotzdem zur Wahl und erscheinen im Spiel normal.

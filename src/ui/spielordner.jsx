@@ -132,7 +132,7 @@ export function Spielordner({ z }) {
         <h1>Spielordner einlesen</h1>
         <ol class="anleitung">
           <li>Öffne Steam und gehe in deine Bibliothek.</li>
-          <li>Rechtsklick auf <strong>Hearts of Iron IV</strong> → <strong>Verwalten</strong> → <strong>Lokale Dateien durchsuchen</strong>. So siehst du, wo der Ordner liegt – meistens <code>C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV</code>.</li>
+          <li>Rechtsklick auf <strong>Hearts of Iron IV</strong> → <strong>Verwalten</strong> → <strong>Lokale Dateien durchsuchen</strong>. So siehst du, wo der Ordner liegt – meistens <code>C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV</code>. Auf dem Mac: <code>~/Library/Application Support/Steam/steamapps/common/Hearts of Iron IV</code> – im Auswahlfenster ⌘⇧G drücken und den Pfad einfügen.</li>
           <li>Klicke unten auf «Ordner auswählen» und wähle genau diesen Ordner <strong>Hearts of Iron IV</strong>.</li>
           <li>Chrome fragt dann, ob du «Dateien hochladen» willst. Keine Sorge: Es wird nichts ins Internet geschickt. Der Creator liest die Dateien nur hier auf deinem Computer.</li>
         </ol>

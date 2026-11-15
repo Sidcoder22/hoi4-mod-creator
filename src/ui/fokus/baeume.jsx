@@ -76,7 +76,7 @@ function SpielbaumDialog({ z, onSchliessen }) {
             {baeume.map(b => (
               <button key={b.id} class={`zeile${b.id === gewaehlt ? ' aktiv' : ''}`} data-test={`spielbaum-${b.id}`} onClick={() => setGewaehlt(b.id)}>
                 <span>{b.land ? landName(b.land, z.projekt, sd) : 'Allgemeiner Baum'}</span>
-                <span class="leise">{b.id} · {b.anzahl} Fokusse</span>
+                <span class="leise">{b.id} · {b.anzahl} Fokusse{b.quelle && b.quelle !== 'Spiel' ? ` · ${b.quelle}` : ''}</span>
               </button>
             ))}
           </div>
@@ -135,7 +135,7 @@ export function Baeume({ z }) {
       )}
       <div class="knopfreihe">
         <button class="knopf haupt" data-test="neuer-baum" onClick={() => setDialog(true)}>＋ Neuer Fokusbaum</button>
-        <button class="knopf" data-test="baum-aus-spiel" onClick={() => setSpielDialog(true)}>Baum aus dem Spiel …</button>
+        <button class="knopf" data-test="baum-aus-spiel" onClick={() => setSpielDialog(true)}>Baum aus Spiel oder Mod …</button>
       </div>
       {dialog && <NeuerBaumDialog z={z} onSchliessen={() => setDialog(false)} />}
       {spielDialog && <SpielbaumDialog z={z} onSchliessen={() => setSpielDialog(false)} />}

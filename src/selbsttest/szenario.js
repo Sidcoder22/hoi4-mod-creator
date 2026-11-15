@@ -913,6 +913,43 @@ export const SCHRITTE = [
       h.pruefe(!zustand().meldung, 'Unerwartete Meldung: ' + zustand().meldung)
     },
   },
+  {
+    name: 'Submod',
+    async lauf(h) {
+      await h.klicke('spielordner-weiter')
+      await h.klicke('zur-startseite')
+      await h.tippe('neues-projekt-name', 'Selbsttest Submod')
+      await h.klicke('neues-projekt-anlegen')
+      await h.element('seitenleiste')
+      h.pruefe(zustand().projekt.mod.grundlage[0]?.name === 'Mini-Reich', 'Neues Projekt ohne Grundlage')
+      await h.klicke('nav-einstellungen')
+      h.pruefe((await h.text('mod-grundlage')).includes('Mini-Reich'), 'Grundlage fehlt in den Einstellungen')
+      await h.klicke('nav-fokusbaeume')
+      h.pruefe((await h.text('baum-aus-spiel')).includes('Spiel oder Mod'), 'Knopftext nicht angepasst')
+      await h.klicke('baum-aus-spiel')
+      await h.warte(async () => (await h.text('spielbaum-reich_focus')).includes('Mini-Reich'), 3000, 'Quelle im Fokusbaum-Dialog')
+      await h.klicke('spielbaum-reich_focus')
+      await h.waehle('spielbaum-art', 'aendern')
+      await h.klicke('spielbaum-importieren')
+      await h.element('baum-editor')
+      await h.klicke('nav-speichern')
+      await h.klicke('speichern-ordner')
+      await h.element('speichern-ergebnis')
+      const dateien = fakeOrdner.alsObjekt()
+      const deskriptor = new TextDecoder().decode(dateien['mod/selbsttest_submod/descriptor.mod'] ?? new Uint8Array())
+      h.pruefe(deskriptor.includes('dependencies={\n\t"Mini-Reich"\n}'), 'dependencies fehlen: ' + deskriptor)
+      h.pruefe(dateien['mod/selbsttest_submod/common/national_focus/reich.txt'], 'Baum der Mod nicht am gleichen Pfad')
+      h.pruefe((await h.text('speichern-anleitung')).includes('starte ihn neu'), 'Hinweis zum Neustart des Launchers fehlt')
+      h.pruefe((await h.text('speichern-anleitung')).includes('«Mini-Reich»'), 'Anleitung nennt die Grundlage nicht')
+      await window.__hmc.aktionen.grundlageEntfernen(0)
+      await h.klicke('nav-pruefung')
+      await h.element('meldung-grundlage-abweichend-0')
+      await h.klicke('nav-einstellungen')
+      await h.klicke('grundlage-uebernehmen')
+      h.pruefe(zustand().projekt.mod.grundlage.length === 0, 'Grundlage nicht übernommen')
+      h.pruefe(!document.querySelector('[data-test="grundlage-uebernehmen"]'), 'Knopf bleibt nach dem Übernehmen')
+    },
+  },
 ]
 
 function mittelpixel(canvas) {

@@ -20,12 +20,13 @@ function ladeHerunter(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 5000)
 }
 
-function Checkliste({ zip }) {
+function Checkliste({ zip, grundlage }) {
   return (
-    <ol class="checkliste">
-      {zip && <li>Entpacke die ZIP-Datei in den Ordner <code>Dokumente\Paradox Interactive\Hearts of Iron IV</code>. Danach gibt es dort im Ordner <code>mod</code> deine Mod.</li>}
-      <li>Öffne den Paradox-Launcher von Hearts of Iron IV.</li>
-      <li>Gehe zu <strong>Spielsets</strong> (Playsets), lege ein neues Spielset an und füge deine Mod hinzu.</li>
+    <ol class="checkliste" data-test="speichern-anleitung">
+      {zip && <li>Entpacke die ZIP-Datei in den Ordner «Hearts of Iron IV» in deinen Dokumenten – Windows: <code>Dokumente\Paradox Interactive\Hearts of Iron IV</code> · Mac: <code>Dokumente/Paradox Interactive/Hearts of Iron IV</code>. Danach gibt es dort im Ordner <code>mod</code> deine Mod.</li>}
+      <li>Öffne den Paradox-Launcher von Hearts of Iron IV. Läuft der Launcher schon, starte ihn neu. Er sucht nur beim Start nach neuen Mods.</li>
+      <li>Gehe zu <strong>Spielsets</strong> (Playsets), lege ein neues Spielset an, klicke auf <strong>«Weitere Mods hinzufügen»</strong> und füge deine Mod hinzu.</li>
+      {grundlage?.length > 0 && <li>Füge auch «{grundlage.map(g => g.name).join('», «')}» hinzu. Der Launcher ordnet die Reihenfolge selbst.</li>}
       <li>Klicke auf <strong>Spielen</strong>.</li>
       <li>Wähle den Start 1936 und suche dein Land auf der Karte.</li>
       <li>Danach hier unter <strong>Spielfehler</strong> nachschauen, ob das Spiel etwas bemängelt hat.</li>
@@ -103,7 +104,7 @@ export function Speichern({ z }) {
       )}
       <div class="karte">
         <h2>In den Spielordner speichern</h2>
-        <p class="leise">Der Creator schreibt die Mod direkt nach <code>Dokumente\Paradox Interactive\Hearts of Iron IV\mod</code>. Beim ersten Mal fragt der Browser, welchen Ordner er benutzen darf.</p>
+        <p class="leise">Der Creator schreibt die Mod direkt in den Ordner <code>mod</code> unter <code>Dokumente\Paradox Interactive\Hearts of Iron IV</code> (Mac: <code>Dokumente/Paradox Interactive/Hearts of Iron IV</code>). Beim ersten Mal fragt der Browser, welchen Ordner er benutzen darf.</p>
         {z.zielordner && <p class="leise">Gemerkter Ordner: <strong>{z.zielordner.name}</strong> <button class="knopf klein leise" onClick={() => aktionen.merkeZielordner(null)}>Anderen Ordner wählen</button></p>}
         <div class="knopfreihe">
           {kannOrdner && <button class="knopf haupt" data-test="speichern-ordner" disabled={gesperrt} onClick={inOrdner}>In den Spielordner speichern</button>}
@@ -124,7 +125,7 @@ export function Speichern({ z }) {
           <h2>{ergebnis.ort === 'zip' ? 'ZIP-Datei erstellt' : 'Gespeichert!'}</h2>
           <p>{ergebnis.geschrieben} Dateien {ergebnis.ort === 'zip' ? 'in der ZIP-Datei' : 'geschrieben'}{ergebnis.geloescht.length ? `, ${ergebnis.geloescht.length} veraltete Dateien entfernt` : ''}.</p>
           <h3>So testest du die Mod im Spiel</h3>
-          <Checkliste zip={ergebnis.ort === 'zip'} />
+          <Checkliste zip={ergebnis.ort === 'zip'} grundlage={p.mod.grundlage} />
         </div>
       )}
     </div>

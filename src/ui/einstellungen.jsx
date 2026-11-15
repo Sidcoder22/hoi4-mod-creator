@@ -1,6 +1,7 @@
 import { aktionen } from './zustand.js'
 import { setzeModFeld } from '../projekt/aenderungen.js'
 import { TextFeld } from './felder.jsx'
+import { grundlageText } from '../projekt/modell.js'
 
 const setze = (feld, gruppe) => (wert) => aktionen.aendere((p) => setzeModFeld(p, feld, wert), { gruppe })
 
@@ -12,6 +13,27 @@ async function vorschaubildAusDatei(datei) {
   c.height = Math.round(bild.height * faktor)
   c.getContext('2d').drawImage(bild, 0, 0, c.width, c.height)
   return c.toDataURL('image/png').split(',')[1]
+}
+
+/** Grundlage der Mod (Etappe 4g): nur das Spiel oder Mods, auf denen sie als Submod aufbaut. */
+function Grundlage({ m, sd }) {
+  const eingelesen = sd?.grundlage ?? []
+  const abweichend = grundlageText(m.grundlage) !== grundlageText(eingelesen)
+  return (
+    <div class="feld breit">
+      <span class="feld-titel">Grundlage</span>
+      <span data-test="mod-grundlage">{grundlageText(m.grundlage)}</span>
+      {abweichend && sd && (
+        <div class="knopfreihe">
+          <button class="knopf klein" data-test="grundlage-uebernehmen"
+            onClick={() => aktionen.aendere((p) => setzeModFeld(p, 'grundlage', eingelesen.map(({ name, id }) => ({ name, id }))))}>
+            Grundlage auf «{grundlageText(eingelesen)}» umstellen
+          </button>
+        </div>
+      )}
+      <span class="feld-hilfe">Baut die Mod auf anderen Mods auf, wird sie zur Submod und verlangt diese im Launcher. Die Grundlage wählst du beim Einlesen des Spielordners.</span>
+    </div>
+  )
 }
 
 export function Einstellungen({ z }) {
@@ -44,6 +66,7 @@ export function Einstellungen({ z }) {
           </div>
           <span class="feld-hilfe">Erscheint im Launcher neben dem Namen der Mod.</span>
         </div>
+        <Grundlage m={m} sd={z.spieldaten} />
         <p class="leise" data-test="modid-anzeige">Interner Name: <code>{m.modid}</code></p>
         <details class="erweitert">
           <summary>Erweitert</summary>
